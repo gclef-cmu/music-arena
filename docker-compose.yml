@@ -1,0 +1,26 @@
+version: '3.7'
+services:
+  music_arena_app:
+    container_name: music_arena_app
+    build: .
+    environment:
+      - FIREBASE_ACCOUNT_KEY=${FIREBASE_ACCOUNT_KEY}
+      - GCP_PROJECT_ID=${GCP_PROJECT_ID:-music-arena}
+      - GCS_AUDIO_BUCKET=${GCS_AUDIO_BUCKET:-music-arena-audio}
+      - MUSIC_API_URL=${MUSIC_API_URL:-http://localhost:5000}
+      - USE_MOCK_CLIENTS=${USE_MOCK_CLIENTS:-false}
+      - PORT=12000
+    volumes:
+      - ./config:/app/config
+    ports:
+      - "12000:12000"
+  
+  nginx:
+    container_name: music_arena_nginx
+    image: nginx:latest
+    ports:
+      - "8080:80"
+    volumes:
+      - ./nginx:/etc/nginx/conf.d
+    depends_on:
+      - music_arena_app
