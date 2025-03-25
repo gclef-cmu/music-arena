@@ -1,0 +1,10 @@
+{
+    "firebase_collections": {
+        "audio_metadata": "audio_metadata",
+        "audio_outcomes": "audio_outcomes"
+    },
+    "gcs_buckets": {
+        "audio_files": "music-arena-audio"
+    },
+    "version_backend": "0.1.0"
+}
