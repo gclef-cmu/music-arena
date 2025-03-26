@@ -17,7 +17,7 @@ print_header() {
 
 # Install test dependencies if needed
 print_header "Installing test dependencies"
-pip install pytest pytest-cov pytest-xdist requests fastapi httpx
+pip install -r requirements-test.txt
 
 # Run unit tests with coverage
 print_header "Running unit tests with coverage"
