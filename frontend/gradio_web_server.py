@@ -6,6 +6,17 @@ Debugging Ongoing (Yonghyun)
 python -m frontend.gradio_web_server --controller-url http://0.0.0.0:21001 --share
 """
 
+"""
+TODO
+- Debug the code (Music Retrieving Process Doesn't work & Bug after pressing SEND button)
+- Connect with the Wayne's backend
+- Implement the support for lyrics conditioning on the frontend? The UI components should look like:
+    Prompt: text box
+    Instrumental-only: check box, checked by default
+    Lyrics: text box, prepopulated w/ ghost text that says "Surprise me!", indicating that the system will come up with lyrics when unspecified
+   (Professor will incorporate YuE (a recent open weights model w/ lyrics conditioning) into the backend so have something to test it out with.)
+"""
+
 import argparse
 from collections import defaultdict
 import datetime
