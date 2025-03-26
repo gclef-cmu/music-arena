@@ -7,6 +7,9 @@ import pytest
 from unittest.mock import patch, mock_open
 from src.api.music_api import get_music_api_provider, CustomServerMusicAPIProvider, MusicResponseOutput
 
+# Mark all tests in this module as unit tests and music tests
+pytestmark = [pytest.mark.unit, pytest.mark.music]
+
 # Sample model configuration for testing
 SAMPLE_MODEL_CONFIG = {
     "noise": {
@@ -91,18 +94,20 @@ def test_generate_music_success(mock_get, mock_post):
     mock_post.return_value.json.return_value = {"job_id": "test-job-id"}
     mock_post.return_value.raise_for_status = lambda: None
     
-    mock_get.side_effect = [
-        # First call to status endpoint
-        type("MockResponse", (), {
-            "json": lambda self: {"status": "COMPLETE"},
-            "raise_for_status": lambda: None
-        }),
-        # Call to download endpoint
-        type("MockResponse", (), {
-            "content": b"mock_audio_data",
-            "raise_for_status": lambda: None
-        })
-    ]
+    # Create proper mock responses
+    class MockStatusResponse:
+        def json(self):
+            return {"status": "COMPLETE"}
+        def raise_for_status(self):
+            pass
+    
+    class MockDownloadResponse:
+        content = b"mock_audio_data"
+        def raise_for_status(self):
+            pass
+    
+    # Set up the side effect sequence
+    mock_get.side_effect = [MockStatusResponse(), MockDownloadResponse()]
     
     provider = CustomServerMusicAPIProvider(
         "test-model",
@@ -129,8 +134,14 @@ def test_generate_music_error(mock_get, mock_post):
     mock_post.return_value.json.return_value = {"job_id": "test-job-id"}
     mock_post.return_value.raise_for_status = lambda: None
     
-    mock_get.return_value.json.return_value = {"status": "ERROR"}
-    mock_get.return_value.raise_for_status = lambda: None
+    # Create proper mock response
+    class MockErrorResponse:
+        def json(self):
+            return {"status": "ERROR"}
+        def raise_for_status(self):
+            pass
+    
+    mock_get.return_value = MockErrorResponse()
     
     provider = CustomServerMusicAPIProvider(
         "test-model",
@@ -157,8 +168,14 @@ def test_generate_music_timeout(mock_get, mock_post):
     mock_post.return_value.json.return_value = {"job_id": "test-job-id"}
     mock_post.return_value.raise_for_status = lambda: None
     
-    mock_get.return_value.json.return_value = {"status": "PROCESSING"}
-    mock_get.return_value.raise_for_status = lambda: None
+    # Create proper mock response
+    class MockProcessingResponse:
+        def json(self):
+            return {"status": "PROCESSING"}
+        def raise_for_status(self):
+            pass
+    
+    mock_get.return_value = MockProcessingResponse()
     
     provider = CustomServerMusicAPIProvider(
         "test-model",

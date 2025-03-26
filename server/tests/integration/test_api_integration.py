@@ -8,8 +8,8 @@ import base64
 from fastapi.testclient import TestClient
 from src.api.app import app
 
-# Mark these tests as integration tests
-pytestmark = pytest.mark.integration
+# Mark these tests as integration tests, API tests, and slow tests
+pytestmark = [pytest.mark.integration, pytest.mark.api, pytest.mark.slow]
 
 # Test client
 client = TestClient(app)

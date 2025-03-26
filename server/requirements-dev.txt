@@ -1,0 +1,18 @@
+# Include all base requirements
+-r requirements.txt
+
+# Additional development tools
+black>=23.10.0
+isort>=5.12.0
+flake8>=6.1.0
+mypy>=1.6.1
+pre-commit>=3.5.0
+
+# Documentation
+mkdocs>=1.5.3
+mkdocs-material>=9.4.6
+mkdocstrings>=0.23.0
+
+# Debugging
+ipython>=8.16.1
+ipdb>=0.13.13

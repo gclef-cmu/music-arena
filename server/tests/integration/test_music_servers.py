@@ -6,8 +6,8 @@ import pytest
 import requests
 from src.api.music_api import get_music_api_provider, MusicResponseOutput
 
-# Mark these tests as integration tests
-pytestmark = pytest.mark.integration
+# Mark these tests as integration tests, music tests, and slow tests
+pytestmark = [pytest.mark.integration, pytest.mark.music, pytest.mark.slow]
 
 # Test data
 TEST_PROMPT = "Create a short, gentle melody with piano"

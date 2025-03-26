@@ -4,6 +4,9 @@ Basic unit tests to verify the test setup.
 import pytest
 from src.api.music_api import CustomServerMusicAPIProvider
 
+# Mark all tests in this module as unit tests
+pytestmark = pytest.mark.unit
+
 def test_custom_server_music_api_provider_validate_config():
     """Test that the CustomServerMusicAPIProvider validates its configuration correctly."""
     # Valid configuration
