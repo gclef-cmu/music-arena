@@ -6,6 +6,7 @@ class AudioPairRequest(BaseModel):
     prompt: str
     user_id: str = Field(..., alias="userId")
     seed: Optional[int] = None
+    model_key: Optional[str] = Field(None, alias="modelKey")
     
 class AudioPairResponse(BaseModel):
     """Response model for a pair of generated audio samples."""

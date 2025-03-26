@@ -77,13 +77,13 @@ class FastAPIApp:
                 # Create a unique pair ID
                 pair_id = str(uuid.uuid4())
                 
-                # Get music API provider
-                music_api = get_music_api_provider(
-                    model_key="default",
-                    base_url=os.getenv("MUSIC_API_URL", "http://localhost:5000"),
-                    check_interval=1.0,
-                    max_wait_time=60.0
-                )
+                # Get model key from request or use default
+                model_key = request.model_key if hasattr(request, 'model_key') and request.model_key else "musicgen-small"
+                
+                # Get music API provider using the model configuration
+                music_api = get_music_api_provider(model_key=model_key)
+                
+                logger.info(f"Using music model: {music_api.model_name} with base_url: {music_api.config.get('base_url')}")
                 
                 # Generate first audio
                 audio_id_1 = generate_unique_id()
@@ -115,8 +115,10 @@ class FastAPIApp:
                 gcs_path_1 = f"audio/{audio_id_1}.mp3"
                 gcs_path_2 = f"audio/{audio_id_2}.mp3"
                 
+                logger.info(f"Uploading audio files to GCS bucket: {bucket_name}")
                 url_1 = self.gcp_client.upload_file(bucket_name, response_1.audio_data, gcs_path_1)
                 url_2 = self.gcp_client.upload_file(bucket_name, response_2.audio_data, gcs_path_2)
+                logger.info(f"Audio files uploaded successfully. URLs: {url_1}, {url_2}")
                 
                 # Create metadata
                 metadata_1 = create_audio_metadata(
@@ -145,10 +147,12 @@ class FastAPIApp:
                 metadata_1["audioUrl"] = url_1
                 metadata_2["audioUrl"] = url_2
                 
-                # Upload metadata to Firebase
+                # Upload metadata to Firebase synchronously
                 collection = self.settings["firebase_collections"]["audio_metadata"]
-                background_tasks.add_task(self.firebase_client.upload_data, collection, metadata_1)
-                background_tasks.add_task(self.firebase_client.upload_data, collection, metadata_2)
+                logger.info(f"Uploading metadata to Firebase collection: {collection}")
+                doc_id_1 = self.firebase_client.upload_data(collection, metadata_1)
+                doc_id_2 = self.firebase_client.upload_data(collection, metadata_2)
+                logger.info(f"Metadata uploaded successfully. Document IDs: {doc_id_1}, {doc_id_2}")
                 
                 # Prepare response
                 audio_items = [
