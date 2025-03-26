@@ -6,13 +6,69 @@ import sys
 import pytest
 from unittest.mock import MagicMock
 from fastapi.testclient import TestClient
-from fastapi import FastAPI
+from fastapi import FastAPI, Request
+from fastapi.responses import JSONResponse
 
 # Add the parent directory to the path so we can import from src
 sys.path.insert(0, os.path.abspath(os.path.join(os.path.dirname(__file__), '..')))
 
 # Create a mock app for testing
 app = FastAPI(title="Music Arena API Test", version="0.1.0")
+
+# Add test routes to the mock app
+@app.get("/health")
+async def health_check():
+    """Health check endpoint."""
+    return {"status": "healthy", "version": "0.1.0"}
+
+@app.post("/generate_audio_pair")
+async def generate_audio_pair(request: Request):
+    """Mock generate_audio_pair endpoint."""
+    data = await request.json()
+    
+    # Check if there's an error condition to simulate
+    if "error" in data:
+        return JSONResponse(status_code=500, content={"detail": "Error generating audio"})
+    
+    # Create mock audio items
+    audio_items = [
+        {
+            "audioId": "test-audio-id-1",
+            "userId": data.get("userId", "test-user"),
+            "prompt": data.get("prompt", "test prompt"),
+            "model": "test-model",
+            "latency": 1.0,
+            "seed": data.get("seed", 42),
+            "pairAudioId": "test-audio-id-2",
+            "pairIndex": 0,
+            "audioUrl": "https://example.com/test1.mp3",
+            "audioData": "bW9ja19hdWRpb19kYXRh"  # Base64 encoded "mock_audio_data"
+        },
+        {
+            "audioId": "test-audio-id-2",
+            "userId": data.get("userId", "test-user"),
+            "prompt": data.get("prompt", "test prompt"),
+            "model": "test-model",
+            "latency": 1.0,
+            "seed": data.get("seed", 43) if data.get("seed") is not None else 43,
+            "pairAudioId": "test-audio-id-1",
+            "pairIndex": 1,
+            "audioUrl": "https://example.com/test2.mp3",
+            "audioData": "bW9ja19hdWRpb19kYXRh"  # Base64 encoded "mock_audio_data"
+        }
+    ]
+    
+    return {"pairId": "test-pair-id", "audioItems": audio_items}
+
+@app.post("/upload_json")
+async def upload_json(request: Request):
+    """Mock upload_json endpoint."""
+    return {"status": "success", "uploadId": "test-upload-id", "documentId": "test-doc-id"}
+
+@app.post("/upload_audio")
+async def upload_audio(request: Request):
+    """Mock upload_audio endpoint."""
+    return {"status": "success", "audioId": "test-audio-id", "documentId": "test-doc-id", "audioUrl": "https://example.com/test.mp3"}
 
 @pytest.fixture
 def client():
