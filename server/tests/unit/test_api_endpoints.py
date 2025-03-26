@@ -5,6 +5,9 @@ import json
 import pytest
 from unittest.mock import patch, MagicMock
 
+# Mark all tests in this module as unit tests and API tests
+pytestmark = [pytest.mark.unit, pytest.mark.api]
+
 def test_health_check(client):
     """Test the health check endpoint."""
     response = client.get("/health")

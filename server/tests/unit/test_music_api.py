@@ -7,6 +7,9 @@ import pytest
 from unittest.mock import patch, mock_open
 from src.api.music_api import get_music_api_provider, CustomServerMusicAPIProvider, MusicResponseOutput
 
+# Mark all tests in this module as unit tests and music tests
+pytestmark = [pytest.mark.unit, pytest.mark.music]
+
 # Sample model configuration for testing
 SAMPLE_MODEL_CONFIG = {
     "noise": {

@@ -17,11 +17,11 @@ print_header() {
 
 # Install test dependencies if needed
 print_header "Installing test dependencies"
-pip install pytest pytest-cov requests fastapi httpx
+pip install pytest pytest-cov pytest-xdist requests fastapi httpx
 
-# Run unit tests
-print_header "Running unit tests"
-python -m pytest -v
+# Run unit tests with coverage
+print_header "Running unit tests with coverage"
+pytest -v tests/unit/ --cov=src --cov-report=term --cov-report=html:test_output/coverage
 
 # Ask if integration tests should be run
 print_header "Integration tests"
@@ -41,7 +41,7 @@ if [[ $REPLY =~ ^[Yy]$ ]]; then
         print_header "Running integration tests with mock clients"
     fi
     
-    python -m pytest -v -m integration
+    pytest -v tests/integration/ -m integration
     
     print_header "Integration test results"
     if [ -d "test_output" ] && [ "$(ls -A test_output)" ]; then
@@ -53,3 +53,4 @@ if [[ $REPLY =~ ^[Yy]$ ]]; then
 fi
 
 print_header "All tests completed"
+echo "Coverage report is available in test_output/coverage/index.html"
