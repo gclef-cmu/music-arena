@@ -1,0 +1,29 @@
+{
+    "noise": {
+        "provider": "custom-server",
+        "model_name": "noise",
+        "config": {
+            "base_url": "http://treble.cs.cmu.edu:54408",
+            "check_interval": 1.0,
+            "max_wait_time": 5.0
+        }
+    },
+    "audioldm2": {
+        "provider": "custom-server",
+        "model_name": "audioldm2",
+        "config": {
+            "base_url": "http://treble.cs.cmu.edu:51759",
+            "check_interval": 1.0,
+            "max_wait_time": 60.0
+        }
+    },
+    "musicgen-small": {
+        "provider": "custom-server",
+        "model_name": "musicgen-small",
+        "config": {
+            "base_url": "http://treble.cs.cmu.edu:22709",
+            "check_interval": 1.0,
+            "max_wait_time": 60.0
+        }
+    }
+}

@@ -112,13 +112,43 @@ def get_music_api_provider(model_key: str, **kwargs):
     Returns:
         BaseMusicAPIProvider: An instance of the appropriate provider class
     """
+    import os
+    import json
+    
+    # Default configuration
     base_config = {
         "base_url": "http://localhost:5000",
         "check_interval": 1.0,
         "max_wait_time": 60.0,  # 1 minute
     }
-
-    # Merge kwargs into base config, prioritizing kwargs
-    config = {**base_config, **kwargs}
-
-    return CustomServerMusicAPIProvider(model_key, **config)
+    
+    # Try to load model configuration from model_config.json
+    config_path = os.path.join("config", "model_config.json")
+    if os.path.exists(config_path):
+        try:
+            with open(config_path, "r") as f:
+                model_configs = json.load(f)
+                
+            # If the model_key exists in the configuration, use it
+            if model_key in model_configs:
+                model_config = model_configs[model_key]
+                model_name = model_config.get("model_name", model_key)
+                config = {**base_config, **model_config.get("config", {})}
+                logger.info(f"Using configuration for model {model_key} from model_config.json")
+            else:
+                model_name = model_key
+                config = base_config
+                logger.warning(f"Model {model_key} not found in model_config.json, using default configuration")
+        except Exception as e:
+            logger.error(f"Error loading model configuration: {str(e)}")
+            model_name = model_key
+            config = base_config
+    else:
+        logger.warning("model_config.json not found, using default configuration")
+        model_name = model_key
+        config = base_config
+    
+    # Merge kwargs into config, prioritizing kwargs
+    config = {**config, **kwargs}
+    
+    return CustomServerMusicAPIProvider(model_name, **config)
