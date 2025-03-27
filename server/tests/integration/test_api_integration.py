@@ -70,10 +70,10 @@ def test_generate_audio_pair_integration(model_key):
         assert "prompt" in audio_item
         assert "model" in audio_item
         assert "audioUrl" in audio_item
-        assert "audioData" in audio_item
+        assert "audioDataBase64" in audio_item
         
         # Decode and save the audio data for manual inspection
-        audio_data = base64.b64decode(audio_item["audioData"].encode("latin1"))
+        audio_data = base64.b64decode(audio_item["audioDataBase64"])
         os.makedirs("test_output", exist_ok=True)
         with open(f"test_output/{model_key}_pair_{i}.mp3", "wb") as f:
             f.write(audio_data)
@@ -140,3 +140,51 @@ def test_upload_audio_integration():
     assert "audioUrl" in response_data
     
     print(f"Successfully uploaded audio file, URL: {response_data['audioUrl']}")
+    
+def test_record_vote_integration():
+    """Test the record_vote endpoint with real clients."""
+    # Skip if we're using mock clients
+    if os.environ.get("USE_MOCK_CLIENTS", "true").lower() == "true":
+        pytest.skip("Test requires real clients (set USE_MOCK_CLIENTS=false)")
+    
+    # First, generate an audio pair to vote on
+    request_data = {
+        "prompt": "Short test melody for vote integration test",
+        "userId": TEST_USER_ID,
+        "seed": 123
+    }
+    
+    print("Generating test audio pair for voting...")
+    pair_response = client.post("/generate_audio_pair", json=request_data, timeout=300)
+    
+    if pair_response.status_code != 200:
+        pytest.skip("Could not generate test audio pair for voting")
+    
+    pair_data = pair_response.json()
+    
+    # Now vote on the generated pair
+    winning_item = pair_data["audioItems"][0]
+    losing_item = pair_data["audioItems"][1]
+    
+    vote_data = {
+        "pairId": pair_data["pairId"],
+        "userId": TEST_USER_ID,
+        "winningAudioId": winning_item["audioId"],
+        "losingAudioId": losing_item["audioId"],
+        "winningModel": winning_item["model"],
+        "losingModel": losing_item["model"],
+        "winningIndex": 0,
+        "prompt": winning_item["prompt"]
+    }
+    
+    print(f"Voting on audio pair {pair_data['pairId']}, selecting {vote_data['winningAudioId']} as winner")
+    vote_response = client.post("/record_vote", json=vote_data)
+    
+    # Verify response
+    assert vote_response.status_code == 200
+    vote_result = vote_response.json()
+    assert "voteId" in vote_result
+    assert "timestamp" in vote_result
+    assert vote_result["status"] == "success"
+    
+    print(f"Successfully recorded vote with ID: {vote_result['voteId']}")

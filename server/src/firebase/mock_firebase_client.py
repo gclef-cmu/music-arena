@@ -1,38 +1,51 @@
 import logging
-import json
-import os
-from datetime import datetime
+import uuid
+from typing import Dict, Any
 
 logger = logging.getLogger(__name__)
 
 class MockFirebaseClient:
     """
-    Mock implementation of FirebaseClient for testing without actual Firebase connection.
+    Mock Firebase client for testing without a real Firebase connection.
     """
     def __init__(self):
-        """Initialize the mock client."""
-        self.data_dir = "mock_data"
-        os.makedirs(self.data_dir, exist_ok=True)
+        """
+        Initialize mock client with an in-memory database.
+        """
+        self.data = {}
         logger.info("Initialized MockFirebaseClient")
     
     def upload_data(self, collection_name: str, data: dict):
         """
-        Mock upload data to a collection.
+        Upload data to a mock collection.
         
         Args:
-            collection_name: Name of the collection
+            collection_name: Name of the collection to upload to
             data: Dictionary containing the data to upload
+            
+        Returns:
+            str: The ID of the created document
         """
-        collection_dir = os.path.join(self.data_dir, collection_name)
-        os.makedirs(collection_dir, exist_ok=True)
+        if collection_name not in self.data:
+            self.data[collection_name] = {}
         
-        # Generate a document ID
-        doc_id = f"{datetime.now().strftime('%Y%m%d%H%M%S')}_{id(data)}"
-        
-        # Save the data to a JSON file
-        file_path = os.path.join(collection_dir, f"{doc_id}.json")
-        with open(file_path, 'w') as f:
-            json.dump(data, f, indent=2)
-        
-        logger.info(f"Mock data uploaded to collection '{collection_name}' with ID '{doc_id}'")
+        doc_id = str(uuid.uuid4())
+        self.data[collection_name][doc_id] = data.copy()
+        logger.info(f"Mock data uploaded to collection '{collection_name}' with ID {doc_id}")
         return doc_id
+    
+    def get_collection_data(self, collection_name: str):
+        """
+        Get all documents from a mock collection.
+        
+        Args:
+            collection_name: Name of the collection to retrieve
+            
+        Returns:
+            dict: Dictionary of document IDs to document data
+        """
+        if collection_name not in self.data:
+            self.data[collection_name] = {}
+        
+        logger.info(f"Retrieved {len(self.data[collection_name])} documents from mock collection '{collection_name}'")
+        return self.data[collection_name]

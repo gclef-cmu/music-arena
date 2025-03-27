@@ -41,7 +41,7 @@ def test_generate_audio_pair(client):
         assert "prompt" in item
         assert "model" in item
         assert "audioUrl" in item
-        assert "audioData" in item
+        assert "audioDataBase64" in item
 
 def test_generate_audio_pair_with_default_model(client):
     """Test the generate_audio_pair endpoint with default model."""
@@ -113,3 +113,26 @@ def test_upload_audio(client, mock_firebase_client, mock_gcp_client):
     assert "audioId" in response_data
     assert "documentId" in response_data
     assert "audioUrl" in response_data
+    
+def test_record_vote(client, mock_firebase_client):
+    """Test the record_vote endpoint."""
+    # Test request
+    request_data = {
+        "pairId": "test-pair-id",
+        "userId": "test-user-123",
+        "winningAudioId": "test-audio-id-1",
+        "losingAudioId": "test-audio-id-2",
+        "winningModel": "musicgen-small",
+        "losingModel": "audioldm2",
+        "winningIndex": 0,
+        "prompt": "Test melody for voting"
+    }
+    
+    response = client.post("/record_vote", json=request_data)
+    
+    # Verify response
+    assert response.status_code == 200
+    response_data = response.json()
+    assert "voteId" in response_data
+    assert "timestamp" in response_data
+    assert response_data["status"] == "success"

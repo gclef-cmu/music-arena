@@ -4,7 +4,7 @@ import time
 import uuid
 import logging
 from datetime import datetime
-from typing import Dict, Any, Optional
+from typing import Dict, Any, Optional, Tuple
 
 logger = logging.getLogger(__name__)
 
@@ -81,5 +81,35 @@ def create_audio_metadata(
     
     if pair_index is not None:
         metadata["pairIndex"] = pair_index
+    
+    return metadata
+
+def create_vote_metadata(
+    vote_id: str,
+    request_data: Dict[str, Any]
+) -> Dict[str, Any]:
+    """
+    Create metadata dictionary for a vote from request data.
+    
+    Args:
+        vote_id: Unique ID for the vote
+        request_data: Dictionary containing the vote request data
+        
+    Returns:
+        Dictionary containing the vote metadata
+    """
+    metadata = {
+        "voteId": vote_id,
+        "pairId": request_data["pairId"],
+        "userId": request_data["userId"],
+        "timestamp": get_timestamp(),
+        "winningAudioId": request_data["winningAudioId"],
+        "losingAudioId": request_data["losingAudioId"],
+        "winningModel": request_data["winningModel"],
+        "losingModel": request_data["losingModel"],
+        "winningIndex": request_data["winningIndex"],
+        "prompt": request_data["prompt"],
+        "versionBackend": get_settings().get("version_backend", "0.1.0")
+    }
     
     return metadata

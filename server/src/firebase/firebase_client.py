@@ -37,6 +37,9 @@ class FirebaseClient:
         Args:
             collection_name: Name of the collection to upload to
             data: Dictionary containing the data to upload
+            
+        Returns:
+            str: The ID of the created document
         """
         try:
             collection_ref = self.db.collection(collection_name)
@@ -45,4 +48,24 @@ class FirebaseClient:
             return doc_ref[1].id  # Return the document ID
         except Exception as e:
             logger.error(f"Error uploading data to Firebase: {str(e)}")
+            raise
+            
+    def get_collection_data(self, collection_name: str):
+        """
+        Get all documents from a Firebase Firestore collection.
+        
+        Args:
+            collection_name: Name of the collection to retrieve
+            
+        Returns:
+            dict: Dictionary of document IDs to document data
+        """
+        try:
+            collection_ref = self.db.collection(collection_name)
+            docs = collection_ref.stream()
+            result = {doc.id: doc.to_dict() for doc in docs}
+            logger.info(f"Retrieved {len(result)} documents from Firebase collection '{collection_name}'")
+            return result
+        except Exception as e:
+            logger.error(f"Error retrieving data from Firebase: {str(e)}")
             raise

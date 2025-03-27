@@ -1,10 +1,2 @@
 # Include all base requirements
 -r requirements.txt
-
-# Testing dependencies
-pytest>=8.0.0
-pytest-cov>=6.0.0
-pytest-xdist>=3.3.1
-pytest-timeout>=2.2.0
-pytest-mock>=3.12.0
-coverage>=7.7.1

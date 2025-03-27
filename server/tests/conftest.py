@@ -42,7 +42,7 @@ async def generate_audio_pair(request: Request):
             "pairAudioId": "test-audio-id-2",
             "pairIndex": 0,
             "audioUrl": "https://example.com/test1.mp3",
-            "audioData": "bW9ja19hdWRpb19kYXRh"  # Base64 encoded "mock_audio_data"
+            "audioDataBase64": "bW9ja19hdWRpb19kYXRh"  # Base64 encoded "mock_audio_data"
         },
         {
             "audioId": "test-audio-id-2",
@@ -54,7 +54,7 @@ async def generate_audio_pair(request: Request):
             "pairAudioId": "test-audio-id-1",
             "pairIndex": 1,
             "audioUrl": "https://example.com/test2.mp3",
-            "audioData": "bW9ja19hdWRpb19kYXRh"  # Base64 encoded "mock_audio_data"
+            "audioDataBase64": "bW9ja19hdWRpb19kYXRh"  # Base64 encoded "mock_audio_data"
         }
     ]
     
@@ -69,6 +69,26 @@ async def upload_json(request: Request):
 async def upload_audio(request: Request):
     """Mock upload_audio endpoint."""
     return {"status": "success", "audioId": "test-audio-id", "documentId": "test-doc-id", "audioUrl": "https://example.com/test.mp3"}
+
+@app.post("/record_vote")
+async def record_vote(request: Request):
+    """Mock record_vote endpoint."""
+    data = await request.json()
+    # Validate required fields
+    required_fields = ["pairId", "userId", "winningAudioId", "losingAudioId", 
+                      "winningModel", "losingModel", "winningIndex", "prompt"]
+    for field in required_fields:
+        if field not in data:
+            return JSONResponse(
+                status_code=422,
+                content={"detail": f"Missing required field: {field}"}
+            )
+    
+    return {
+        "voteId": "test-vote-id",
+        "timestamp": 1616482800,  # Fixed timestamp for testing
+        "status": "success"
+    }
 
 @pytest.fixture
 def client():
