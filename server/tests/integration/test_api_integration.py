@@ -1,10 +1,10 @@
 """
 Integration tests for the API endpoints.
 """
-import os
 import pytest
 import requests
 import base64
+import os
 from fastapi.testclient import TestClient
 from src.api.app import app
 
@@ -29,10 +29,6 @@ def is_server_reachable(url):
 @pytest.mark.parametrize("model_key", ["noise", "audioldm2", "musicgen-small"])
 def test_generate_audio_pair_integration(model_key):
     """Test the generate_audio_pair endpoint with real music generation servers."""
-    # Skip if we're using mock clients
-    if os.environ.get("USE_MOCK_CLIENTS", "true").lower() == "true":
-        pytest.skip("Test requires real clients (set USE_MOCK_CLIENTS=false)")
-    
     # Check if the server for this model is reachable
     from src.api.music_api import get_music_api_provider
     provider = get_music_api_provider(model_key)
@@ -85,10 +81,6 @@ def test_generate_audio_pair_integration(model_key):
 
 def test_upload_json_integration():
     """Test the upload_json endpoint with real clients."""
-    # Skip if we're using mock clients
-    if os.environ.get("USE_MOCK_CLIENTS", "true").lower() == "true":
-        pytest.skip("Test requires real clients (set USE_MOCK_CLIENTS=false)")
-    
     # Create test audio data
     test_audio = b"Test audio data for integration testing"
     test_audio_base64 = base64.b64encode(test_audio).decode("utf-8")
@@ -114,10 +106,6 @@ def test_upload_json_integration():
 
 def test_upload_audio_integration():
     """Test the upload_audio endpoint with real clients."""
-    # Skip if we're using mock clients
-    if os.environ.get("USE_MOCK_CLIENTS", "true").lower() == "true":
-        pytest.skip("Test requires real clients (set USE_MOCK_CLIENTS=false)")
-    
     # Create a test file
     test_file = b"Test audio data for integration testing"
     
@@ -143,10 +131,6 @@ def test_upload_audio_integration():
     
 def test_record_vote_integration():
     """Test the record_vote endpoint with real clients."""
-    # Skip if we're using mock clients
-    if os.environ.get("USE_MOCK_CLIENTS", "true").lower() == "true":
-        pytest.skip("Test requires real clients (set USE_MOCK_CLIENTS=false)")
-    
     # First, generate an audio pair to vote on
     request_data = {
         "prompt": "Short test melody for vote integration test",
