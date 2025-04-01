@@ -3,6 +3,7 @@ Integration tests for the music API.
 """
 import os
 import json
+import time
 import pytest
 import requests
 
@@ -216,6 +217,113 @@ def test_all_model_config_providers():
             
     # Assert that at least one model was successfully tested
     assert any(r["status"] == "success" for r in results.values()), "No models were successfully tested"
+
+def test_ping_all_custom_servers():
+    """
+    Test the /ping endpoint for all custom-server providers in model_config.json.
+    This ensures basic connectivity to each server without generating music.
+    """
+    import logging
+    logger = logging.getLogger(__name__)
+    
+    # Load the model configurations
+    model_configs = get_model_configs()
+    
+    # If no models found, fail the test
+    assert model_configs, "No models found in model_config.json"
+    
+    results = {}
+    
+    # Test each model that has provider type "custom-server"
+    for model_key, config in model_configs.items():
+        # Check if this is a custom-server provider
+        provider_type = config.get("provider")
+        if provider_type != "custom-server":
+            print(f"Skipping {model_key}: not a custom-server provider (type: {provider_type})")
+            continue
+            
+        # Get the base URL for this provider
+        base_url = config.get("config", {}).get("base_url")
+        if not base_url:
+            print(f"Skipping {model_key}: no base_url found in config")
+            results[model_key] = {"status": "skipped", "reason": "no base_url in config"}
+            continue
+            
+        print(f"\n=== Pinging {model_key} server at {base_url} ===")
+        logger.info(f"Pinging {model_key} server at {base_url}")
+        
+        # Test both /ping and /health endpoints
+        endpoints = ["/ping", "/health"]
+        endpoint_results = {}
+        
+        for endpoint in endpoints:
+            full_url = f"{base_url}{endpoint}"
+            try:
+                print(f"Testing endpoint: {full_url}")
+                start_time = time.time()
+                response = requests.get(full_url, timeout=5)
+                response_time = time.time() - start_time
+                
+                # Check the response
+                status_code = response.status_code
+                response_text = response.text[:100]  # Truncate long responses
+                
+                if status_code == 200:
+                    print(f"✅ {endpoint} endpoint is UP (status: {status_code}, time: {response_time:.2f}s)")
+                    print(f"Response: {response_text}")
+                    endpoint_results[endpoint] = {
+                        "status": "success",
+                        "response_time": f"{response_time:.2f}s",
+                        "response_text": response_text
+                    }
+                else:
+                    print(f"❌ {endpoint} endpoint returned status {status_code}")
+                    print(f"Response: {response_text}")
+                    endpoint_results[endpoint] = {
+                        "status": "error",
+                        "status_code": status_code,
+                        "response_text": response_text
+                    }
+                    
+            except requests.RequestException as e:
+                print(f"❌ Could not connect to {endpoint} endpoint: {str(e)}")
+                logger.error(f"Error connecting to {full_url}: {str(e)}")
+                endpoint_results[endpoint] = {
+                    "status": "exception",
+                    "error": str(e)
+                }
+                
+        # Store results for this model
+        results[model_key] = {
+            "base_url": base_url,
+            "endpoints": endpoint_results
+        }
+    
+    # Print summary of results
+    print("\n=== Ping Test Summary ===")
+    for model_key, result in results.items():
+        print(f"\n{model_key} ({result['base_url']}):")
+        
+        for endpoint, endpoint_result in result.get("endpoints", {}).items():
+            status = endpoint_result.get("status")
+            if status == "success":
+                response_time = endpoint_result.get("response_time")
+                print(f"  {endpoint}: ✅ Success - Response time: {response_time}")
+            elif status == "error":
+                status_code = endpoint_result.get("status_code")
+                print(f"  {endpoint}: ❌ Error - Status code: {status_code}")
+            else:
+                error = endpoint_result.get("error")
+                print(f"  {endpoint}: ❌ Exception - {error}")
+    
+    # Assert that at least one endpoint was successfully tested
+    assert any(
+        any(
+            endpoint_result.get("status") == "success" 
+            for endpoint_result in result.get("endpoints", {}).values()
+        )
+        for result in results.values()
+    ), "No endpoints were successfully tested"
 
 def test_music_api_error_handling():
     """Test that the music API handles errors correctly."""
