@@ -593,6 +593,20 @@ def clear_history(request: gr.Request):
     state = None
     return (state, [], "") + (disable_btn,) * 5
 
+def get_random_lyrics_block():
+    samples = [
+        "Let the rhythm take control",
+        "Feel the beat within your soul",
+        "Under stars, we lose it all",
+        "Walking through the midnight rain",
+        "Singing softly through the pain",
+        "Hope will find us once again",
+        "Colors swirling in the sky",
+        "Lift your wings and learn to fly, Every note a lullaby.",
+        "Dreams we chase with open eyes",
+        "Melodies that never lie, Hearts collide and harmonize.",
+    ]
+    return random.choice(samples)
 
 def get_ip(request: gr.Request):
     if "cf-connecting-ip" in request.headers:
@@ -694,7 +708,6 @@ def is_limit_reached(model_name, ip):
     except Exception as e:
         logger.info(f"monitor error: {e}")
         return None
-
 
 # MUSIC_DB_PATH = "music-arena/mock_data/audio/"
 # MUSIC_MAP_FILE = "music-arena/mock_data/audio/music_db.json"
@@ -1129,9 +1142,9 @@ def build_single_model_ui(models, add_promotion_links=False):
                     music_player_1 = gr.Audio(label="Generated Music 1", interactive=False, 
                                                 elem_id="custom-audio-1", show_download_button=False,
                                                 show_share_button=False, visible=True)
-                    # music_player_1.play(on_play_a)
-                    # music_player_1.pause(on_pause_a)
-                    # music_player_1.stop(on_pause_a)
+                    music_player_1.play(on_play_a)
+                    music_player_1.pause(on_pause_a)
+                    music_player_1.stop(on_pause_a)
                     with gr.Row():
                         play_btn1 = gr.Button("▶️ Play", elem_id="play_btn_1", interactive=False)
                         pause_btn1 = gr.Button("⏸️ Pause", elem_id="pause_btn_1", interactive=False)
@@ -1158,43 +1171,34 @@ def build_single_model_ui(models, add_promotion_links=False):
                 model_a_label = gr.Markdown("**Model A: Unknown**", visible=False)
                 model_b_label = gr.Markdown("**Model B: Unknown**", visible=False)
 
-                gr.HTML("""
-                <style>
-                #lyrics_row {
-                    display: flex;
-                    align-items: center;
-                    gap: 12px;
-                    margin-bottom: 8px;
-                }
-                </style>
-                <script>
-                document.getElementById("play_btn_1").onclick = () => {
-                    const audio = document.querySelector("#custom-audio-1 audio");
-                    if (audio) audio.play();
-                };
-                document.getElementById("pause_btn_1").onclick = () => {
-                    const audio = document.querySelector("#custom-audio-1 audio");
-                    if (audio) audio.pause();
-                };
-                document.getElementById("stop_btn_1").onclick = () => {
-                    const audio = document.querySelector("#custom-audio-1 audio");
-                    if (audio) {
-                        audio.pause();
-                        audio.currentTime = 0;
-                    }
-                };
-                </script>
-                """)
-          
-        # Ongoing
-        gr.HTML("""
-        <script>
-        setTimeout(() => {
-            const audio1 = document.querySelector('#custom-audio-1 audio');
-            console.log("Audio 1 exists?", !!audio1);
-        }, 500);
-        </script>
-        """)   
+            # gr.HTML("""
+            # <script>
+            # document.getElementById("play_btn_1").onclick = () => {
+            #     const audio = document.querySelector("#custom-audio-1 audio");
+            #     if (audio) audio.play();
+            # };
+            # document.getElementById("pause_btn_1").onclick = () => {
+            #     const audio = document.querySelector("#custom-audio-1 audio");
+            #     if (audio) audio.pause();
+            # };
+            # document.getElementById("stop_btn_1").onclick = () => {
+            #     const audio = document.querySelector("#custom-audio-1 audio");
+            #     if (audio) {
+            #         audio.pause();
+            #         audio.currentTime = 0;
+            #     }
+            # };
+            # </script>
+            # """)       
+        # # Ongoing
+        # gr.HTML("""
+        # <script>
+        # setTimeout(() => {
+        #     const audio1 = document.querySelector('#custom-audio-1 audio');
+        #     console.log("Audio 1 exists?", !!audio1);
+        # }, 500);
+        # </script>
+        # """)   
            
     with gr.Row() as button_row:
         # Yonghyun
@@ -1259,6 +1263,16 @@ def build_single_model_ui(models, add_promotion_links=False):
         audio_path_2 = "./mock_data/audio/classical_piece_2.wav"
         return f"<script>checkAudioLoaded();</script>"
 
+    gr.HTML('''
+        <style>
+        #lyrics_row {
+            display: flex;
+            align-items: center;
+            gap: 6px;
+            margin-bottom: 4px;
+        }
+        </style>'''
+    )
     with gr.Row(elem_id="lyrics_row"):
         with gr.Column(scale=1, min_width=120):
             checkbox = gr.Checkbox(label="Lyric Music?")
@@ -1268,8 +1282,8 @@ def build_single_model_ui(models, add_promotion_links=False):
                 visible=False,
                 interactive=True
             )
-        with gr.Column(scale=6, min_width=300):
-            textbox = gr.Textbox(
+        with gr.Column(scale=5, min_width=300):
+            lyric_textbox = gr.Textbox(
                 show_label=False,
                 placeholder="🎤 Write your own lyrics!",
                 elem_id="input_box",
@@ -1280,8 +1294,9 @@ def build_single_model_ui(models, add_promotion_links=False):
         checkbox.change(
             fn=toggle_lyrics_box,
             inputs=checkbox,
-            outputs=[textbox, lyrics_surprise_me_btn],
+            outputs=[lyric_textbox, lyrics_surprise_me_btn],
         )
+        
     
     with gr.Row():
         textbox = gr.Textbox(
@@ -1469,12 +1484,24 @@ def build_single_model_ui(models, add_promotion_links=False):
         None,
         [model_a_label, model_b_label]
     )
-
-    surprise_me_btn.click(
-        lambda: ("./mock_data/audio/classical_piece_1.wav", "./mock_data/audio/classical_piece_2.wav"),
-        None,
-        [music_player_1, music_player_2]
+    
+    lyrics_surprise_me_btn.click(
+        fn=get_random_lyrics_block,
+        inputs=None,
+        outputs=[lyric_textbox],
     )
+    
+    surprise_me_btn.click(
+        fn=lambda: "Classical Piano Music",
+        inputs=None,
+        outputs=[textbox],
+    )
+
+    # surprise_me_btn.click(
+    #     lambda: ("./mock_data/audio/classical_piece_1.wav", "./mock_data/audio/classical_piece_2.wav"),
+    #     None,
+    #     [music_player_1, music_player_2]
+    # )
 
     new_round_btn.click(
         clear_history,
