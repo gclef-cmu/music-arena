@@ -35,6 +35,7 @@ python -m frontend.gradio_web_server --controller-url http://0.0.0.0:21001 --sha
 
 4. Build and start the containers:
    ```
+   cd server
    docker-compose up -d
    ```
 
