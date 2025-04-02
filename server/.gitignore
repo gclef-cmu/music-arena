@@ -175,3 +175,4 @@ cython_debug/
 
 # Custom files
 *firebase_config.json*
+test_output/

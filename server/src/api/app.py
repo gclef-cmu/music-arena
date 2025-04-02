@@ -258,13 +258,11 @@ class FastAPIApp:
                 # Prepare response with Base64 encoded audio data
                 audio_item_1 = AudioItem(
                     **metadata_1,
-                    audioUrl=url_1,
                     audioDataBase64=base64.b64encode(response_1.audio_data).decode('utf-8')
                 )
                 
                 audio_item_2 = AudioItem(
                     **metadata_2,
-                    audioUrl=url_2,
                     audioDataBase64=base64.b64encode(response_2.audio_data).decode('utf-8')
                 )
                 

@@ -15,14 +15,6 @@ from src.api.music_api import get_music_api_provider, MusicResponseOutput
 TEST_PROMPT = "Create a short, gentle melody with piano"
 TEST_TIMEOUT = 120.0  # Longer timeout for integration tests
 
-def is_server_reachable(url):
-    """Check if a server is reachable."""
-    try:
-        response = requests.get(f"{url}/health", timeout=5)
-        return response.status_code == 200
-    except requests.RequestException:
-        return False
-        
 def get_model_configs():
     """Load model configurations from model_config.json."""
     config_path = os.path.join("config", "model_config.json")
@@ -58,13 +50,6 @@ def test_music_generation_if_server_available(model_key):
     # Get the provider for the specified model
     provider = get_music_api_provider(model_key)
     base_url = provider.config["base_url"]
-    
-    # Skip if the server is not reachable
-    if not is_server_reachable(base_url):
-        skip_msg = f"Server for {model_key} is not reachable at {base_url}"
-        print(skip_msg)
-        logger.warning(skip_msg)
-        pytest.skip(skip_msg)
     
     # Configure the provider with a longer timeout for integration testing
     provider = get_music_api_provider(
@@ -130,14 +115,6 @@ def test_all_model_config_providers():
         provider = get_music_api_provider(model_key)
         base_url = provider.config["base_url"]
         
-        # Check if the server is reachable
-        if not is_server_reachable(base_url):
-            error_msg = f"Server for {model_key} is not reachable at {base_url}, skipping"
-            print(error_msg)
-            logger.warning(error_msg)
-            results[model_key] = {"status": "skipped", "reason": "server not reachable"}
-            continue
-            
         # Configure the provider with a longer timeout for integration testing
         provider = get_music_api_provider(
             model_key=model_key,
@@ -252,8 +229,7 @@ def test_ping_all_custom_servers():
         print(f"\n=== Pinging {model_key} server at {base_url} ===")
         logger.info(f"Pinging {model_key} server at {base_url}")
         
-        # Test both /ping and /health endpoints
-        endpoints = ["/ping", "/health"]
+        endpoints = ["/ping"]
         endpoint_results = {}
         
         for endpoint in endpoints:

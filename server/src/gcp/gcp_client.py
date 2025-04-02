@@ -34,7 +34,7 @@ class GCPClient:
             destination_blob_name: Path within the bucket to store the file
             
         Returns:
-            Public URL of the uploaded file
+            GCS URI of the uploaded file
         """
         try:
             bucket = self.storage_client.bucket(bucket_name)
@@ -45,11 +45,9 @@ class GCPClient:
             
             logger.info(f"File uploaded to gs://{bucket_name}/{destination_blob_name}")
             
-            # Make the blob publicly readable (optional)
-            blob.make_public()
-            
-            # Return the public URL
-            return blob.public_url
+            # Return the GCS URI
+            return f"gs://{bucket_name}/{destination_blob_name}"
+
         except Exception as e:
             logger.error(f"Error uploading file to GCS: {str(e)}")
             raise
