@@ -8,7 +8,7 @@ python -m frontend.gradio_web_server --controller-url http://0.0.0.0:21001 --sha
 
 """
 TODO
-- Debug the code (Music Retrieving Process Doesn't work & Bug after pressing SEND button)
+- Debug the code (Bug after pressing SEND button)
 - Connect with the Wayne's backend
 - Implement the support for lyrics conditioning on the frontend? The UI components should look like:
     Prompt: text box
@@ -48,7 +48,7 @@ from frontend.constants import (
     SURVEY_LINK,
 )
 
-# from model.model_adapter import get_conversation_template
+from model.model_adapter import get_conversation_template
 from model.model_registry import get_model_info, model_info
 
 #MUSICARENA (Previous version; TODO) 
@@ -148,6 +148,7 @@ def on_play_a():
 def on_play_b():
     global b_start_time
     b_start_time = time.time()
+    print(f"b_start_time: {b_start_time}")
 
 
 def on_pause_a():
@@ -161,6 +162,7 @@ def on_pause_b():
     global b_start_time, b_listen_time
     if b_start_time:
         b_listen_time += time.time() - b_start_time
+        print(f"b_listen_time: {a_listen_time}")
         b_start_time = None 
 
 logger = build_logger("gradio_web_server", "gradio_web_server.log")
@@ -229,7 +231,7 @@ ARENA_TYPE = ArenaType.TXT2MUSIC #ArenaType.TXT2MUSIC # ArenaType.TEXT
 # (Yonghyun) Class for managing chatting session
 class State:
     def __init__(self, model_name, arena_type=ARENA_TYPE, metadata=None):
-        self.conv = None # get_conversation_template(model_name) # 현재 체팅 세션의 대화 기록 저장
+        self.conv = get_conversation_template(model_name) # 현재 체팅 세션의 대화 기록 저장
         self.conv_id = uuid.uuid4().hex
         self.skip_next = False
         self.model_name = model_name
@@ -293,6 +295,65 @@ class State:
     #         )
 
     #     return base
+
+# BACKEND
+def generate_audio_pair(prompt: str, user_id: str):
+    payload = {
+        "prompt": prompt,
+        "user_id": user_id,
+        "seed": 42
+    }
+
+    response = requests.post("http://localhost:12000/generate_audio_pair", json=payload)
+
+    if response.status_code == 200:
+        return response.json()  # AudioPairResponse Format
+    else:
+        print("Error:", response.status_code, response.text)
+        
+def send_vote(pair_id: str, user_id: str, winning_model: str):
+    payload = {
+        "pair_id": pair_id,
+        "user_id": user_id,
+        "winning_model": winning_model
+    }
+
+    response = requests.post("http://localhost:12000/record_vote", json=payload)
+
+    if response.ok:
+        print("Vote recorded!")
+    else:
+        print("Failed to record vote:", response.status_code, response.text)
+
+def call_backend_and_get_music(prompt, user_id="test_user", seed=42):
+    payload = {
+        "prompt": prompt,
+        "user_id": user_id,
+        "seed": seed
+    }
+
+    try:
+        res = requests.post("http://localhost:12000/generate_audio_pair", json=payload)
+        res.raise_for_status()
+        response_json = res.json()
+
+        audio_1_base64 = response_json["audioItems"][0]["audioDataBase64"]
+        audio_2_base64 = response_json["audioItems"][1]["audioDataBase64"]
+        model_a = response_json["audioItems"][0]["model"]
+        model_b = response_json["audioItems"][1]["model"]
+        pair_id = response_json["pairId"]
+
+        return (
+            pair_id,
+            audio_1_base64,
+            audio_2_base64,
+            f"**Model A: {model_a}**",
+            f"**Model B: {model_b}**"
+        )
+
+    except Exception as e:
+        print(f"Error calling backend: {e}")
+        return None, None, None, "Model A: Error", "Model B: Error"
 
 
 def set_global_vars(
@@ -398,6 +459,7 @@ def load_demo_single(context: Context, query_params):
 def load_demo(url_params, request: gr.Request):
     global models
 
+    print(f"load_demo executed: {load_demo}")
     ip = get_ip(request)
     logger.info(f"load_demo. ip: {ip}. params: {url_params}") # ip: 143.215.16.196. params: {}
 
@@ -549,33 +611,33 @@ def add_text(state, model_selector, text, request: gr.Request):
     ip = get_ip(request)
     logger.info(f"add_text. ip: {ip}. len: {len(text)}")
 
-    # if state is None:
-    #     state = State(model_selector)
+    if state is None:
+        state = State(model_selector)
 
-    # if len(text) <= 0:
-    #     state.skip_next = True
-    #     return (state, state.to_gradio_chatbot(), "", None) + (no_change_btn,) * 5
+    if len(text) <= 0:
+        state.skip_next = True
+        return (state, state.to_gradio_chatbot(), "", None) + (no_change_btn,) * 5
 
-    # all_conv_text = state.conv.get_prompt()
-    # all_conv_text = all_conv_text[-2000:] + "\nuser: " + text
-    # flagged = moderation_filter(all_conv_text, [state.model_name])
-    # # flagged = moderation_filter(text, [state.model_name])
-    # if flagged:
-    #     logger.info(f"violate moderation. ip: {ip}. text: {text}")
-    #     # overwrite the original text
-    #     text = MODERATION_MSG
+    all_conv_text = state.conv.get_prompt()
+    all_conv_text = all_conv_text[-2000:] + "\nuser: " + text
+    flagged = moderation_filter(all_conv_text, [state.model_name])
+    # flagged = moderation_filter(text, [state.model_name])
+    if flagged:
+        logger.info(f"violate moderation. ip: {ip}. text: {text}")
+        # overwrite the original text
+        text = MODERATION_MSG
 
-    # if (len(state.conv.messages) - state.conv.offset) // 2 >= CONVERSATION_TURN_LIMIT:
-    #     logger.info(f"conversation turn limit. ip: {ip}. text: {text}")
-    #     state.skip_next = True
-    #     return (state, state.to_gradio_chatbot(), CONVERSATION_LIMIT_MSG, None) + (
-    #         no_change_btn,
-    #     ) * 5
+    if (len(state.conv.messages) - state.conv.offset) // 2 >= CONVERSATION_TURN_LIMIT:
+        logger.info(f"conversation turn limit. ip: {ip}. text: {text}")
+        state.skip_next = True
+        return (state, state.to_gradio_chatbot(), CONVERSATION_LIMIT_MSG, None) + (
+            no_change_btn,
+        ) * 5
 
     text = text[:INPUT_CHAR_LEN_LIMIT]  # Hard cut-off
-    # state.conv.append_message(state.conv.roles[0], text)
-    # state.conv.append_message(state.conv.roles[1], None)
-    return None #(state, state.to_gradio_chatbot(), "") + (disable_btn,) * 5
+    state.conv.append_message(state.conv.roles[0], text)
+    state.conv.append_message(state.conv.roles[1], None)
+    return (state, state.to_gradio_chatbot(), "") + (disable_btn,) * 5
 
 
 def model_worker_stream_iter(
@@ -634,28 +696,28 @@ def is_limit_reached(model_name, ip):
         return None
 
 
-MUSIC_DB_PATH = "fastchat/music_db/"
-MUSIC_MAP_FILE = "fastchat/music_db/music_db.json"
+# MUSIC_DB_PATH = "music-arena/mock_data/audio/"
+# MUSIC_MAP_FILE = "music-arena/mock_data/audio/music_db.json"
 
-def load_music_db():
-    '''Load a predefiend music database from a JSON file.'''
-    if os.path.exists(MUSIC_MAP_FILE):
-        with open(MUSIC_MAP_FILE, "r") as f:
-            return json.load(f)
-    return {}
+# def load_music_db():
+#     '''Load a predefiend music database from a JSON file.'''
+#     if os.path.exists(MUSIC_MAP_FILE):
+#         with open(MUSIC_MAP_FILE, "r") as f:
+#             return json.load(f)
+#     return {}
 
 
-def find_music_file(user_text):
-    '''Match user input with a music file in the database.'''
-    MUSIC_DB = load_music_db()
-    for keyword, filename in MUSIC_DB.items():
-        if keyword.lower() in user_text.lower():
-            file_path = os.path.join(MUSIC_DB_PATH, filename)
-            if os.path.exists(file_path):
-                return file_path
-            else:
-                logger.warning(f"⚠️ Music file '{file_path}' doens't exist.")
-    return None
+# def find_music_file(user_text):
+#     '''Match user input with a music file in the database.'''
+#     MUSIC_DB = load_music_db()
+#     for keyword, filename in MUSIC_DB.items():
+#         if keyword.lower() in user_text.lower():
+#             file_path = os.path.join(MUSIC_DB_PATH, filename)
+#             if os.path.exists(file_path):
+#                 return file_path
+#             else:
+#                 logger.warning(f"⚠️ Music file '{file_path}' doens't exist.")
+#     return None
 
 
 def bot_response(
@@ -1291,8 +1353,8 @@ def build_single_model_ui(models, add_promotion_links=False):
         outputs=[state, music_player_1, music_player_2, textbox]
     ).then( # Retrieve the specific music 
         fn=lambda: (
-            "./mock_data/audio/classical_piece_1.wav",
-            "./mock_data/audio/classical_piece_2.wav",
+            "./mock_data/audio/classical_piece_1.mp3",
+            "./mock_data/audio/classical_piece_2.mp3",
         ),
         inputs=None,
         outputs=[music_player_1, music_player_2]
@@ -1307,6 +1369,32 @@ def build_single_model_ui(models, add_promotion_links=False):
         outputs=[a_better_btn, b_better_btn, tie_btn, both_bad_btn,
                     new_round_btn, regenerate_btn, share_btn])
 
+    # # BACKEND
+    # send_btn.click(
+    #     fn=add_text,
+    #     inputs=[state, model_selector, textbox],
+    #     outputs=[state, textbox, textbox, textbox]
+    # ).then(
+    #     fn=lambda prompt: call_backend_and_get_music(prompt),
+    #     inputs=[textbox],
+    #     outputs=[
+    #         gr.State(),
+    #         music_player_1,
+    #         music_player_2,
+    #         model_a_label,
+    #         model_b_label
+    #     ]
+    # ).then(
+    #     fn=lambda: [gr.update(interactive=True)] * 10,
+    #     inputs=None,
+    #     outputs=[play_btn1, pause_btn1, stop_btn1, forward_btn1, backward_btn1,
+    #             play_btn2, pause_btn2, stop_btn2, forward_btn2, backward_btn2]
+    # ).then(
+    #     fn=lambda: [gr.update(interactive=True)] * 7,
+    #     inputs=None,
+    #     outputs=[a_better_btn, b_better_btn, tie_btn, both_bad_btn,
+    #             new_round_btn, regenerate_btn, share_btn]
+    # )
 
 
     return [state, model_selector]

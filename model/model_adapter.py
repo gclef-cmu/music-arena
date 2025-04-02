@@ -16,16 +16,18 @@ else:
 
 import psutil
 import torch
-# from transformers import (
-#     AutoConfig,
-#     AutoModel,
-#     AutoModelForCausalLM,
-#     AutoModelForSeq2SeqLM,
-#     AutoTokenizer,
-#     LlamaTokenizer,
-#     LlamaForCausalLM,
-#     T5Tokenizer,
-# )
+from transformers import (
+    AutoConfig,
+    AutoModel,
+    AutoModelForCausalLM,
+    AutoModelForSeq2SeqLM,
+    AutoTokenizer,
+    LlamaTokenizer,
+    LlamaForCausalLM,
+    T5Tokenizer,
+)
+
+from frontend.conversation import Conversation
 
 class BaseModelAdapter:
     """The base and the default model adapter."""
@@ -75,6 +77,8 @@ class BaseModelAdapter:
 
     def get_default_conv_template(self, model_path: str) -> Conversation:
         return get_conv_template("one_shot")
+
+model_adapters: List[BaseModelAdapter] = []
 
 @cache
 def get_model_adapter(model_path: str) -> BaseModelAdapter:
