@@ -1035,6 +1035,11 @@ We also thank [UC Berkeley SkyLab](https://sky.cs.berkeley.edu/), [a16z](https:/
 """
     gr.Markdown(about_markdown, elem_id="about_markdown")
 
+def toggle_lyrics_box(show_lyrics):
+    return (
+        gr.update(visible=show_lyrics),
+        gr.update(visible=show_lyrics),
+    )
 
 def build_single_model_ui(models, add_promotion_links=False):
     promotion = (
@@ -1088,8 +1093,34 @@ def build_single_model_ui(models, add_promotion_links=False):
 
         def on_play():
             print("Audio started playing.")
+        
 
         with gr.Blocks(css=custom_css) as music_player:
+            
+            # html_audio = gr.HTML("""
+            # <audio id="audio1" src="audio_path.wav"></audio>
+
+            # <script>
+            # function playAudio() {
+            #     const audio = document.getElementById("audio1");
+            #     audio.play();
+            # }
+            # function pauseAudio() {
+            #     const audio = document.getElementById("audio1");
+            #     audio.pause();
+            # }
+            # function stopAudio() {
+            #     const audio = document.getElementById("audio1");
+            #     audio.pause();
+            #     audio.currentTime = 0;
+            # }
+            # </script>
+            # """)
+            # with gr.Row():
+            #     gr.HTML('<button onclick="playAudio()">▶️ Play</button>')
+            #     gr.HTML('<button onclick="pauseAudio()">⏸️ Pause</button>')
+            #     gr.HTML('<button onclick="stopAudio()">⏹️ Stop</button>')
+                        
             with gr.Row():
                 # Left Audio Player w/ Controls
                 with gr.Column():
@@ -1097,10 +1128,10 @@ def build_single_model_ui(models, add_promotion_links=False):
                     gr.WaveformOptions(show_recording_waveform=False)
                     music_player_1 = gr.Audio(label="Generated Music 1", interactive=False, 
                                                 elem_id="custom-audio-1", show_download_button=False,
-                                                show_share_button=False)
-                    music_player_1.play(on_play_a)
-                    music_player_1.pause(on_pause_a)
-                    music_player_1.stop(on_pause_a)
+                                                show_share_button=False, visible=True)
+                    # music_player_1.play(on_play_a)
+                    # music_player_1.pause(on_pause_a)
+                    # music_player_1.stop(on_pause_a)
                     with gr.Row():
                         play_btn1 = gr.Button("▶️ Play", elem_id="play_btn_1", interactive=False)
                         pause_btn1 = gr.Button("⏸️ Pause", elem_id="pause_btn_1", interactive=False)
@@ -1110,7 +1141,9 @@ def build_single_model_ui(models, add_promotion_links=False):
 
                 # Right Audio Player w/ Controls
                 with gr.Column():
-                    music_player_2 = gr.Audio(label="Generated Music 2", interactive=False, elem_id="custom-audio-2")
+                    music_player_2 = gr.Audio(label="Generated Music 2", interactive=False, 
+                                              elem_id="custom-audio-2", show_download_button=False,
+                                              show_share_button=False, visible=True)
                     music_player_2.play(on_play_b)
                     music_player_2.pause(on_pause_b)
                     music_player_2.stop(on_pause_b)
@@ -1125,6 +1158,44 @@ def build_single_model_ui(models, add_promotion_links=False):
                 model_a_label = gr.Markdown("**Model A: Unknown**", visible=False)
                 model_b_label = gr.Markdown("**Model B: Unknown**", visible=False)
 
+                gr.HTML("""
+                <style>
+                #lyrics_row {
+                    display: flex;
+                    align-items: center;
+                    gap: 12px;
+                    margin-bottom: 8px;
+                }
+                </style>
+                <script>
+                document.getElementById("play_btn_1").onclick = () => {
+                    const audio = document.querySelector("#custom-audio-1 audio");
+                    if (audio) audio.play();
+                };
+                document.getElementById("pause_btn_1").onclick = () => {
+                    const audio = document.querySelector("#custom-audio-1 audio");
+                    if (audio) audio.pause();
+                };
+                document.getElementById("stop_btn_1").onclick = () => {
+                    const audio = document.querySelector("#custom-audio-1 audio");
+                    if (audio) {
+                        audio.pause();
+                        audio.currentTime = 0;
+                    }
+                };
+                </script>
+                """)
+          
+        # Ongoing
+        gr.HTML("""
+        <script>
+        setTimeout(() => {
+            const audio1 = document.querySelector('#custom-audio-1 audio');
+            console.log("Audio 1 exists?", !!audio1);
+        }, 500);
+        </script>
+        """)   
+           
     with gr.Row() as button_row:
         # Yonghyun
         a_better_btn = gr.Button(value="👈 A is better", interactive=False)
@@ -1188,6 +1259,30 @@ def build_single_model_ui(models, add_promotion_links=False):
         audio_path_2 = "./mock_data/audio/classical_piece_2.wav"
         return f"<script>checkAudioLoaded();</script>"
 
+    with gr.Row(elem_id="lyrics_row"):
+        with gr.Column(scale=1, min_width=120):
+            checkbox = gr.Checkbox(label="Lyric Music?")
+        with gr.Column(scale=2, min_width=150):
+            lyrics_surprise_me_btn = gr.Button(
+                value="🔮 Surprise me", 
+                visible=False,
+                interactive=True
+            )
+        with gr.Column(scale=6, min_width=300):
+            textbox = gr.Textbox(
+                show_label=False,
+                placeholder="🎤 Write your own lyrics!",
+                elem_id="input_box",
+                visible=False,
+                interactive=True
+            )
+
+        checkbox.change(
+            fn=toggle_lyrics_box,
+            inputs=checkbox,
+            outputs=[textbox, lyrics_surprise_me_btn],
+        )
+    
     with gr.Row():
         textbox = gr.Textbox(
             show_label=False,
@@ -1233,6 +1328,62 @@ def build_single_model_ui(models, add_promotion_links=False):
 
     if add_promotion_links: None
     
+    gr.HTML("""
+    <script>
+    
+    function getAudioById(id) {
+        const wrapper = document.getElementById(id);
+        return wrapper ? wrapper.querySelector("audio") : null;
+    }
+
+    function playAudio(id) {
+        const audio = getAudioById(id);
+        if (audio) audio.play();
+    }
+
+    function pauseAudio(id) {
+        const audio = getAudioById(id);
+        if (audio) audio.pause();
+    }
+
+    function stopAudio(id) {
+        const audio = getAudioById(id);
+        if (audio) {
+            audio.pause();
+            audio.currentTime = 0;
+        }
+    }
+
+    function forwardAudio(id) {
+        const audio = getAudioById(id);
+        if (audio) audio.currentTime += 10;
+    }
+
+    function backwardAudio(id) {
+        const audio = getAudioById(id);
+        if (audio) audio.currentTime -= 10;
+    }
+    </script>
+    """)
+
+    button_js_pairs = [
+        (play_btn1, "playAudio('custom-audio-1')"),
+        (pause_btn1, "pauseAudio('custom-audio-1')"),
+        (stop_btn1, "stopAudio('custom-audio-1')"),
+        (forward_btn1, "forwardAudio('custom-audio-1')"),
+        (backward_btn1, "backwardAudio('custom-audio-1')"),
+        (play_btn2, "playAudio('custom-audio-2')"),
+        (pause_btn2, "pauseAudio('custom-audio-2')"),
+        (stop_btn2, "stopAudio('custom-audio-2')"),
+        (forward_btn2, "forwardAudio('custom-audio-2')"),
+        (backward_btn2, "backwardAudio('custom-audio-2')")
+    ]
+
+    for button, js_code in button_js_pairs:
+        button.click(None, None, [], js=f"() => {js_code}")
+        
+        
+        
     vote_buttons = [a_better_btn, b_better_btn, tie_btn, both_bad_btn]
 
     a_better_btn.click(
@@ -1346,7 +1497,31 @@ def build_single_model_ui(models, add_promotion_links=False):
         None,
         [textbox]
     )
+    
+    play_btn1.click(None, None, [], js="""
+    () => {
+        setTimeout(() => {
+            const audio = document.querySelector('#custom-audio-1 audio');
+            if (audio) audio.play();
+        }, 200);
+    }
+    """)
+    pause_btn1.click(None, None, [], js="() => { const audio = document.querySelector('#custom-audio-1 audio'); if (audio) audio.pause(); }")
+    stop_btn1.click(None, None, [], js="() => { const audio = document.querySelector('#custom-audio-1 audio'); if (audio) { audio.pause(); audio.currentTime = 0; } }")
 
+
+    # play_btn1.click(
+    #     lambda: """
+    #         const audioPlayer = document.getElementById("custom-audio-1");
+    #         if (audioPlayer) {
+    #             audioPlayer.play();
+    #         }
+    #     """,
+    #     inputs=None,
+    #     outputs=None
+    # )
+    
+    # Original
     send_btn.click(
         fn=add_text,
         inputs=[state, model_selector, textbox],
@@ -1370,6 +1545,19 @@ def build_single_model_ui(models, add_promotion_links=False):
                     new_round_btn, regenerate_btn, share_btn])
 
     # # BACKEND
+    # send_btn.click(
+    #     fn=lambda prompt: call_backend_and_get_music(prompt),
+    #     inputs=[textbox],
+    #     outputs=[
+    #         gr.State(),         # pair_id
+    #         music_player_1,     # audioDataBase64 -> decoded
+    #         music_player_2,
+    #         model_a_label,
+    #         model_b_label
+    #     ]
+    # )
+
+    
     # send_btn.click(
     #     fn=add_text,
     #     inputs=[state, model_selector, textbox],
