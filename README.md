@@ -2,6 +2,14 @@
 
 A FastAPI server that handles JSON uploads to Firebase and audio file uploads to Google Cloud Storage.
 
+## Front-End
+The main part of the front end is located in the 'frontend/gradio_web_server.py'.
+
+The following command will make the front end sharable in public.
+```
+python -m frontend.gradio_web_server --controller-url http://0.0.0.0:21001 --share
+```
+
 ## Setup
 
 ### Using Docker (Recommended)
