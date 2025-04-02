@@ -296,7 +296,7 @@ class State:
 
     #     return base
 
-# BACKEND
+# BACKEND (START)
 def generate_audio_pair(prompt: str, user_id: str):
     payload = {
         "prompt": prompt,
@@ -354,7 +354,7 @@ def call_backend_and_get_music(prompt, user_id="test_user", seed=42):
     except Exception as e:
         print(f"Error calling backend: {e}")
         return None, None, None, "Model A: Error", "Model B: Error"
-
+# BACKEND (END)
 
 def set_global_vars(
     controller_url_,
@@ -1206,12 +1206,7 @@ def build_single_model_ui(models, add_promotion_links=False):
         b_better_btn = gr.Button(value="👉 B is better", interactive=False)
         tie_btn = gr.Button(value="🤝 Tie", interactive=False)
         both_bad_btn = gr.Button(value="👎 Both are bad", interactive=False)
-        # upvote_btn = gr.Button(value="👍  Upvote", interactive=False)
-        # downvote_btn = gr.Button(value="👎  Downvote", interactive=False)
-        # flag_btn = gr.Button(value="⚠️  Flag", interactive=False)
-        # regenerate_btn = gr.Button(value="🔄  Regenerate", interactive=False)
-        # clear_btn = gr.Button(value="🗑️  Clear history", interactive=False)
-        
+  
     html_code = """
     <div id="audio-container">
         <audio id="audio-player-1" controls></audio>
