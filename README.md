@@ -10,7 +10,7 @@ To make the front end publicly accessible, run the following command:
 python -m frontend.gradio_web_server --controller-url http://0.0.0.0:21001 --share
 ```
 
-## Setup
+## Back-End Setup
 
 ### Using Docker (Recommended)
 
