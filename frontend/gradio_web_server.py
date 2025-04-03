@@ -8,13 +8,8 @@ python -m frontend.gradio_web_server --controller-url http://0.0.0.0:21001 --sha
 
 """
 TODO
-- Debug the code (Bug after pressing SEND button)
+- AudioPlayer with only button appears (Hiding gradio.Audio() module)
 - Connect with the Wayne's backend
-- Implement the support for lyrics conditioning on the frontend? The UI components should look like:
-    Prompt: text box
-    Instrumental-only: check box, checked by default
-    Lyrics: text box, prepopulated w/ ghost text that says "Surprise me!", indicating that the system will come up with lyrics when unspecified
-   (Professor will incorporate YuE (a recent open weights model w/ lyrics conditioning) into the backend so have something to test it out with.)
 """
 
 import argparse
@@ -31,6 +26,9 @@ from typing import List, Dict
 
 import gradio as gr
 import requests
+
+import base64
+from io import BytesIO
 
 from functools import partial
 
@@ -139,6 +137,12 @@ a_start_time = None
 b_start_time = None
 a_listen_time = 0
 b_listen_time = 0
+
+def enable_vote_buttons_if_ready():
+    global a_listen_time, b_listen_time
+    if a_listen_time >= 5.0 and b_listen_time >= 5.0:
+        return [gr.update(interactive=True)] * 4
+    return [gr.update(interactive=False)] * 4
 
 def on_play_a():
     global a_start_time
@@ -298,11 +302,13 @@ class State:
 
 # BACKEND (START)
 def generate_audio_pair(prompt: str, user_id: str):
+    # Referred to server/api/models.py
     payload = {
         "prompt": prompt,
-        "user_id": user_id,
-        "seed": 42
+        "userId": user_id, 
+        "seed": seed
     }
+
 
     response = requests.post("http://localhost:12000/generate_audio_pair", json=payload)
 
@@ -313,9 +319,9 @@ def generate_audio_pair(prompt: str, user_id: str):
         
 def send_vote(pair_id: str, user_id: str, winning_model: str):
     payload = {
-        "pair_id": pair_id,
-        "user_id": user_id,
-        "winning_model": winning_model
+        "pairId": pair_id,
+        "userId": user_id,
+        "winningModel": winning_model
     }
 
     response = requests.post("http://localhost:12000/record_vote", json=payload)
@@ -325,10 +331,13 @@ def send_vote(pair_id: str, user_id: str, winning_model: str):
     else:
         print("Failed to record vote:", response.status_code, response.text)
 
+def decode_base64_audio(audio_base64: str):
+    return BytesIO(base64.b64decode(audio_base64))
+
 def call_backend_and_get_music(prompt, user_id="test_user", seed=42):
     payload = {
         "prompt": prompt,
-        "user_id": user_id,
+        "userId": user_id,
         "seed": seed
     }
 
@@ -343,10 +352,13 @@ def call_backend_and_get_music(prompt, user_id="test_user", seed=42):
         model_b = response_json["audioItems"][1]["model"]
         pair_id = response_json["pairId"]
 
+        audio_1 = decode_base64_audio(audio_1_base64)
+        audio_2 = decode_base64_audio(audio_2_base64)
+
         return (
             pair_id,
-            audio_1_base64,
-            audio_2_base64,
+            audio_1,
+            audio_2,
             f"**Model A: {model_a}**",
             f"**Model B: {model_b}**"
         )
@@ -354,6 +366,7 @@ def call_backend_and_get_music(prompt, user_id="test_user", seed=42):
     except Exception as e:
         print(f"Error calling backend: {e}")
         return None, None, None, "Model A: Error", "Model B: Error"
+    
 # BACKEND (END)
 
 def set_global_vars(
@@ -1142,9 +1155,9 @@ def build_single_model_ui(models, add_promotion_links=False):
                     music_player_1 = gr.Audio(label="Generated Music 1", interactive=False, 
                                                 elem_id="custom-audio-1", show_download_button=False,
                                                 show_share_button=False, visible=True)
-                    music_player_1.play(on_play_a)
-                    music_player_1.pause(on_pause_a)
-                    music_player_1.stop(on_pause_a)
+
+                    # music_player_1.pause(on_pause_a)
+                    # music_player_1.stop(on_pause_a)
                     with gr.Row():
                         play_btn1 = gr.Button("▶️ Play", elem_id="play_btn_1", interactive=False)
                         pause_btn1 = gr.Button("⏸️ Pause", elem_id="pause_btn_1", interactive=False)
@@ -1157,9 +1170,8 @@ def build_single_model_ui(models, add_promotion_links=False):
                     music_player_2 = gr.Audio(label="Generated Music 2", interactive=False, 
                                               elem_id="custom-audio-2", show_download_button=False,
                                               show_share_button=False, visible=True)
-                    music_player_2.play(on_play_b)
-                    music_player_2.pause(on_pause_b)
-                    music_player_2.stop(on_pause_b)
+                    # music_player_2.pause(on_pause_b)
+                    # music_player_2.stop(on_pause_b)
                     with gr.Row():
                         play_btn2 = gr.Button("▶️ Play", elem_id="play_btn_2", interactive=False)
                         pause_btn2 = gr.Button("⏸️ Pause", elem_id="pause_btn_2", interactive=False)
@@ -1206,7 +1218,14 @@ def build_single_model_ui(models, add_promotion_links=False):
         b_better_btn = gr.Button(value="👉 B is better", interactive=False)
         tie_btn = gr.Button(value="🤝 Tie", interactive=False)
         both_bad_btn = gr.Button(value="👎 Both are bad", interactive=False)
-  
+        
+        music_player_1.play(on_play_a)
+        music_player_1.pause(lambda: enable_vote_buttons_if_ready(), outputs=[a_better_btn, b_better_btn, tie_btn, both_bad_btn])
+        music_player_1.stop(lambda: enable_vote_buttons_if_ready(), outputs=[a_better_btn, b_better_btn, tie_btn, both_bad_btn])
+        music_player_2.play(on_play_b)
+        music_player_2.pause(lambda: enable_vote_buttons_if_ready(), outputs=[a_better_btn, b_better_btn, tie_btn, both_bad_btn])
+        music_player_2.stop(lambda: enable_vote_buttons_if_ready(), outputs=[a_better_btn, b_better_btn, tie_btn, both_bad_btn])
+        
     html_code = """
     <div id="audio-container">
         <audio id="audio-player-1" controls></audio>
@@ -1544,27 +1563,56 @@ def build_single_model_ui(models, add_promotion_links=False):
     # )
     
     # Original
+    # send_btn.click(
+    #     fn=add_text,
+    #     inputs=[state, model_selector, textbox],
+    #     outputs=[state, music_player_1, music_player_2, textbox]
+    # ).then( # Retrieve the specific music 
+    #     fn=lambda: (
+    #         "./mock_data/audio/classical_piece_1.mp3",
+    #         "./mock_data/audio/classical_piece_2.mp3",
+    #     ),
+    #     inputs=None,
+    #     outputs=[music_player_1, music_player_2]
+    # ).then( # This will be fixed (Try to make the users can vote after hearing both songs at least @ sconds)
+    #     fn=lambda:[gr.update(interactive=True)] * 10,
+    #     inputs=None, 
+    #     outputs=[play_btn1, pause_btn1, stop_btn1, forward_btn1, backward_btn1,
+    #                 play_btn2, pause_btn2, stop_btn2, forward_btn2, backward_btn2]
+    # ).then(
+    #     fn=lambda:[gr.update(interactive=True)] * 7,
+    #     inputs=None,
+    #     outputs=[a_better_btn, b_better_btn, tie_btn, both_bad_btn,
+    #                 new_round_btn, regenerate_btn, share_btn])
+
+    # Apr 3 (BACKEND)
     send_btn.click(
-        fn=add_text,
-        inputs=[state, model_selector, textbox],
-        outputs=[state, music_player_1, music_player_2, textbox]
-    ).then( # Retrieve the specific music 
-        fn=lambda: (
-            "./mock_data/audio/classical_piece_1.mp3",
-            "./mock_data/audio/classical_piece_2.mp3",
-        ),
-        inputs=None,
-        outputs=[music_player_1, music_player_2]
-    ).then( # This will be fixed (Try to make the users can vote after hearing both songs at least @ sconds)
-        fn=lambda:[gr.update(interactive=True)] * 10,
-        inputs=None, 
-        outputs=[play_btn1, pause_btn1, stop_btn1, forward_btn1, backward_btn1,
-                    play_btn2, pause_btn2, stop_btn2, forward_btn2, backward_btn2]
+        fn=call_backend_and_get_music,
+        inputs=[textbox],
+        outputs=[
+            gr.State(),         # pair_id
+            music_player_1,
+            music_player_2,
+            model_a_label,
+            model_b_label,
+        ]
     ).then(
-        fn=lambda:[gr.update(interactive=True)] * 7,
+        fn=lambda: [gr.update(interactive=False)] * 4,
         inputs=None,
-        outputs=[a_better_btn, b_better_btn, tie_btn, both_bad_btn,
-                    new_round_btn, regenerate_btn, share_btn])
+        outputs=[a_better_btn, b_better_btn, tie_btn, both_bad_btn]
+    ).then(
+        fn=lambda: [gr.update(interactive=True)] * 10,
+        inputs=None,
+        outputs=[
+            play_btn1, pause_btn1, stop_btn1, forward_btn1, backward_btn1,
+            play_btn2, pause_btn2, stop_btn2, forward_btn2, backward_btn2
+        ]
+    ).then(
+        fn=lambda: [gr.update(interactive=True)] * 3,
+        inputs=None,
+        outputs=[new_round_btn, regenerate_btn, share_btn]
+    )
+
 
     # # BACKEND
     # send_btn.click(
