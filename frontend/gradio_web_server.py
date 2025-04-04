@@ -27,6 +27,8 @@ from typing import List, Dict
 import gradio as gr
 import requests
 
+import re
+
 import base64
 from io import BytesIO
 
@@ -306,7 +308,7 @@ def generate_audio_pair(prompt: str, user_id: str):
     }
 
 
-    response = requests.post("http://localhost:12000/generate_audio_pair", json=payload)
+    response = requests.post("http://localhost:12001/generate_audio_pair", json=payload)
 
     if response.status_code == 200:
         return response.json()  # AudioPairResponse Format
@@ -333,12 +335,29 @@ def send_vote(pair_id: str, user_id: str, winning_model: str, losing_model: str,
         print("❌ Failed to record vote:", response.status_code, response.text)
 
 
-def decode_base64_audio(audio_base64: str, filename: str) -> str:
+def sanitize_filename(text):
+    words = re.findall(r'\w+', text)
+    return "_".join(words[:3])
+
+def decode_base64_audio(audio_base64: str, prompt: str, model: str) -> str:
     audio_bytes = base64.b64decode(audio_base64)
-    file_path = f"/tmp/{filename}.mp3"
+
+    timestamp = datetime.datetime.now().strftime("%Y-%m-%d-%H-%M-%S")
+    sanitized_prompt = sanitize_filename(prompt)
+    filename = f"{timestamp}_{sanitized_prompt}_{model}.mp3"
+
+    file_path = f"/tmp/{filename}"
     with open(file_path, "wb") as f:
         f.write(audio_bytes)
+
     return file_path
+
+# def decode_base64_audio(audio_base64: str, filename: str) -> str:
+#     audio_bytes = base64.b64decode(audio_base64)
+#     file_path = f"/tmp/{filename}.mp3"
+#     with open(file_path, "wb") as f:
+#         f.write(audio_bytes)
+#     return file_path
 
 
 def call_backend_and_get_music(prompt, user_id="test_user", seed=42):
@@ -359,8 +378,8 @@ def call_backend_and_get_music(prompt, user_id="test_user", seed=42):
         model_b = response_json["audioItems"][1]["model"]
         pair_id = response_json["pairId"]
 
-        audio_1 = decode_base64_audio(audio_1_base64, "audio1")
-        audio_2 = decode_base64_audio(audio_2_base64, "audio2")
+        audio_1 = decode_base64_audio(audio_1_base64, prompt, model_a)
+        audio_2 = decode_base64_audio(audio_2_base64, prompt, model_b)
 
         return (
             pair_id,
@@ -375,6 +394,14 @@ def call_backend_and_get_music(prompt, user_id="test_user", seed=42):
         return None, None, None, "Model A: Error", "Model B: Error"
     
 # BACKEND (END)
+
+def prepare_download_file(winning_index):
+    if winning_index == 0:
+        return gr.update(value="/tmp/audio1.mp3", visible=True)
+    elif winning_index == 1:
+        return gr.update(value="/tmp/audio2.mp3", visible=True)
+    else:
+        return gr.update(visible=False)
 
 def set_global_vars(
     controller_url_,
@@ -1327,6 +1354,8 @@ def build_single_model_ui(models, add_promotion_links=False):
         # </script>
         # """)   
            
+    download_file = gr.File(label="🎵 Download your voted music!", visible=False)
+
     status_text = gr.Markdown("⚠️ You must listen to at least 5 seconds of each audio before voting is enabled.")
 
     with gr.Row() as button_row:
@@ -1563,7 +1592,12 @@ def build_single_model_ui(models, add_promotion_links=False):
         ),
         [model_a_state, model_b_state],
         [model_a_label, model_b_label]
-    )
+    ).then(
+    fn=lambda: prepare_download_file(0),  # or 1 for b_better, -1 for tie
+    inputs=None,
+    outputs=[download_file]
+)
+
 
     b_better_btn.click(
         b_better_last_response,
@@ -1584,7 +1618,12 @@ def build_single_model_ui(models, add_promotion_links=False):
         ),
         [model_a_state, model_b_state],
         [model_a_label, model_b_label]
-    )
+    ).then(
+    fn=lambda: prepare_download_file(1),
+    inputs=None,
+    outputs=[download_file]
+)
+
 
     tie_btn.click(
         tie_last_response,
@@ -1605,7 +1644,12 @@ def build_single_model_ui(models, add_promotion_links=False):
         ),
         [model_a_state, model_b_state],
         [model_a_label, model_b_label]
-    )
+    ).then(
+    fn=lambda: prepare_download_file(-1),
+    inputs=None,
+    outputs=[download_file]
+)
+
 
     both_bad_btn.click(
         both_bad_last_response,
@@ -1626,7 +1670,12 @@ def build_single_model_ui(models, add_promotion_links=False):
         ),
         [model_a_state, model_b_state],
         [model_a_label, model_b_label]
-    )
+    ).then(
+    fn=lambda: prepare_download_file(-1),
+    inputs=None,
+    outputs=[download_file]
+)
+
     
     lyrics_surprise_me_btn.click(
         fn=get_random_lyrics_block,
