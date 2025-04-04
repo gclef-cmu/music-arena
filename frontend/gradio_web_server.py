@@ -144,6 +144,12 @@ def enable_vote_buttons_if_ready():
         return [gr.update(interactive=True)] * 4
     return [gr.update(interactive=False)] * 4
 
+def update_vote_status(a_listen_time, b_listen_time):
+    if a_listen_time >= 5.0 and b_listen_time >= 5.0:
+        return "✅ You can now vote!"
+    else:
+        return "⚠️ You must listen to at least 5 seconds of each audio before voting is enabled."
+
 def on_play_a():
     global a_start_time
     a_start_time = time.time()
@@ -159,15 +165,20 @@ def on_pause_a():
     global a_start_time, a_listen_time
     if a_start_time:
         a_listen_time += time.time() - a_start_time
-        print(f"a_listen_time: {a_listen_time}")
         a_start_time = None
+    buttons = enable_vote_buttons_if_ready()
+    message = update_vote_status(a_listen_time, b_listen_time)
+    return buttons + [gr.update(value=message)]
 
 def on_pause_b():
     global b_start_time, b_listen_time
     if b_start_time:
         b_listen_time += time.time() - b_start_time
-        print(f"b_listen_time: {a_listen_time}")
-        b_start_time = None 
+        b_start_time = None
+    buttons = enable_vote_buttons_if_ready()
+    message = update_vote_status(a_listen_time, b_listen_time)
+    return buttons + [gr.update(value=message)]
+
 
 logger = build_logger("gradio_web_server", "gradio_web_server.log")
 
@@ -275,30 +286,15 @@ class State:
     # def to_gradio_chatbot(self):
     #     return self.conv.to_gradio_chatbot()
 
-    # def dict(self):
-    #     base = self.conv.dict()
-    #     base.update(
-    #         {
-    #             "conv_id": self.conv_id,
-    #             "model_name": self.model_name,
-    #         }
-    #     )
-
-    #     if self.ans_models:
-    #         base.update(
-    #             {
-    #                 "ans_models": self.ans_models,
-    #             }
-    #         )
-
-    #     if self.router_outputs:
-    #         base.update(
-    #             {
-    #                 "router_outputs": self.router_outputs,
-    #             }
-    #         )
-
-    #     return base
+    def dict(self):
+        base = {
+            "conv_id": self.conv_id,
+            "model_name": self.model_name,
+            "arena_type": self.arena_type,
+            "ans_models": self.ans_models,
+            "router_outputs": self.router_outputs,
+        }
+        return base
 
 # BACKEND (START)
 def generate_audio_pair(prompt: str, user_id: str):
@@ -317,22 +313,33 @@ def generate_audio_pair(prompt: str, user_id: str):
     else:
         print("Error:", response.status_code, response.text)
         
-def send_vote(pair_id: str, user_id: str, winning_model: str):
+def send_vote(pair_id: str, user_id: str, winning_model: str, losing_model: str,
+              winning_audio_id: str, losing_audio_id: str, winning_index: int, prompt: str):
     payload = {
         "pairId": pair_id,
         "userId": user_id,
-        "winningModel": winning_model
+        "winningModel": winning_model,
+        "losingModel": losing_model,
+        "winningAudioId": winning_audio_id,
+        "losingAudioId": losing_audio_id,
+        "winningIndex": winning_index,
+        "prompt": prompt
     }
 
     response = requests.post("http://localhost:12000/record_vote", json=payload)
-
     if response.ok:
-        print("Vote recorded!")
+        print("✅ Vote recorded!")
     else:
-        print("Failed to record vote:", response.status_code, response.text)
+        print("❌ Failed to record vote:", response.status_code, response.text)
 
-def decode_base64_audio(audio_base64: str):
-    return BytesIO(base64.b64decode(audio_base64))
+
+def decode_base64_audio(audio_base64: str, filename: str) -> str:
+    audio_bytes = base64.b64decode(audio_base64)
+    file_path = f"/tmp/{filename}.mp3"
+    with open(file_path, "wb") as f:
+        f.write(audio_bytes)
+    return file_path
+
 
 def call_backend_and_get_music(prompt, user_id="test_user", seed=42):
     payload = {
@@ -352,8 +359,8 @@ def call_backend_and_get_music(prompt, user_id="test_user", seed=42):
         model_b = response_json["audioItems"][1]["model"]
         pair_id = response_json["pairId"]
 
-        audio_1 = decode_base64_audio(audio_1_base64)
-        audio_2 = decode_base64_audio(audio_2_base64)
+        audio_1 = decode_base64_audio(audio_1_base64, "audio1")
+        audio_2 = decode_base64_audio(audio_2_base64, "audio2")
 
         return (
             pair_id,
@@ -393,15 +400,14 @@ def get_model_list(controller_url, register_api_endpoint_file, arena_type):
 
     # Add models from the controller
     if controller_url:
-        print(f"controller_url: {controller_url}") # https://localhost:21001
         ret = requests.post(controller_url + "/refresh_all_workers")
-        print(f"ret (1): {ret}") # <Response [200]>
+        #print(f"ret (1): {ret}") # <Response [200]>
         assert ret.status_code == 200
 
         ret = requests.post(controller_url + "/list_multimodal_models")
         models = ret.json()["models"]
-        print(f"ret (2): {ret}") # <Response [200]>
-        print(f"models: {models}") # []            
+        #print(f"ret (2): {ret}") # <Response [200]>
+        #print(f"models: {models}") # []            
 
     else:
         models = []
@@ -437,8 +443,8 @@ def get_model_list(controller_url, register_api_endpoint_file, arena_type):
     priority = {k: f"___{i:03d}" for i, k in enumerate(model_info)}
     models.sort(key=lambda x: priority.get(x, x))
     visible_models.sort(key=lambda x: priority.get(x, x))
-    logger.info(f"(get_model_list) All models: {models}")
-    logger.info(f"(get_model_list) Visible models: {visible_models}")
+    #logger.info(f"(get_model_list) All models: {models}")
+    #logger.info(f"(get_model_list) Visible models: {visible_models}")
     return visible_models, models
 
 
@@ -446,7 +452,7 @@ def load_demo_single(context: Context, query_params):
     # default to text models
     # logger.info(f"context: {context}")
     if isinstance(context, list):
-        logger.warning("[gradio_web_server.py] ⚠️ Context 객체가 아니라 리스트로 전달됨. 기본 Context 사용")
+        logger.warning("[gradio_web_server.py] ⚠️")
         context = Context()
         
     models = context.music_models # gradio_global_state
@@ -503,42 +509,139 @@ get_conv_log_filename() → Generates a filename for saving the chat conversatio
 'ip': User's IP address
 """
 
-def vote_last_response(state, vote_type, model_selector, request: gr.Request, model_a='musicgen', model_b='riffusionv1'):
+# def vote_last_response(state, vote_type, model_selector, request: gr.Request, model_a='musicgen', model_b='riffusionv1'):
     
+#     global a_listen_time, b_listen_time
+    
+#     ip = get_ip(request)
+    
+#     filename = get_conv_log_filename()
+#     #print(f"[gradio_web_server.py vote_last_response()] filename: {filename}") #  ./txt2music-2025-03-12-conv.json
+    
+#     if "llava" in model_selector:
+#         filename = filename.replace("2024", "vision-tmp-2024")
+
+#     with open(filename, "a") as fout: 
+#         # Append mode - Adds content to the existing file
+#         # Converts vote data to JSON format and appends it to the file
+#         data = {
+#             "tstamp": round(time.time(), 4),
+#             "type": vote_type,
+#             "model": model_selector,
+#             'model_a': model_a,
+#             'model_b': model_b,
+#             'a_listen_time': round(a_listen_time, 2),
+#             'b_listen_time': round(b_listen_time, 2),
+#             "state": state.dict(),
+#             "ip": ip,
+#         }
+#         fout.write(json.dumps(data) + "\n") 
+#     get_remote_logger().log(data) # # Sends the log data remotely for additional monitoring
+
+def vote_last_response(
+    state,
+    vote_type,
+    model_selector,
+    request: gr.Request,
+    model_a='musicgen',
+    model_b='riffusionv1',
+    pair_id=None,
+    audio_id_a=None,
+    audio_id_b=None,
+    prompt=None,
+):
     global a_listen_time, b_listen_time
-    
+
     ip = get_ip(request)
-    
     filename = get_conv_log_filename()
-    #print(f"[gradio_web_server.py vote_last_response()] filename: {filename}") #  ./txt2music-2025-03-12-conv.json
-    
-    if "llava" in model_selector:
-        filename = filename.replace("2024", "vision-tmp-2024")
 
-    with open(filename, "a") as fout: 
-        # Append mode - Adds content to the existing file
-        # Converts vote data to JSON format and appends it to the file
-        data = {
-            "tstamp": round(time.time(), 4),
-            "type": vote_type,
-            "model": model_selector,
-            'model_a': model_a,
-            'model_b': model_b,
-            'a_listen_time': round(a_listen_time, 2),
-            'b_listen_time': round(b_listen_time, 2),
-            "state": state.dict(),
-            "ip": ip,
-        }
-        fout.write(json.dumps(data) + "\n") 
-    get_remote_logger().log(data) # # Sends the log data remotely for additional monitoring
+    if state is None:
+        state = State(model_selector)
+
+    # Determine winning and losing models & audio IDs
+    if vote_type == "a_better":
+        winning_model = model_a
+        losing_model = model_b
+        winning_audio_id = audio_id_a
+        losing_audio_id = audio_id_b
+        winning_index = 0
+    elif vote_type == "b_better":
+        winning_model = model_b
+        losing_model = model_a
+        winning_audio_id = audio_id_b
+        losing_audio_id = audio_id_a
+        winning_index = 1
+    elif vote_type == "tie":
+        winning_model = "tie"
+        losing_model = "tie"
+        winning_audio_id = "tie"
+        losing_audio_id = "tie"
+        winning_index = -1
+    elif vote_type == "both_bad":
+        winning_model = "both_bad"
+        losing_model = "both_bad"
+        winning_audio_id = "both_bad"
+        losing_audio_id = "both_bad"
+        winning_index = -1
+    else:
+        winning_model = None
+        losing_model = None
+        winning_audio_id = None
+        losing_audio_id = None
+        winning_index = -1
+
+    # Send to backend only if we have the required info
+    if pair_id and winning_model and winning_audio_id and prompt is not None:
+        send_vote(
+            pair_id,
+            ip,
+            winning_model,
+            losing_model,
+            winning_audio_id,
+            losing_audio_id,
+            winning_index,
+            prompt,
+        )
+
+    # Local logging
+    data = {
+        "tstamp": round(time.time(), 4),
+        "type": vote_type,
+        "model": model_selector,
+        "model_a": model_a,
+        "model_b": model_b,
+        "a_listen_time": round(a_listen_time, 2),
+        "b_listen_time": round(b_listen_time, 2),
+        "state": state.dict(),
+        "ip": ip,
+        "prompt": prompt,
+        "pair_id": pair_id,
+        "winning_model": winning_model,
+        "losing_model": losing_model,
+        "winning_audio_id": winning_audio_id,
+        "losing_audio_id": losing_audio_id,
+        "winning_index": winning_index,
+    }
+
+    with open(filename, "a") as fout:
+        fout.write(json.dumps(data) + "\n")
+
+    get_remote_logger().log(data)
 
     
-def a_better_last_response(state, model_selector, request: gr.Request):
+def a_better_last_response(state, model_selector, request: gr.Request, model_a, model_b, pair_id, audio_id_a, audio_id_b, current_prompt):
     ip = get_ip(request)
     logger.info(f"a is better. ip: {ip}")
     print(f"DEBUG: a_better_last_response")
-    vote_last_response(state, "a_better", model_selector, request)
-
+    vote_last_response(
+        state, "a_better", model_selector, request,
+        model_a=model_a,
+        model_b=model_b,
+        pair_id=pair_id,
+        audio_id_a=audio_id_a,
+        audio_id_b=audio_id_b,
+        prompt=current_prompt,
+    )
     return (
         "",
         gr.update(interactive=False),
@@ -547,48 +650,50 @@ def a_better_last_response(state, model_selector, request: gr.Request):
         gr.update(interactive=False),
     )
 
-def b_better_last_response(state, model_selector, request: gr.Request):
+def b_better_last_response(state, model_selector, request: gr.Request, model_a, model_b, pair_id, audio_id_a, audio_id_b, current_prompt):
     ip = get_ip(request)
     logger.info(f"b is better. ip: {ip}")
     print(f"DEBUG: b_better_last_response")
-    vote_last_response(state, "b_better", model_selector, request)
+    vote_last_response(
+        state, "b_better", model_selector, request,
+        model_a=model_a,
+        model_b=model_b,
+        pair_id=pair_id,
+        audio_id_a=audio_id_a,
+        audio_id_b=audio_id_b,
+        prompt=current_prompt,
+    )
     return ("",) + (disable_btn,) * 4
 
-def tie_last_response(state, model_selector, request: gr.Request):
+def tie_last_response(state, model_selector, request: gr.Request, model_a, model_b, pair_id, audio_id_a, audio_id_b, current_prompt):
     ip = get_ip(request)
     logger.info(f"tie. ip: {ip}")
     print(f"DEBUG: tie_last_response")
-    vote_last_response(state, "tie", model_selector, request)
+    vote_last_response(
+        state, "tie", model_selector, request,
+        model_a=model_a,
+        model_b=model_b,
+        pair_id=pair_id,
+        audio_id_a=audio_id_a,
+        audio_id_b=audio_id_b,
+        prompt=current_prompt,
+    )
     return ("",) + (disable_btn,) * 4 
 
-def both_bad_last_response(state, model_selector, request: gr.Request):
+def both_bad_last_response(state, model_selector, request: gr.Request, model_a, model_b, pair_id, audio_id_a, audio_id_b, current_prompt):
     ip = get_ip(request)
     logger.info(f"both are bad ip: {ip}")
     print(f"DEBUG: both_bad_last_response")
-    vote_last_response(state, "both_bad", model_selector, request)
+    vote_last_response(
+        state, "both_bad", model_selector, request,
+        model_a=model_a,
+        model_b=model_b,
+        pair_id=pair_id,
+        audio_id_a=audio_id_a,
+        audio_id_b=audio_id_b,
+        prompt=current_prompt,
+    )
     return ("",) + (disable_btn,) * 4
-
-
-def upvote_last_response(state, model_selector, request: gr.Request):
-    ip = get_ip(request)
-    logger.info(f"upvote. ip: {ip}")
-    vote_last_response(state, "upvote", model_selector, request)
-    return ("",) + (disable_btn,) * 3
-
-
-def downvote_last_response(state, model_selector, request: gr.Request):
-    ip = get_ip(request)
-    logger.info(f"downvote. ip: {ip}")
-    vote_last_response(state, "downvote", model_selector, request)
-    return ("",) + (disable_btn,) * 3
-
-
-def flag_last_response(state, model_selector, request: gr.Request):
-    ip = get_ip(request)
-    logger.info(f"flag. ip: {ip}")
-    vote_last_response(state, "flag", model_selector, request)
-    return ("",) + (disable_btn,) * 3
-
 
 def regenerate(state, request: gr.Request):
     ip = get_ip(request)
@@ -639,7 +744,11 @@ def add_text(state, model_selector, text, request: gr.Request):
     logger.info(f"add_text. ip: {ip}. len: {len(text)}")
 
     if state is None:
-        state = State(model_selector)
+        if not model_selector or model_selector not in model_info:
+            logger.error(f"[ERROR] Invalid model for state recovery: {model_selector}")
+            return
+    
+    state = State(model_selector)
 
     if len(text) <= 0:
         state.skip_next = True
@@ -855,13 +964,16 @@ def bot_response(
 
     filename = get_conv_log_filename(state.arena_type, state.has_csam_image)
 
+    if state is None:
+        state = State(model_selector)
+        
     data = {
         "tstamp": round(finish_tstamp, 4),
         "type": "chat",
         "model": model_name,
         "start": round(start_tstamp, 4),
         "finish": round(finish_tstamp, 4),
-        "state": state.dict(),
+        "state": state.model_dump(),
         "ip": get_ip(request),
     }
 
@@ -1087,7 +1199,10 @@ def build_single_model_ui(models, add_promotion_links=False):
 
     state = gr.State()
     gr.Markdown(notice_markdown, elem_id="notice_markdown")
-
+    audio_id_a_state = gr.State("")
+    audio_id_b_state = gr.State("")
+    prompt_state = gr.State("")
+    
     with gr.Group(elem_id="share-region-named"):
         with gr.Row(elem_id="model_selector_row"):
             model_selector = gr.Dropdown(
@@ -1212,6 +1327,8 @@ def build_single_model_ui(models, add_promotion_links=False):
         # </script>
         # """)   
            
+    status_text = gr.Markdown("⚠️ You must listen to at least 5 seconds of each audio before voting is enabled.")
+
     with gr.Row() as button_row:
         # Yonghyun
         a_better_btn = gr.Button(value="👈 A is better", interactive=False)
@@ -1220,11 +1337,19 @@ def build_single_model_ui(models, add_promotion_links=False):
         both_bad_btn = gr.Button(value="👎 Both are bad", interactive=False)
         
         music_player_1.play(on_play_a)
-        music_player_1.pause(lambda: enable_vote_buttons_if_ready(), outputs=[a_better_btn, b_better_btn, tie_btn, both_bad_btn])
-        music_player_1.stop(lambda: enable_vote_buttons_if_ready(), outputs=[a_better_btn, b_better_btn, tie_btn, both_bad_btn])
+        music_player_1.pause(
+            on_pause_a,
+            outputs=[a_better_btn, b_better_btn, tie_btn, both_bad_btn, status_text]
+        )
+        #music_player_1.pause(lambda: enable_vote_buttons_if_ready(), outputs=[a_better_btn, b_better_btn, tie_btn, both_bad_btn])
+        #music_player_1.stop(lambda: enable_vote_buttons_if_ready(), outputs=[a_better_btn, b_better_btn, tie_btn, both_bad_btn])
         music_player_2.play(on_play_b)
-        music_player_2.pause(lambda: enable_vote_buttons_if_ready(), outputs=[a_better_btn, b_better_btn, tie_btn, both_bad_btn])
-        music_player_2.stop(lambda: enable_vote_buttons_if_ready(), outputs=[a_better_btn, b_better_btn, tie_btn, both_bad_btn])
+        music_player_2.pause(
+            on_pause_b,
+            outputs=[a_better_btn, b_better_btn, tie_btn, both_bad_btn, status_text]
+        )
+        #music_player_2.pause(lambda: enable_vote_buttons_if_ready(), outputs=[a_better_btn, b_better_btn, tie_btn, both_bad_btn])
+        #music_player_2.stop(lambda: enable_vote_buttons_if_ready(), outputs=[a_better_btn, b_better_btn, tie_btn, both_bad_btn])
         
     html_code = """
     <div id="audio-container">
@@ -1357,6 +1482,11 @@ def build_single_model_ui(models, add_promotion_links=False):
 
     if add_promotion_links: None
     
+    # Declare model_a_state, model_b_state, pair_id_state at the top of `build_single_model_ui`:
+    model_a_state = gr.State("")
+    model_b_state = gr.State("")
+    pair_id_state = gr.State("")
+    
     gr.HTML("""
     <script>
     
@@ -1412,12 +1542,11 @@ def build_single_model_ui(models, add_promotion_links=False):
         button.click(None, None, [], js=f"() => {js_code}")
         
         
-        
     vote_buttons = [a_better_btn, b_better_btn, tie_btn, both_bad_btn]
-
+    
     a_better_btn.click(
         a_better_last_response,
-        [state, model_selector],
+        [state, model_selector, model_a_state, model_b_state, pair_id_state, audio_id_a_state, audio_id_b_state, textbox],
         [textbox] + vote_buttons
     ).then(
         lambda: "Press \"🎲 New Round\" to start over👇 (Note: Your vote shapes the leaderboard, please vote RESPONSIBLY!)",
@@ -1428,17 +1557,17 @@ def build_single_model_ui(models, add_promotion_links=False):
         None,
         vote_buttons
     ).then( 
-        lambda: (
-            gr.update(value="**Model A: MusicGen medium**", visible=True), 
-            gr.update(value="**Model B: Riffusion v1**", visible=True)
+        lambda m_a, m_b: (
+            gr.update(value=f"**Model A: {m_a}**", visible=True), 
+            gr.update(value=f"**Model B: {m_b}**", visible=True)
         ),
-        None,
+        [model_a_state, model_b_state],
         [model_a_label, model_b_label]
     )
 
     b_better_btn.click(
         b_better_last_response,
-        [state, model_selector],
+        [state, model_selector, model_a_state, model_b_state, pair_id_state, audio_id_a_state, audio_id_b_state, textbox],
         [textbox] + vote_buttons
     ).then(
         lambda: "Press \"🎲 New Round\" to start over👇 (Note: Your vote shapes the leaderboard, please vote RESPONSIBLY!)",
@@ -1449,17 +1578,17 @@ def build_single_model_ui(models, add_promotion_links=False):
         None,
         vote_buttons
     ).then( 
-        lambda: (
-            gr.update(value="**Model A: MusicGen**", visible=True), 
-            gr.update(value="**Model B: Riffusion**", visible=True)
+        lambda m_a, m_b: (
+            gr.update(value=f"**Model A: {m_a}**", visible=True), 
+            gr.update(value=f"**Model B: {m_b}**", visible=True)
         ),
-        None,
+        [model_a_state, model_b_state],
         [model_a_label, model_b_label]
     )
 
     tie_btn.click(
         tie_last_response,
-        [state, model_selector],
+        [state, model_selector, model_a_state, model_b_state, pair_id_state, audio_id_a_state, audio_id_b_state, textbox],
         [textbox] + vote_buttons
     ).then(
         lambda: "Press \"🎲 New Round\" to start over👇 (Note: Your vote shapes the leaderboard, please vote RESPONSIBLY!)",
@@ -1470,17 +1599,17 @@ def build_single_model_ui(models, add_promotion_links=False):
         None,
         vote_buttons
     ).then( 
-        lambda: (
-            gr.update(value="**Model A: MusicGen medium**", visible=True), 
-            gr.update(value="**Model B: Riffusion v1**", visible=True)
+        lambda m_a, m_b: (
+            gr.update(value=f"**Model A: {m_a}**", visible=True), 
+            gr.update(value=f"**Model B: {m_b}**", visible=True)
         ),
-        None,
+        [model_a_state, model_b_state],
         [model_a_label, model_b_label]
     )
 
     both_bad_btn.click(
         both_bad_last_response,
-        [state, model_selector],
+        [state, model_selector, model_a_state, model_b_state, pair_id_state, audio_id_a_state, audio_id_b_state, textbox],
         [textbox] + vote_buttons
     ).then(
         lambda: "Press \"🎲 New Round\" to start over👇 (Note: Your vote shapes the leaderboard, please vote RESPONSIBLY!)",
@@ -1491,11 +1620,11 @@ def build_single_model_ui(models, add_promotion_links=False):
         None,
         vote_buttons
     ).then( 
-        lambda: (
-            gr.update(value="**Model A: MusicGen medium**", visible=True), 
-            gr.update(value="**Model B: Riffusion v1**", visible=True)
+        lambda m_a, m_b: (
+            gr.update(value=f"**Model A: {m_a}**", visible=True), 
+            gr.update(value=f"**Model B: {m_b}**", visible=True)
         ),
-        None,
+        [model_a_state, model_b_state],
         [model_a_label, model_b_label]
     )
     
@@ -1586,16 +1715,25 @@ def build_single_model_ui(models, add_promotion_links=False):
     #                 new_round_btn, regenerate_btn, share_btn])
 
     # Apr 3 (BACKEND)
+    
     send_btn.click(
         fn=call_backend_and_get_music,
         inputs=[textbox],
         outputs=[
-            gr.State(),         # pair_id
+            pair_id_state,
             music_player_1,
             music_player_2,
             model_a_label,
             model_b_label,
         ]
+    ).then(
+        fn=lambda pair_id, model_a_label, model_b_label: (
+            pair_id,
+            model_a_label.replace("**Model A: ", "").replace("**", ""),
+            model_b_label.replace("**Model B: ", "").replace("**", "")
+        ),
+        inputs=[pair_id_state, model_a_label, model_b_label],
+        outputs=[pair_id_state, model_a_state, model_b_state]
     ).then(
         fn=lambda: [gr.update(interactive=False)] * 4,
         inputs=None,
@@ -1760,13 +1898,13 @@ if __name__ == "__main__":
         args.controller_url, args.register_api_endpoint_file, ARENA_TYPE
     )
 
-    # Set authorization credentials
+    # # Set authorization credentials
     auth = None
-    if args.gradio_auth_path is not None:
-        auth = parse_gradio_auth_creds(args.gradio_auth_path)
+    # if args.gradio_auth_path is not None:
+    #     auth = parse_gradio_auth_creds(args.gradio_auth_path)
     
-    print(f"auth: {auth}") # None
-    print(f"models: {models}") # []
+    # print(f"auth: {auth}") # None
+    # print(f"models: {models}") # []
 
     # Launch the demo
     demo = build_demo(models)

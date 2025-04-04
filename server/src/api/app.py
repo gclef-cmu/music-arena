@@ -204,7 +204,7 @@ class FastAPIApp:
                     )
 
                 # Upload audio files to GCS
-                bucket_name = self.settings["gcs_buckets"]["audio_files"]
+                bucket_name = "music-arena-audio-yonghyun" #self.settings["gcs_buckets"]["audio_files"]
                 gcs_path_1 = f"audio/{audio_id_1}.mp3"
                 gcs_path_2 = f"audio/{audio_id_2}.mp3"
 

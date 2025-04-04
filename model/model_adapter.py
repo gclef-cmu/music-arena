@@ -28,6 +28,7 @@ from transformers import (
 )
 
 from frontend.conversation import Conversation
+from frontend.conversation import get_conv_template
 
 class BaseModelAdapter:
     """The base and the default model adapter."""
@@ -78,7 +79,25 @@ class BaseModelAdapter:
     def get_default_conv_template(self, model_path: str) -> Conversation:
         return get_conv_template("one_shot")
 
-model_adapters: List[BaseModelAdapter] = []
+class MusicGenAdapter(BaseModelAdapter):
+    def match(self, model_path: str):
+        return "musicgen" in model_path.lower()
+
+    def get_default_conv_template(self, model_path: str) -> Conversation:
+        return get_conv_template("musicgen-style")  # 혹은 one_shot
+
+class AudioLDMAdapter(BaseModelAdapter):
+    def match(self, model_path: str):
+        return "audioldm" in model_path.lower()
+
+    def get_default_conv_template(self, model_path: str) -> Conversation:
+        return get_conv_template("audioldm-style")
+
+model_adapters = [
+    MusicGenAdapter(),
+    AudioLDMAdapter(),
+    BaseModelAdapter()  # fallback
+]
 
 @cache
 def get_model_adapter(model_path: str) -> BaseModelAdapter:

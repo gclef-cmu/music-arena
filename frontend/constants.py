@@ -67,7 +67,6 @@ LOGDIR = os.getenv("LOGDIR", ".")
 # CPU Instruction Set Architecture
 CPU_ISA = os.getenv("CPU_ISA")
 
-
 ##### For the controller and workers (could be overwritten through ENV variables.)
 CONTROLLER_HEART_BEAT_EXPIRATION = int(
     os.getenv("FASTCHAT_CONTROLLER_HEART_BEAT_EXPIRATION", 90)
