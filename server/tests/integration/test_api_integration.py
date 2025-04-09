@@ -26,7 +26,7 @@ def is_server_reachable(url):
     except requests.RequestException:
         return False
 
-@pytest.mark.parametrize("model_key", ["noise", "audioldm2", "musicgen-small"])
+@pytest.mark.parametrize("model_key", ["musicgen-small", "musicgen-large"])
 def test_generate_audio_pair_integration(model_key):
     """Test the generate_audio_pair endpoint with real music generation servers."""
     # Check if the server for this model is reachable

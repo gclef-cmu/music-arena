@@ -30,20 +30,11 @@ def mock_model_config():
     Create a mock model configuration.
     """
     return {
-        "noise": {
+        "musicgen-large": {
             "provider": "custom-server",
-            "model_name": "noise",
+            "model_name": "musicgen-large", 
             "config": {
-                "base_url": "http://treble.cs.cmu.edu:54408",
-                "check_interval": 1.0,
-                "max_wait_time": 5.0
-            }
-        },
-        "audioldm2": {
-            "provider": "custom-server",
-            "model_name": "audioldm2",
-            "config": {
-                "base_url": "http://treble.cs.cmu.edu:51759",
+                "base_url": "http://treble.cs.cmu.edu:25009",
                 "check_interval": 1.0,
                 "max_wait_time": 60.0
             }
