@@ -23,7 +23,7 @@ def get_model_configs():
             return json.load(f)
     return {}
 
-@pytest.mark.parametrize("model_key", ["noise", "audioldm2", "musicgen-small"])
+@pytest.mark.parametrize("model_key", ["musicgen-small", "musicgen-large"])
 def test_music_api_provider_creation(model_key):
     """Test that we can create a music API provider for each model."""
     # Get the provider for the specified model
@@ -38,7 +38,7 @@ def test_music_api_provider_creation(model_key):
     # Log the configuration
     print(f"Model: {model_key}, Base URL: {provider.config['base_url']}")
 
-@pytest.mark.parametrize("model_key", ["noise", "audioldm2", "musicgen-small"])
+@pytest.mark.parametrize("model_key", ["musicgen-small", "musicgen-large"])
 def test_music_generation_if_server_available(model_key):
     """
     Test music generation if the server is available.

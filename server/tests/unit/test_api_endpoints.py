@@ -123,7 +123,7 @@ def test_record_vote(client, mock_firebase_client):
         "winningAudioId": "test-audio-id-1",
         "losingAudioId": "test-audio-id-2",
         "winningModel": "musicgen-small",
-        "losingModel": "audioldm2",
+        "losingModel": "musicgen-large",
         "winningIndex": 0,
         "prompt": "Test melody for voting"
     }

@@ -21,7 +21,7 @@ def is_server_reachable(url):
     except requests.RequestException:
         return False
 
-@pytest.mark.parametrize("model_key", ["noise", "audioldm2", "musicgen-small"])
+@pytest.mark.parametrize("model_key", ["musicgen-small"])
 def test_music_server_connection(model_key):
     """Test that we can connect to the music generation servers."""
     # Get the provider for the specified model
@@ -40,7 +40,7 @@ def test_music_server_connection(model_key):
     # This test is informational, not a hard requirement
     # We don't assert is_reachable because the servers might be down during testing
 
-@pytest.mark.parametrize("model_key", ["noise", "audioldm2", "musicgen-small"])
+@pytest.mark.parametrize("model_key", ["musicgen-small"])
 def test_generate_music(model_key):
     """Test that we can generate music from the servers."""
     # Skip if the server is not reachable
@@ -76,7 +76,7 @@ def test_generate_music(model_key):
             f.write(response.audio_data)
         print(f"Saved audio to test_output/{model_key}_test_output.mp3")
 
-@pytest.mark.parametrize("model_key", ["noise"])
+@pytest.mark.parametrize("model_key", ["musicgen-small"])
 def test_generate_music_with_seed(model_key):
     """Test that we can generate deterministic music with a seed."""
     # Skip if the server is not reachable

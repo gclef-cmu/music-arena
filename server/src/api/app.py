@@ -94,10 +94,7 @@ class FastAPIApp:
             list: List of sampled model keys
         """
         if not self.model_configs or len(self.model_configs) < count:
-            # Fallback models if not enough are configured
-            logger.warning(f"Not enough models in config, using default models")
-            default_models = ["musicgen-small", "audioldm2", "noise"]
-            return random.sample(default_models[:count], min(count, len(default_models)))
+            raise Exception("Error reading model config")
         
         # Select random models from available models
         model_keys = list(self.model_configs.keys())
@@ -204,7 +201,7 @@ class FastAPIApp:
                     )
 
                 # Upload audio files to GCS
-                bucket_name = "music-arena-audio-yonghyun" #self.settings["gcs_buckets"]["audio_files"]
+                bucket_name = self.settings["gcs_buckets"]["audio_files"]
                 gcs_path_1 = f"audio/{audio_id_1}.mp3"
                 gcs_path_2 = f"audio/{audio_id_2}.mp3"
 

@@ -1,27 +1,37 @@
 {
-    "noise": {
-        "provider": "custom-server",
-        "model_name": "noise",
-        "config": {
-            "base_url": "http://treble.cs.cmu.edu:54408",
-            "check_interval": 1.0,
-            "max_wait_time": 5.0
-        }
-    },
-    "audioldm2": {
-        "provider": "custom-server",
-        "model_name": "audioldm2",
-        "config": {
-            "base_url": "http://treble.cs.cmu.edu:51759",
-            "check_interval": 1.0,
-            "max_wait_time": 60.0
-        }
-    },
     "musicgen-small": {
         "provider": "custom-server",
         "model_name": "musicgen-small",
         "config": {
             "base_url": "http://treble.cs.cmu.edu:22709",
+            "check_interval": 1.0,
+            "max_wait_time": 60.0
+        }
+    }
+    ,
+    "sao": {
+        "provider": "custom-server",
+        "model_name": "sao",
+        "config": {
+            "base_url": "http://treble.cs.cmu.edu:22105",
+            "check_interval": 1.0,
+            "max_wait_time": 60.0
+        }
+    },
+    "musicgen-large": {
+        "provider": "custom-server",
+        "model_name": "musicgen-large", 
+        "config": {
+            "base_url": "http://treble.cs.cmu.edu:25009",
+            "check_interval": 1.0,
+            "max_wait_time": 60.0
+        }
+    },
+    "songgen": {
+        "provider": "custom-server",
+        "model_name": "songgen",
+        "config": {
+            "base_url": "http://treble.cs.cmu.edu:5125",
             "check_interval": 1.0,
             "max_wait_time": 60.0
         }
