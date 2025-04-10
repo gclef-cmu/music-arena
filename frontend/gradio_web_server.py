@@ -3,13 +3,11 @@ The gradio demo server for chatting with a single model.
 
 Debugging Ongoing (Yonghyun)
 
-python -m frontend.gradio_web_server --controller-url http://0.0.0.0:21001 --share
-"""
+```
+cd frontend
+python -m frontend.gradio_web_server --share
+```
 
-"""
-TODO
-- AudioPlayer with only button appears (Hiding gradio.Audio() module)
-- Connect with the Wayne's backend
 """
 
 import argparse
@@ -34,7 +32,7 @@ from io import BytesIO
 
 from functools import partial
 
-from frontend.constants import (
+from constants import (
     LOGDIR, # The output dir of log files LOGDIR = os.getenv("LOGDIR", ".")
     WORKER_API_TIMEOUT, # int(os.getenv("FASTCHAT_WORKER_API_TIMEOUT", 100))
     ErrorCode,
@@ -52,7 +50,7 @@ from model.model_adapter import get_conversation_template
 from model.model_registry import get_model_info, model_info
 
 #MUSICARENA (Previous version; TODO) 
-from frontend.gradio_global_state import (
+from gradio_global_state import (
     Context, # music_models
     ArenaType, # TEXT2MUSIC
     RepoChatContext,
@@ -84,7 +82,7 @@ This class defines constants for various **arena types**.
 '''
 
 # MUSICARENA (Previous version; TODO)
-from frontend.api_provider import get_music_api_provider
+from api_provider import get_music_api_provider
 '''
 #Yonghyun
 [fastchat.serve.txt2music.music_api_provider]
@@ -120,11 +118,11 @@ from frontend.api_provider import get_music_api_provider
 - `max_wait_time`: `60.0` seconds  
 '''
 
-from frontend.remote_logger import (
+from remote_logger import (
     get_remote_logger,
     get_repochat_remote_logger,
 )
-from frontend.utils import (
+from utils import (
     build_logger,
     get_window_url_params_js,
     get_window_url_params_with_tos_js,
@@ -1138,7 +1136,7 @@ a:hover {
     padding-top: 6px !important;
     padding-bottom: 6px !important;
     min-height: 36px !important;
-    line-height: 1.2 !important;
+    line-height: 1 !important;
 }
 
 #custom-input-row {
@@ -1675,6 +1673,7 @@ def build_single_model_ui(models, add_promotion_links=False):
     #     outputs=[lyric_textbox],
     # )
     
+    # Retrieve from existing text-audio pair
     surprise_me_btn.click(
         fn=lambda: "Classical Piano Music",
         inputs=None,

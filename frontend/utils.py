@@ -17,8 +17,8 @@ import warnings
 
 import requests
 
-from frontend.constants import LOGDIR
-from frontend.gradio_global_state import ArenaType
+from constants import LOGDIR
+from gradio_global_state import ArenaType
 
 handler = None
 visited_loggers = set()
