@@ -1133,6 +1133,18 @@ a:hover {
 #_Transparent_Rectangle_ {
     display: none;
 }
+
+#input_box textarea {
+    padding-top: 6px !important;
+    padding-bottom: 6px !important;
+    min-height: 36px !important;
+    line-height: 1.2 !important;
+}
+
+#custom-input-row {
+    align-items: center !important;
+    gap: 6px;
+}
 """
 
 def get_model_description_md(models):
@@ -1300,12 +1312,12 @@ def build_single_model_ui(models, add_promotion_links=False):
 
                     # music_player_1.pause(on_pause_a)
                     # music_player_1.stop(on_pause_a)
-                    with gr.Row():
-                        play_btn1 = gr.Button("▶️ Play", elem_id="play_btn_1", interactive=False)
-                        pause_btn1 = gr.Button("⏸️ Pause", elem_id="pause_btn_1", interactive=False)
-                        stop_btn1 = gr.Button("⏹️ Stop", elem_id="stop_btn_1", interactive=False)
-                        forward_btn1 = gr.Button("⏩ +10s", elem_id="forward_btn_1", interactive=False)
-                        backward_btn1 = gr.Button("⏪ -10s", elem_id="backward_btn_1", interactive=False)
+                    # with gr.Row():
+                    #     play_btn1 = gr.Button("▶️ Play", elem_id="play_btn_1", interactive=False)
+                    #     pause_btn1 = gr.Button("⏸️ Pause", elem_id="pause_btn_1", interactive=False)
+                    #     stop_btn1 = gr.Button("⏹️ Stop", elem_id="stop_btn_1", interactive=False)
+                    #     forward_btn1 = gr.Button("⏩ +10s", elem_id="forward_btn_1", interactive=False)
+                    #     backward_btn1 = gr.Button("⏪ -10s", elem_id="backward_btn_1", interactive=False)
 
                 # Right Audio Player w/ Controls
                 with gr.Column():
@@ -1314,12 +1326,12 @@ def build_single_model_ui(models, add_promotion_links=False):
                                               show_share_button=False, visible=True)
                     # music_player_2.pause(on_pause_b)
                     # music_player_2.stop(on_pause_b)
-                    with gr.Row():
-                        play_btn2 = gr.Button("▶️ Play", elem_id="play_btn_2", interactive=False)
-                        pause_btn2 = gr.Button("⏸️ Pause", elem_id="pause_btn_2", interactive=False)
-                        stop_btn2 = gr.Button("⏹️ Stop", elem_id="stop_btn_2", interactive=False)
-                        forward_btn2 = gr.Button("⏩ +10s", elem_id="forward_btn_2", interactive=False)
-                        backward_btn2 = gr.Button("⏪ -10s", elem_id="backward_btn_2", interactive=False)
+                    # with gr.Row():
+                    #     play_btn2 = gr.Button("▶️ Play", elem_id="play_btn_2", interactive=False)
+                    #     pause_btn2 = gr.Button("⏸️ Pause", elem_id="pause_btn_2", interactive=False)
+                    #     stop_btn2 = gr.Button("⏹️ Stop", elem_id="stop_btn_2", interactive=False)
+                    #     forward_btn2 = gr.Button("⏩ +10s", elem_id="forward_btn_2", interactive=False)
+                    #     backward_btn2 = gr.Button("⏪ -10s", elem_id="backward_btn_2", interactive=False)
 
             with gr.Row():
                 model_a_label = gr.Markdown("**Model A: Unknown**", visible=False)
@@ -1441,38 +1453,18 @@ def build_single_model_ui(models, add_promotion_links=False):
         }
         </style>'''
     )
-    with gr.Row(elem_id="lyrics_row"):
-        with gr.Column(scale=1, min_width=120):
-            checkbox = gr.Checkbox(label="Lyric Music?")
-        with gr.Column(scale=2, min_width=150):
-            lyrics_surprise_me_btn = gr.Button(
-                value="🔮 Surprise me", 
-                visible=False,
-                interactive=True
-            )
-        with gr.Column(scale=5, min_width=300):
-            lyric_textbox = gr.Textbox(
-                show_label=False,
-                placeholder="🎤 Write your own lyrics!",
-                elem_id="input_box",
-                visible=False,
-                interactive=True
-            )
-
-        checkbox.change(
-            fn=toggle_lyrics_box,
-            inputs=checkbox,
-            outputs=[lyric_textbox, lyrics_surprise_me_btn],
-        )
         
     
-    with gr.Row():
-        textbox = gr.Textbox(
-            show_label=False,
-            placeholder="👉 Enter your prompt and press ENTER",
-            elem_id="input_box",
-        )
-        send_btn = gr.Button(value="Send", variant="primary", scale=0)
+    with gr.Row(elem_id="custom-input-row"):
+        with gr.Column(scale=7, min_width=120):
+            textbox = gr.Textbox(
+                show_label=False,
+                placeholder="👉 Enter your prompt and press ENTER"
+            )
+        with gr.Column(scale=1, min_width=120):
+            checkbox = gr.Checkbox(label="Lyrics")
+        with gr.Column(scale=2, min_width=120):
+            send_btn = gr.Button(value="Send", variant="primary")
         
 
     with gr.Row() as extra_button_row:
@@ -1482,32 +1474,32 @@ def build_single_model_ui(models, add_promotion_links=False):
         regenerate_btn = gr.Button(value="🔄 Regenerate", interactive=False)
         share_btn = gr.Button(value="📷 Share", interactive=True)
 
-    # Accordion is a layout element which can be toggled to show/hide the contained content. (https://www.gradio.app/docs/gradio/accordion)
-    with gr.Accordion("Parameters", open=False) as parameter_row:
-        temperature = gr.Slider(
-            minimum=0.0,
-            maximum=1.0,
-            value=0.7,
-            step=0.1,
-            interactive=True,
-            label="Temperature",
-        )
-        top_p = gr.Slider(
-            minimum=0.0,
-            maximum=1.0,
-            value=1.0,
-            step=0.1,
-            interactive=True,
-            label="Top P",
-        )
-        max_output_tokens = gr.Slider(
-            minimum=16,
-            maximum=4096,
-            value=2048,
-            step=64,
-            interactive=True,
-            label="Max output tokens",
-        )
+    # # Accordion is a layout element which can be toggled to show/hide the contained content. (https://www.gradio.app/docs/gradio/accordion)
+    # with gr.Accordion("Parameters", open=False) as parameter_row:
+    #     temperature = gr.Slider(
+    #         minimum=0.0,
+    #         maximum=1.0,
+    #         value=0.7,
+    #         step=0.1,
+    #         interactive=True,
+    #         label="Temperature",
+    #     )
+    #     top_p = gr.Slider(
+    #         minimum=0.0,
+    #         maximum=1.0,
+    #         value=1.0,
+    #         step=0.1,
+    #         interactive=True,
+    #         label="Top P",
+    #     )
+    #     max_output_tokens = gr.Slider(
+    #         minimum=16,
+    #         maximum=4096,
+    #         value=2048,
+    #         step=64,
+    #         interactive=True,
+    #         label="Max output tokens",
+    #     )
 
     if add_promotion_links: None
     
@@ -1554,21 +1546,21 @@ def build_single_model_ui(models, add_promotion_links=False):
     </script>
     """)
 
-    button_js_pairs = [
-        (play_btn1, "playAudio('custom-audio-1')"),
-        (pause_btn1, "pauseAudio('custom-audio-1')"),
-        (stop_btn1, "stopAudio('custom-audio-1')"),
-        (forward_btn1, "forwardAudio('custom-audio-1')"),
-        (backward_btn1, "backwardAudio('custom-audio-1')"),
-        (play_btn2, "playAudio('custom-audio-2')"),
-        (pause_btn2, "pauseAudio('custom-audio-2')"),
-        (stop_btn2, "stopAudio('custom-audio-2')"),
-        (forward_btn2, "forwardAudio('custom-audio-2')"),
-        (backward_btn2, "backwardAudio('custom-audio-2')")
-    ]
+    # button_js_pairs = [
+    #     (play_btn1, "playAudio('custom-audio-1')"),
+    #     (pause_btn1, "pauseAudio('custom-audio-1')"),
+    #     (stop_btn1, "stopAudio('custom-audio-1')"),
+    #     (forward_btn1, "forwardAudio('custom-audio-1')"),
+    #     (backward_btn1, "backwardAudio('custom-audio-1')"),
+    #     (play_btn2, "playAudio('custom-audio-2')"),
+    #     (pause_btn2, "pauseAudio('custom-audio-2')"),
+    #     (stop_btn2, "stopAudio('custom-audio-2')"),
+    #     (forward_btn2, "forwardAudio('custom-audio-2')"),
+    #     (backward_btn2, "backwardAudio('custom-audio-2')")
+    # ]
 
-    for button, js_code in button_js_pairs:
-        button.click(None, None, [], js=f"() => {js_code}")
+    # for button, js_code in button_js_pairs:
+    #     button.click(None, None, [], js=f"() => {js_code}")
         
         
     vote_buttons = [a_better_btn, b_better_btn, tie_btn, both_bad_btn]
@@ -1677,11 +1669,11 @@ def build_single_model_ui(models, add_promotion_links=False):
 )
 
     
-    lyrics_surprise_me_btn.click(
-        fn=get_random_lyrics_block,
-        inputs=None,
-        outputs=[lyric_textbox],
-    )
+    # lyrics_surprise_me_btn.click(
+    #     fn=get_random_lyrics_block,
+    #     inputs=None,
+    #     outputs=[lyric_textbox],
+    # )
     
     surprise_me_btn.click(
         fn=lambda: "Classical Piano Music",
@@ -1705,11 +1697,12 @@ def build_single_model_ui(models, add_promotion_links=False):
         regenerate,
         state,
         [state, textbox]
-    ).then(
-        bot_response,
-        [state, temperature, top_p, max_output_tokens],
-        [state]
     )
+    # .then(
+    #     bot_response,
+    #     [state, temperature, top_p, max_output_tokens],
+    #     [state]
+    # )
 
     share_btn.click(
         lambda: "Shared successfully! 📤",
@@ -1717,16 +1710,16 @@ def build_single_model_ui(models, add_promotion_links=False):
         [textbox]
     )
     
-    play_btn1.click(None, None, [], js="""
-    () => {
-        setTimeout(() => {
-            const audio = document.querySelector('#custom-audio-1 audio');
-            if (audio) audio.play();
-        }, 200);
-    }
-    """)
-    pause_btn1.click(None, None, [], js="() => { const audio = document.querySelector('#custom-audio-1 audio'); if (audio) audio.pause(); }")
-    stop_btn1.click(None, None, [], js="() => { const audio = document.querySelector('#custom-audio-1 audio'); if (audio) { audio.pause(); audio.currentTime = 0; } }")
+    # play_btn1.click(None, None, [], js="""
+    # () => {
+    #     setTimeout(() => {
+    #         const audio = document.querySelector('#custom-audio-1 audio');
+    #         if (audio) audio.play();
+    #     }, 200);
+    # }
+    # """)
+    # pause_btn1.click(None, None, [], js="() => { const audio = document.querySelector('#custom-audio-1 audio'); if (audio) audio.pause(); }")
+    # stop_btn1.click(None, None, [], js="() => { const audio = document.querySelector('#custom-audio-1 audio'); if (audio) { audio.pause(); audio.currentTime = 0; } }")
 
 
     # play_btn1.click(
@@ -1788,17 +1781,19 @@ def build_single_model_ui(models, add_promotion_links=False):
         inputs=None,
         outputs=[a_better_btn, b_better_btn, tie_btn, both_bad_btn]
     ).then(
-        fn=lambda: [gr.update(interactive=True)] * 10,
-        inputs=None,
-        outputs=[
-            play_btn1, pause_btn1, stop_btn1, forward_btn1, backward_btn1,
-            play_btn2, pause_btn2, stop_btn2, forward_btn2, backward_btn2
-        ]
-    ).then(
         fn=lambda: [gr.update(interactive=True)] * 3,
         inputs=None,
         outputs=[new_round_btn, regenerate_btn, share_btn]
     )
+    
+    # .then(
+    #     fn=lambda: [gr.update(interactive=True)] * 10,
+    #     inputs=None,
+    #     outputs=[
+    #         play_btn1, pause_btn1, stop_btn1, forward_btn1, backward_btn1,
+    #         play_btn2, pause_btn2, stop_btn2, forward_btn2, backward_btn2
+    #     ]
+    # )
 
 
     # # BACKEND
