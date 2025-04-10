@@ -21,7 +21,7 @@ TEST_USER_ID = "integration-test-user"
 def is_server_reachable(url):
     """Check if a server is reachable."""
     try:
-        response = requests.get(f"{url}/health", timeout=5)
+        response = requests.get(f"{url}/ping", timeout=5)
         return response.status_code == 200
     except requests.RequestException:
         return False
