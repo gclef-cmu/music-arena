@@ -9,7 +9,8 @@ The main front-end component is implemented in `frontend/gradio_web_server.py`.
 
 To make the front end publicly accessible, run the following command:
 ```
-python -m frontend.gradio_web_server --share
+cd frontend
+python -m gradio_web_server --share
 ```
 
 ## Setup
