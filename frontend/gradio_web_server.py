@@ -420,57 +420,57 @@ def get_conv_log_filename(arena_type=ARENA_TYPE, has_csam_image=False):
     return name
 
 
-def get_model_list(controller_url, register_api_endpoint_file, arena_type):
-    global api_endpoint_info
+# def get_model_list(controller_url, register_api_endpoint_file, arena_type):
+#     global api_endpoint_info
 
-    # Add models from the controller
-    if controller_url:
-        ret = requests.post(controller_url + "/refresh_all_workers")
-        #print(f"ret (1): {ret}") # <Response [200]>
-        assert ret.status_code == 200
+#     # Add models from the controller
+#     if controller_url:
+#         ret = requests.post(controller_url + "/refresh_all_workers")
+#         #print(f"ret (1): {ret}") # <Response [200]>
+#         assert ret.status_code == 200
 
-        ret = requests.post(controller_url + "/list_multimodal_models")
-        models = ret.json()["models"]
-        #print(f"ret (2): {ret}") # <Response [200]>
-        #print(f"models: {models}") # []            
+#         ret = requests.post(controller_url + "/list_multimodal_models")
+#         models = ret.json()["models"]
+#         #print(f"ret (2): {ret}") # <Response [200]>
+#         #print(f"models: {models}") # []            
 
-    else:
-        models = []
+#     else:
+#         models = []
 
-    # Add models from the API providers
-    if register_api_endpoint_file:
-        api_endpoint_info = json.load(open(register_api_endpoint_file))
-        for mdl, mdl_dict in api_endpoint_info.items():
-            mdl_vision = mdl_dict.get("vision-arena", False)
-            mdl_text = mdl_dict.get("text-arena", True)
-            mdl_txt2img = mdl_dict.get("txt2img-arena", False)
-            mdl_txt2music = mdl_dict.get("txt2music-arena", False) # Yonghyun
-            if arena_type == ArenaType.VISION and mdl_vision:
-                models.append(mdl)
-            if arena_type == ArenaType.TEXT and mdl_text:
-                models.append(mdl)
-            if arena_type == ArenaType.TXT2IMG and mdl_txt2img:
-                models.append(mdl)
-            if arena_type == ArenaType.TXT2MUSIC and mdl_txt2music:
-                models.append(mdl)
+#     # Add models from the API providers
+#     if register_api_endpoint_file:
+#         api_endpoint_info = json.load(open(register_api_endpoint_file))
+#         for mdl, mdl_dict in api_endpoint_info.items():
+#             mdl_vision = mdl_dict.get("vision-arena", False)
+#             mdl_text = mdl_dict.get("text-arena", True)
+#             mdl_txt2img = mdl_dict.get("txt2img-arena", False)
+#             mdl_txt2music = mdl_dict.get("txt2music-arena", False) # Yonghyun
+#             if arena_type == ArenaType.VISION and mdl_vision:
+#                 models.append(mdl)
+#             if arena_type == ArenaType.TEXT and mdl_text:
+#                 models.append(mdl)
+#             if arena_type == ArenaType.TXT2IMG and mdl_txt2img:
+#                 models.append(mdl)
+#             if arena_type == ArenaType.TXT2MUSIC and mdl_txt2music:
+#                 models.append(mdl)
 
-    # Remove anonymous models
-    models = list(set(models))
-    visible_models = models.copy()
-    for mdl in models:
-        if mdl not in api_endpoint_info:
-            continue
-        mdl_dict = api_endpoint_info[mdl]
-        if mdl_dict["anony_only"]:
-            visible_models.remove(mdl)
+#     # Remove anonymous models
+#     models = list(set(models))
+#     visible_models = models.copy()
+#     for mdl in models:
+#         if mdl not in api_endpoint_info:
+#             continue
+#         mdl_dict = api_endpoint_info[mdl]
+#         if mdl_dict["anony_only"]:
+#             visible_models.remove(mdl)
 
-    # Sort models and add descriptions
-    priority = {k: f"___{i:03d}" for i, k in enumerate(model_info)}
-    models.sort(key=lambda x: priority.get(x, x))
-    visible_models.sort(key=lambda x: priority.get(x, x))
-    #logger.info(f"(get_model_list) All models: {models}")
-    #logger.info(f"(get_model_list) Visible models: {visible_models}")
-    return visible_models, models
+#     # Sort models and add descriptions
+#     priority = {k: f"___{i:03d}" for i, k in enumerate(model_info)}
+#     models.sort(key=lambda x: priority.get(x, x))
+#     visible_models.sort(key=lambda x: priority.get(x, x))
+#     #logger.info(f"(get_model_list) All models: {models}")
+#     #logger.info(f"(get_model_list) Visible models: {visible_models}")
+#     return visible_models, models
 
 
 def load_demo_single(context: Context, query_params):
@@ -508,10 +508,10 @@ def load_demo(url_params, request: gr.Request):
     logger.info(f"load_demo. ip: {ip}. params: {url_params}") # ip: 143.215.16.196. params: {}
 
     logger.info(f"args.model_list_mode: {args.model_list_mode}") # 'once'
-    if args.model_list_mode == "reload":
-        models, all_models = get_model_list(
-            controller_url, args.register_api_endpoint_file, ARENA_TYPE
-        )
+    # if args.model_list_mode == "reload":
+    #     models, all_models = get_model_list(
+    #         controller_url, args.register_api_endpoint_file, ARENA_TYPE
+    #     )
 
     return load_demo_single(models, url_params)
 
@@ -1971,9 +1971,10 @@ if __name__ == "__main__":
     print(f"args.controller_url: {args.controller_url}") # http://localhost:21001
     print(f"ARENA_TYPE: {ARENA_TYPE}") # txt2music-arena
     print(f"register-api-endpoint-file: {args.register_api_endpoint_file}") # None
-    models, all_models = get_model_list(
-        args.controller_url, args.register_api_endpoint_file, ARENA_TYPE
-    )
+    models, all_models = [], []
+    # models, all_models = get_model_list(
+    #     args.controller_url, args.register_api_endpoint_file, ARENA_TYPE
+    # )
 
     # # Set authorization credentials
     auth = None
