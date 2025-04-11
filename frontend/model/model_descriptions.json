@@ -1,0 +1,18 @@
+{
+    "musicgen-small": {
+      "link": "https://musicgen.com/",
+      "description": "Lightweight 300M model for fast and efficient text-to-music generation by Meta"
+    },
+    "musicgen-large": {
+      "link": "https://musicgen.com/",
+      "description": "High-capacity 3.3B model for expressive and high-fidelity music generation by Meta"
+    },
+    "sao": {
+      "link": "https://stability.ai/news/introducing-stable-audio-open",
+      "description": "Latent diffusion model for high-quality text-to-audio generation by Stability AI"
+    },
+    "songgen": {
+      "link": "https://www.songgen.ai/",
+      "description": "Interactive AI songwriting assistant for co-creative and personalized music generation"
+    }
+  }
