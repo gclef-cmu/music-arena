@@ -1,5 +1,7 @@
 """
 Model adapter registration. [Source] https://github.com/lmarena/FastChat-dev/blob/yonghyun/txt2music-dev/fastchat/model/model_adapter.py
+
+This part should be modified when any new model is added from the backend.
 """
 
 import math
@@ -79,23 +81,47 @@ class BaseModelAdapter:
     def get_default_conv_template(self, model_path: str) -> Conversation:
         return get_conv_template("one_shot")
 
-class MusicGenAdapter(BaseModelAdapter):
+class MusicGenSmallAdapter(BaseModelAdapter):
     def match(self, model_path: str):
-        return "musicgen" in model_path.lower()
+        return "musicgen-small" in model_path.lower()
 
     def get_default_conv_template(self, model_path: str) -> Conversation:
-        return get_conv_template("musicgen-style")  # 혹은 one_shot
+        return get_conv_template("musicgen-small-style")
 
-class AudioLDMAdapter(BaseModelAdapter):
+class MusicGenLargeAdapter(BaseModelAdapter):
     def match(self, model_path: str):
-        return "audioldm" in model_path.lower()
+        return "musicgen-large" in model_path.lower()
 
     def get_default_conv_template(self, model_path: str) -> Conversation:
-        return get_conv_template("audioldm-style")
+        return get_conv_template("musicgen-large-style")
+
+class SaoAdapter(BaseModelAdapter):
+    def match(self, model_path: str):
+        return "sao" in model_path.lower()
+
+    def get_default_conv_template(self, model_path: str) -> Conversation:
+        return get_conv_template("sao-style")
+
+class SongGenAdapter(BaseModelAdapter):
+    def match(self, model_path: str):
+        return "songgen" in model_path.lower()
+
+    def get_default_conv_template(self, model_path: str) -> Conversation:
+        return get_conv_template("songgen-style")
+
+# class AudioLDMAdapter(BaseModelAdapter):
+#     def match(self, model_path: str):
+#         return "audioldm" in model_path.lower()
+
+#     def get_default_conv_template(self, model_path: str) -> Conversation:
+#         return get_conv_template("audioldm-style")
+
 
 model_adapters = [
-    MusicGenAdapter(),
-    AudioLDMAdapter(),
+    MusicGenSmallAdapter(),
+    MusicGenLargeAdapter(),
+    SaoAdapter(),
+    SongGenAdapter(),
     BaseModelAdapter()  # fallback
 ]
 

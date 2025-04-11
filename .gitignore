@@ -174,7 +174,8 @@ cython_debug/
 .pypirc
 *.DS_Store*
 
-# Gradio web server log
+# Gradio
+frontend/.gradio/
 gradio_web_server.log.*
 
 # Firebase Config
