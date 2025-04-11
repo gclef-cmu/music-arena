@@ -1,3 +1,6 @@
 fastapi==0.115.12
 python-multipart==0.0.20
 starlette==0.46.1
+gradio==5.24.0
+torch==2.6.0
+transformers==4.51.2
