@@ -19,14 +19,9 @@ else:
 import psutil
 import torch
 from transformers import (
-    AutoConfig,
     AutoModel,
     AutoModelForCausalLM,
-    AutoModelForSeq2SeqLM,
-    AutoTokenizer,
-    LlamaTokenizer,
-    LlamaForCausalLM,
-    T5Tokenizer,
+    AutoTokenizer
 )
 
 from conversation import Conversation
