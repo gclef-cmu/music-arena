@@ -1167,6 +1167,35 @@ def get_model_description_md(models):
         ct += 1
     return model_description_md
 
+def get_model_description_md_from_json(json_path, display_model_list):
+    DISPLAY_NAME_TO_KEY = {
+        "MusicGen - Small": "musicgen-small",
+        "MusicGen - Large": "musicgen-large",
+        "Stable Audio Open": "sao",
+        "SongGen": "songgen",
+    }
+
+    with open(json_path, "r") as f:
+        model_info = json.load(f)
+
+    md = "| | | |\n|---|---|---|\n"
+    row = []
+
+    for i, display_name in enumerate(display_model_list):
+        model_key = DISPLAY_NAME_TO_KEY[display_name]
+        model = model_info[model_key]
+        one = f"[{display_name}]({model['link']}): {model['description']}"
+        row.append(one)
+        if len(row) == 3:
+            md += "| " + " | ".join(row) + " |\n"
+            row = []
+
+    if row:  # fill the last row
+        while len(row) < 3:
+            row.append("")
+        md += "| " + " | ".join(row) + " |\n"
+
+    return md
 
 def build_about():
     about_markdown = """
@@ -1251,12 +1280,17 @@ def build_single_model_ui(models, add_promotion_links=False):
                 allow_custom_value=True
             )
         with gr.Row():
-            with gr.Accordion(
-                f"🔍 Expand to see the descriptions of 2 models", # f"🔍 Expand to see the descriptions of {len(models)} models"
-                open=False,
-            ):
-                model_description_md = get_model_description_md(models)
+            model_list = ["MusicGen - Small", "MusicGen - Large", "Stable Audio Open", "SongGen"]
+            with gr.Accordion(f"🔍 Expand to see the descriptions of {len(model_list)} models", open=False):
+                model_description_md = get_model_description_md_from_json("model/model_descriptions.json", model_list)
                 gr.Markdown(model_description_md, elem_id="model_description_markdown")
+
+            # with gr.Accordion(
+            #     f"🔍 Expand to see the descriptions of 2 models", # f"🔍 Expand to see the descriptions of {len(models)} models"
+            #     open=False,
+            # ):
+            #     model_description_md = get_model_description_md(models)
+            #     gr.Markdown(model_description_md, elem_id="model_description_markdown")
         
         # Yonghyun (Add Gradio Audio Component for playing music)
         # Custom CSS for hiding default waveform & time info
