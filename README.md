@@ -10,6 +10,7 @@ The main front-end component is implemented in `frontend/gradio_web_server.py`.
 To make the front end publicly accessible, run the following command:
 ```
 cd frontend
+pip install -r requirements-frontend.txt
 python -m gradio_web_server --share
 ```
 
