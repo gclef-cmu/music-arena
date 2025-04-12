@@ -46,14 +46,14 @@ from constants import (
     SURVEY_LINK,
 )
 
-from model.model_adapter import get_conversation_template
-from model.model_registry import get_model_info, model_info
+# from model.model_adapter import get_conversation_template
+# from model.model_registry import get_model_info, model_info
 
 #MUSICARENA (Previous version; TODO) 
 from gradio_global_state import (
     Context, # music_models
     ArenaType, # TEXT2MUSIC
-    RepoChatContext,
+    # RepoChatContext,
 )
 
 '''
@@ -252,7 +252,7 @@ class State:
         self.model_name = model_name
         self.oai_thread_id = None
         self.arena_type = arena_type
-        self.repochat_context = RepoChatContext()
+        # self.repochat_context = RepoChatContext()
         self.ans_models = []
         self.router_outputs = []
         # NOTE(chris): This could be sort of a hack since it assumes the user only uploads one image. If they can upload multiple, we should store a list of image hashes.

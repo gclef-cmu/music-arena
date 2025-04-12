@@ -17,7 +17,6 @@ class MusicResponseOutput:
     audio_data: Optional[bytes]
     error: Optional[str] = None
 
-
 class BaseMusicAPIProvider(ABC):
     def __init__(self, model_name, **config):
         self.model_name = model_name
@@ -31,7 +30,6 @@ class BaseMusicAPIProvider(ABC):
 
     def log_gen_params(self, gen_params):
         logger.info(f"==== request ====\n{gen_params}")
-
 
 class CustomServerMusicAPIProvider(BaseMusicAPIProvider):
     def validate_config(self):
@@ -103,7 +101,6 @@ class CustomServerMusicAPIProvider(BaseMusicAPIProvider):
             return MusicResponseOutput(
                 audio_data=None, error=f"API request failed: {str(e)}"
             )
-
 
 def get_music_api_provider(model_key: str, **kwargs):
     """
