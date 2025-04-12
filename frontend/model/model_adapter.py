@@ -3,14 +3,12 @@ Model adapter registration.
 [Adapted from] https://github.com/lmarena/FastChat-dev/blob/yonghyun/txt2music-dev/fastchat/model/model_adapter.py
 This part should be modified when any new model is added from the backend.
 """
-import os
 import sys
 
 if sys.version_info >= (3, 9):
     from functools import cache
 else:
     from functools import lru_cache as cache
-
 
 from conversation import Conversation
 from conversation import get_conv_template
