@@ -1,0 +1,1 @@
+{"tstamp": 1744474378.8568, "type": "b_better", "model": null, "model_a": "musicgen-large", "model_b": "sao", "a_listen_time": 5.18, "b_listen_time": 5.39, "ip": "143.215.16.169", "prompt": "Jazz Guitar", "pair_id": "2ef065a6-05c0-41ff-9a52-894eda40a198", "winning_model": "sao", "losing_model": "musicgen-large", "winning_audio_id": "", "losing_audio_id": "", "winning_index": 1}
