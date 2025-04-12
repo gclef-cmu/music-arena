@@ -50,11 +50,14 @@ from constants import (
 # from model.model_registry import get_model_info, model_info
 
 #MUSICARENA (Previous version; TODO) 
-from gradio_global_state import (
-    Context, # music_models
-    ArenaType, # TEXT2MUSIC
-    # RepoChatContext,
-)
+# from gradio_global_state import (
+#     Context, # music_models
+#     ArenaType, # TEXT2MUSIC
+#     # RepoChatContext,
+# )
+
+class ArenaType:
+    TXT2MUSIC = "txt2music-arena"
 
 '''
 #Yonghyun
@@ -225,76 +228,45 @@ We thank [UC Berkeley SkyLab](https://sky.cs.berkeley.edu/), [a16z](https://a16z
 </div>
 """
 
-# JSON file format of API-based models:
-# {
-#   "gpt-3.5-turbo": {
-#     "model_name": "gpt-3.5-turbo",
-#     "api_type": "openai",
-#     "api_base": "https://api.openai.com/v1",
-#     "api_key": "sk-******",
-#     "anony_only": false
-#   }
-# }
-#
-#  - "api_type" can be one of the following: openai, anthropic, gemini, or mistral. For custom APIs, add a new type and implement it accordingly.
-#  - "anony_only" indicates whether to display this model in anonymous mode only.
-
 api_endpoint_info = {}
 
 ARENA_TYPE = ArenaType.TXT2MUSIC #ArenaType.TXT2MUSIC # ArenaType.TEXT
 
 # (Yonghyun) Class for managing chatting session
-class State:
-    def __init__(self, model_name, arena_type=ARENA_TYPE, metadata=None):
-        self.conv = get_conversation_template(model_name) # 현재 체팅 세션의 대화 기록 저장
-        self.conv_id = uuid.uuid4().hex
-        self.skip_next = False
-        self.model_name = model_name
-        self.oai_thread_id = None
-        self.arena_type = arena_type
-        # self.repochat_context = RepoChatContext()
-        self.ans_models = []
-        self.router_outputs = []
-        # NOTE(chris): This could be sort of a hack since it assumes the user only uploads one image. If they can upload multiple, we should store a list of image hashes.
-        self.has_csam_image = False
+# class State:
+#     def __init__(self, model_name, arena_type=ARENA_TYPE, metadata=None):
+#         # self.conv = get_conversation_template(model_name) 
+#         self.conv_id = uuid.uuid4().hex
+#         self.skip_next = False
+#         self.model_name = model_name
+#         self.oai_thread_id = None
+#         self.arena_type = arena_type
+#         # self.repochat_context = RepoChatContext()
+#         self.ans_models = []
+#         self.router_outputs = []
+#         # NOTE(chris): This could be sort of a hack since it assumes the user only uploads one image. If they can upload multiple, we should store a list of image hashes.
+#         self.has_csam_image = False
 
-        self.regen_support = True
-        if "browsing" in model_name:
-            self.regen_support = False
-        #self.init_system_prompt(self.conv)
+#         self.regen_support = True
+#         if "browsing" in model_name:
+#             self.regen_support = False
+#         #self.init_system_prompt(self.conv)
 
-    def update_ans_models(self, ans: str) -> None:
-        self.ans_models.append(ans)
+#     def update_ans_models(self, ans: str) -> None:
+#         self.ans_models.append(ans)
 
-    def update_router_outputs(self, outputs: Dict[str, float]) -> None:
-        self.router_outputs.append(outputs)
+#     def update_router_outputs(self, outputs: Dict[str, float]) -> None:
+#         self.router_outputs.append(outputs)
 
-    # def init_system_prompt(self, conv):
-    #     system_prompt = conv.get_system_message(is_vision=self.is_vision)
-    #     if len(system_prompt) == 0:
-    #         return
-    #     current_date = datetime.datetime.now().strftime("%Y-%m-%d")
-    #     system_prompt = system_prompt.replace("{{currentDateTime}}", current_date)
-
-    #     current_date_v2 = datetime.datetime.now().strftime("%d %b %Y")
-    #     system_prompt = system_prompt.replace("{{currentDateTimev2}}", current_date_v2)
-
-    #     current_date_v3 = datetime.datetime.now().strftime("%B %Y")
-    #     system_prompt = system_prompt.replace("{{currentDateTimev3}}", current_date_v3)
-    #     conv.set_system_message(system_prompt)
-
-    # def to_gradio_chatbot(self):
-    #     return self.conv.to_gradio_chatbot()
-
-    def dict(self):
-        base = {
-            "conv_id": self.conv_id,
-            "model_name": self.model_name,
-            "arena_type": self.arena_type,
-            "ans_models": self.ans_models,
-            "router_outputs": self.router_outputs,
-        }
-        return base
+#     def dict(self):
+#         base = {
+#             "conv_id": self.conv_id,
+#             "model_name": self.model_name,
+#             "arena_type": self.arena_type,
+#             "ans_models": self.ans_models,
+#             "router_outputs": self.router_outputs,
+#         }
+#         return base
 
 # BACKEND (START)
 def generate_audio_pair(prompt: str, user_id: str):
@@ -349,14 +321,6 @@ def decode_base64_audio(audio_base64: str, prompt: str, model: str) -> str:
         f.write(audio_bytes)
 
     return file_path
-
-# def decode_base64_audio(audio_base64: str, filename: str) -> str:
-#     audio_bytes = base64.b64decode(audio_base64)
-#     file_path = f"/tmp/{filename}.mp3"
-#     with open(file_path, "wb") as f:
-#         f.write(audio_bytes)
-#     return file_path
-
 
 def call_backend_and_get_music(prompt, user_id="test_user", seed=42):
     payload = {
@@ -420,86 +384,6 @@ def get_conv_log_filename(arena_type=ARENA_TYPE, has_csam_image=False):
     return name
 
 
-# def get_model_list(controller_url, register_api_endpoint_file, arena_type):
-#     global api_endpoint_info
-
-#     # Add models from the controller
-#     if controller_url:
-#         ret = requests.post(controller_url + "/refresh_all_workers")
-#         #print(f"ret (1): {ret}") # <Response [200]>
-#         assert ret.status_code == 200
-
-#         ret = requests.post(controller_url + "/list_multimodal_models")
-#         models = ret.json()["models"]
-#         #print(f"ret (2): {ret}") # <Response [200]>
-#         #print(f"models: {models}") # []            
-
-#     else:
-#         models = []
-
-#     # Add models from the API providers
-#     if register_api_endpoint_file:
-#         api_endpoint_info = json.load(open(register_api_endpoint_file))
-#         for mdl, mdl_dict in api_endpoint_info.items():
-#             mdl_vision = mdl_dict.get("vision-arena", False)
-#             mdl_text = mdl_dict.get("text-arena", True)
-#             mdl_txt2img = mdl_dict.get("txt2img-arena", False)
-#             mdl_txt2music = mdl_dict.get("txt2music-arena", False) # Yonghyun
-#             if arena_type == ArenaType.VISION and mdl_vision:
-#                 models.append(mdl)
-#             if arena_type == ArenaType.TEXT and mdl_text:
-#                 models.append(mdl)
-#             if arena_type == ArenaType.TXT2IMG and mdl_txt2img:
-#                 models.append(mdl)
-#             if arena_type == ArenaType.TXT2MUSIC and mdl_txt2music:
-#                 models.append(mdl)
-
-#     # Remove anonymous models
-#     models = list(set(models))
-#     visible_models = models.copy()
-#     for mdl in models:
-#         if mdl not in api_endpoint_info:
-#             continue
-#         mdl_dict = api_endpoint_info[mdl]
-#         if mdl_dict["anony_only"]:
-#             visible_models.remove(mdl)
-
-#     # Sort models and add descriptions
-#     priority = {k: f"___{i:03d}" for i, k in enumerate(model_info)}
-#     models.sort(key=lambda x: priority.get(x, x))
-#     visible_models.sort(key=lambda x: priority.get(x, x))
-#     #logger.info(f"(get_model_list) All models: {models}")
-#     #logger.info(f"(get_model_list) Visible models: {visible_models}")
-#     return visible_models, models
-
-
-def load_demo_single(context: Context, query_params):
-    # default to text models
-    # logger.info(f"context: {context}")
-    if isinstance(context, list):
-        logger.warning("[gradio_web_server.py] ⚠️")
-        context = Context()
-        
-    models = context.music_models # gradio_global_state
-
-    selected_model = models[0] if len(models) > 0 else ""
-    if "model" in query_params:
-        model = query_params["model"]
-        if model in models:
-            selected_model = model
-
-    all_models = context.models
-
-    if selected_model not in all_models:
-        selected_model = all_models[0] if all_models else ""
-    
-    dropdown_update = gr.Dropdown(
-        choices=all_models, value=selected_model, visible=True
-    )
-    state = None
-    return [state, dropdown_update]
-
-
 def load_demo(url_params, request: gr.Request):
     global models
 
@@ -508,12 +392,8 @@ def load_demo(url_params, request: gr.Request):
     logger.info(f"load_demo. ip: {ip}. params: {url_params}") # ip: 143.215.16.196. params: {}
 
     logger.info(f"args.model_list_mode: {args.model_list_mode}") # 'once'
-    # if args.model_list_mode == "reload":
-    #     models, all_models = get_model_list(
-    #         controller_url, args.register_api_endpoint_file, ARENA_TYPE
-    #     )
 
-    return load_demo_single(models, url_params)
+    return None, None
 
 """
 (Revised vote_last_response)
@@ -564,7 +444,7 @@ get_conv_log_filename() → Generates a filename for saving the chat conversatio
 #     get_remote_logger().log(data) # # Sends the log data remotely for additional monitoring
 
 def vote_last_response(
-    state,
+    # state,
     vote_type,
     model_selector,
     request: gr.Request,
@@ -580,8 +460,8 @@ def vote_last_response(
     ip = get_ip(request)
     filename = get_conv_log_filename()
 
-    if state is None:
-        state = State(model_selector)
+    # if state is None:
+    #     state = State(model_selector)
 
     # Determine winning and losing models & audio IDs
     if vote_type == "a_better":
@@ -637,7 +517,7 @@ def vote_last_response(
         "model_b": model_b,
         "a_listen_time": round(a_listen_time, 2),
         "b_listen_time": round(b_listen_time, 2),
-        "state": state.dict(),
+        # "state": state.dict(),
         "ip": ip,
         "prompt": prompt,
         "pair_id": pair_id,
@@ -659,7 +539,7 @@ def a_better_last_response(state, model_selector, request: gr.Request, model_a, 
     logger.info(f"a is better. ip: {ip}")
     print(f"DEBUG: a_better_last_response")
     vote_last_response(
-        state, "a_better", model_selector, request,
+        "a_better", model_selector, request,
         model_a=model_a,
         model_b=model_b,
         pair_id=pair_id,
@@ -680,7 +560,7 @@ def b_better_last_response(state, model_selector, request: gr.Request, model_a, 
     logger.info(f"b is better. ip: {ip}")
     print(f"DEBUG: b_better_last_response")
     vote_last_response(
-        state, "b_better", model_selector, request,
+        "b_better", model_selector, request,
         model_a=model_a,
         model_b=model_b,
         pair_id=pair_id,
@@ -695,7 +575,7 @@ def tie_last_response(state, model_selector, request: gr.Request, model_a, model
     logger.info(f"tie. ip: {ip}")
     print(f"DEBUG: tie_last_response")
     vote_last_response(
-        state, "tie", model_selector, request,
+        "tie", model_selector, request,
         model_a=model_a,
         model_b=model_b,
         pair_id=pair_id,
@@ -710,7 +590,7 @@ def both_bad_last_response(state, model_selector, request: gr.Request, model_a, 
     logger.info(f"both are bad ip: {ip}")
     print(f"DEBUG: both_bad_last_response")
     vote_last_response(
-        state, "both_bad", model_selector, request,
+        "both_bad", model_selector, request,
         model_a=model_a,
         model_b=model_b,
         pair_id=pair_id,
@@ -720,6 +600,7 @@ def both_bad_last_response(state, model_selector, request: gr.Request, model_a, 
     )
     return ("",) + (disable_btn,) * 4
 
+# To be fixed
 def regenerate(state, request: gr.Request):
     ip = get_ip(request)
     logger.info(f"regenerate. ip: {ip}")
@@ -763,42 +644,42 @@ def get_ip(request: gr.Request):
     return ip
 
 
-# Convey the user's text input to the AI Model
-def add_text(state, model_selector, text, request: gr.Request):
-    ip = get_ip(request)
-    logger.info(f"add_text. ip: {ip}. len: {len(text)}")
+# # Convey the user's text input to the AI Model
+# def add_text(state, model_selector, text, request: gr.Request):
+#     ip = get_ip(request)
+#     logger.info(f"add_text. ip: {ip}. len: {len(text)}")
 
-    if state is None:
-        if not model_selector or model_selector not in model_info:
-            logger.error(f"[ERROR] Invalid model for state recovery: {model_selector}")
-            return
+#     if state is None:
+#         if not model_selector or model_selector not in model_info:
+#             logger.error(f"[ERROR] Invalid model for state recovery: {model_selector}")
+#             return
     
-    state = State(model_selector)
+#     state = State(model_selector)
 
-    if len(text) <= 0:
-        state.skip_next = True
-        return (state, state.to_gradio_chatbot(), "", None) + (no_change_btn,) * 5
+#     if len(text) <= 0:
+#         state.skip_next = True
+#         return (state, state.to_gradio_chatbot(), "", None) + (no_change_btn,) * 5
 
-    all_conv_text = state.conv.get_prompt()
-    all_conv_text = all_conv_text[-2000:] + "\nuser: " + text
-    flagged = moderation_filter(all_conv_text, [state.model_name])
-    # flagged = moderation_filter(text, [state.model_name])
-    if flagged:
-        logger.info(f"violate moderation. ip: {ip}. text: {text}")
-        # overwrite the original text
-        text = MODERATION_MSG
+#     all_conv_text = state.conv.get_prompt()
+#     all_conv_text = all_conv_text[-2000:] + "\nuser: " + text
+#     flagged = moderation_filter(all_conv_text, [state.model_name])
+#     # flagged = moderation_filter(text, [state.model_name])
+#     if flagged:
+#         logger.info(f"violate moderation. ip: {ip}. text: {text}")
+#         # overwrite the original text
+#         text = MODERATION_MSG
 
-    if (len(state.conv.messages) - state.conv.offset) // 2 >= CONVERSATION_TURN_LIMIT:
-        logger.info(f"conversation turn limit. ip: {ip}. text: {text}")
-        state.skip_next = True
-        return (state, state.to_gradio_chatbot(), CONVERSATION_LIMIT_MSG, None) + (
-            no_change_btn,
-        ) * 5
+#     if (len(state.conv.messages) - state.conv.offset) // 2 >= CONVERSATION_TURN_LIMIT:
+#         logger.info(f"conversation turn limit. ip: {ip}. text: {text}")
+#         state.skip_next = True
+#         return (state, state.to_gradio_chatbot(), CONVERSATION_LIMIT_MSG, None) + (
+#             no_change_btn,
+#         ) * 5
 
-    text = text[:INPUT_CHAR_LEN_LIMIT]  # Hard cut-off
-    state.conv.append_message(state.conv.roles[0], text)
-    state.conv.append_message(state.conv.roles[1], None)
-    return (state, state.to_gradio_chatbot(), "") + (disable_btn,) * 5
+#     text = text[:INPUT_CHAR_LEN_LIMIT]  # Hard cut-off
+#     state.conv.append_message(state.conv.roles[0], text)
+#     state.conv.append_message(state.conv.roles[1], None)
+#     return (state, state.to_gradio_chatbot(), "") + (disable_btn,) * 5
 
 
 def model_worker_stream_iter(
@@ -880,138 +761,138 @@ def is_limit_reached(model_name, ip):
 #     return None
 
 
-def bot_response(
-    state: State,
-    temperature,
-    top_p,
-    max_new_tokens,
-    request: gr.Request,
-    apply_rate_limit=True,
-    use_recommended_config=False,
-):
-    ip = get_ip(request)
-    logger.info(f"bot_response. ip: {ip}")
-    start_tstamp = time.time()
-    temperature = float(temperature)
-    top_p = float(top_p)
-    max_new_tokens = int(max_new_tokens)
+# def bot_response(
+#     state: State,
+#     temperature,
+#     top_p,
+#     max_new_tokens,
+#     request: gr.Request,
+#     apply_rate_limit=True,
+#     use_recommended_config=False,
+# ):
+#     ip = get_ip(request)
+#     logger.info(f"bot_response. ip: {ip}")
+#     start_tstamp = time.time()
+#     temperature = float(temperature)
+#     top_p = float(top_p)
+#     max_new_tokens = int(max_new_tokens)
 
-    if state.skip_next:
-        # This generate call is skipped due to invalid inputs
-        state.skip_next = False
-        yield (state, state.to_gradio_chatbot(), None) + (no_change_btn,) * 5
-        return
+#     if state.skip_next:
+#         # This generate call is skipped due to invalid inputs
+#         state.skip_next = False
+#         yield (state, state.to_gradio_chatbot(), None) + (no_change_btn,) * 5
+#         return
 
-    if apply_rate_limit:
-        ret = is_limit_reached(state.model_name, ip)
-        if ret is not None and ret["is_limit_reached"]:
-            error_msg = RATE_LIMIT_MSG + "\n\n" + ret["reason"]
-            logger.info(f"rate limit reached. ip: {ip}. error_msg: {ret['reason']}")
-            state.conv.update_last_message(error_msg)
-            yield (state, state.to_gradio_chatbot(), None) + (no_change_btn,) * 5
-            return
+#     if apply_rate_limit:
+#         ret = is_limit_reached(state.model_name, ip)
+#         if ret is not None and ret["is_limit_reached"]:
+#             error_msg = RATE_LIMIT_MSG + "\n\n" + ret["reason"]
+#             logger.info(f"rate limit reached. ip: {ip}. error_msg: {ret['reason']}")
+#             state.conv.update_last_message(error_msg)
+#             yield (state, state.to_gradio_chatbot(), None) + (no_change_btn,) * 5
+#             return
 
-    conv, model_name = state.conv, state.model_name
-    model_api_dict = (
-        api_endpoint_info[model_name] if model_name in api_endpoint_info else None
-    )
+#     conv, model_name = state.conv, state.model_name
+#     model_api_dict = (
+#         api_endpoint_info[model_name] if model_name in api_endpoint_info else None
+#     )
 
-    # TODO Wayne Need to figure out --register-api-endpoint-file argument and add music models
-    api_provider = get_music_api_provider(
-        model_key=model_api_dict["model_name"],
-    )
+#     # TODO Wayne Need to figure out --register-api-endpoint-file argument and add music models
+#     api_provider = get_music_api_provider(
+#         model_key=model_api_dict["model_name"],
+#     )
 
-    # TODO(CHRIS): make seed tunable.
-    seed = random.randint(0, 2**31 - 1)
+#     # TODO(CHRIS): make seed tunable.
+#     seed = random.randint(0, 2**31 - 1)
 
-    start_tstamp = time.time()
-    try:
-        music_response = api_provider.generate_music(state.prompt, seed=seed)
-        state.generated_music = music_response.audio_data
-    except requests.exceptions.RequestException as e:
-        state.generated_music = None
-        yield [state, state.to_gradio_chatbot(), None] + [
-            disable_btn,
-            disable_btn,
-            disable_btn,
-            enable_btn,
-            enable_btn,
-        ]
-        return
+#     start_tstamp = time.time()
+#     try:
+#         music_response = api_provider.generate_music(state.prompt, seed=seed)
+#         state.generated_music = music_response.audio_data
+#     except requests.exceptions.RequestException as e:
+#         state.generated_music = None
+#         yield [state, state.to_gradio_chatbot(), None] + [
+#             disable_btn,
+#             disable_btn,
+#             disable_btn,
+#             enable_btn,
+#             enable_btn,
+#         ]
+#         return
 
-    api_provider = get_api_provider(
-        model_key=model_api_dict["model_name"],
-        api_key=model_api_dict["api_key"],
-    )
+#     api_provider = get_api_provider(
+#         model_key=model_api_dict["model_name"],
+#         api_key=model_api_dict["api_key"],
+#     )
 
-    # TODO(CHRIS): make seed tunable.
-    seed = random.randint(0, 2**31 - 1)
+#     # TODO(CHRIS): make seed tunable.
+#     seed = random.randint(0, 2**31 - 1)
 
-    start_tstamp = time.time()
-    try:
-        image_response = api_provider.generate_image(state.prompt)
-        image_response.image = crop_image(image_response.image, ratio=(16, 9))
-        state.generated_image = image_response.image
-        state.has_nsfw_image = image_response.moderation_flagged
-    except requests.exceptions.RequestException as e:
-        state.generated_image = None
-        yield [state, state.to_gradio_chatbot(), None] + [
-            disable_btn,
-            disable_btn,
-            disable_btn,
-            enable_btn,
-            enable_btn,
-        ]
-        return
+#     start_tstamp = time.time()
+#     try:
+#         image_response = api_provider.generate_image(state.prompt)
+#         image_response.image = crop_image(image_response.image, ratio=(16, 9))
+#         state.generated_image = image_response.image
+#         state.has_nsfw_image = image_response.moderation_flagged
+#     except requests.exceptions.RequestException as e:
+#         state.generated_image = None
+#         yield [state, state.to_gradio_chatbot(), None] + [
+#             disable_btn,
+#             disable_btn,
+#             disable_btn,
+#             enable_btn,
+#             enable_btn,
+#         ]
+#         return
 
-    finish_tstamp = time.time()
+#     finish_tstamp = time.time()
 
-    print(F"state.arena_type: {state.arena_type}")
-    print(F"ArenaType.TXT2MUSIC: {ArenaType.TXT2MUSIC}")
+#     print(F"state.arena_type: {state.arena_type}")
+#     print(F"ArenaType.TXT2MUSIC: {ArenaType.TXT2MUSIC}")
     
-    if state.generated_music is not None:
-        music_to_save = [state.generated_music]
-    else:
-        music_to_save = []
+#     if state.generated_music is not None:
+#         music_to_save = [state.generated_music]
+#     else:
+#         music_to_save = []
 
-    if len(music_to_save) > 0:
-        (
-            music_directory_name,
-            remote_storage_flag,
-        ) = get_music_directory_name_and_remote_storage_flag(
-            use_remote_storage, state.arena_type
-        )
-        filenames = save_music_files(
-            music_to_save, music_directory_name, remote_storage_flag
-        )
-        if state.arena_type == ArenaType.TXT2MUSIC:
-            state.music_filenames = filenames
+#     if len(music_to_save) > 0:
+#         (
+#             music_directory_name,
+#             remote_storage_flag,
+#         ) = get_music_directory_name_and_remote_storage_flag(
+#             use_remote_storage, state.arena_type
+#         )
+#         filenames = save_music_files(
+#             music_to_save, music_directory_name, remote_storage_flag
+#         )
+#         if state.arena_type == ArenaType.TXT2MUSIC:
+#             state.music_filenames = filenames
 
-    filename = get_conv_log_filename(state.arena_type, state.has_csam_image)
+#     filename = get_conv_log_filename(state.arena_type, state.has_csam_image)
 
-    if state is None:
-        state = State(model_selector)
+#     if state is None:
+#         state = State(model_selector)
         
-    data = {
-        "tstamp": round(finish_tstamp, 4),
-        "type": "chat",
-        "model": model_name,
-        "start": round(start_tstamp, 4),
-        "finish": round(finish_tstamp, 4),
-        "state": state.model_dump(),
-        "ip": get_ip(request),
-    }
+#     data = {
+#         "tstamp": round(finish_tstamp, 4),
+#         "type": "chat",
+#         "model": model_name,
+#         "start": round(start_tstamp, 4),
+#         "finish": round(finish_tstamp, 4),
+#         "state": state.model_dump(),
+#         "ip": get_ip(request),
+#     }
 
-    # Note: upstream expects a generator element so we must yield here instead of returning
-    returned_music = state.generated_music
-    yield [state, state.to_gradio_chatbot(), returned_music] + [
-        disable_btn,
-        disable_btn,
-        disable_btn,
-        enable_btn,
-        enable_btn,
-    ]
-    return
+#     # Note: upstream expects a generator element so we must yield here instead of returning
+#     returned_music = state.generated_music
+#     yield [state, state.to_gradio_chatbot(), returned_music] + [
+#         disable_btn,
+#         disable_btn,
+#         disable_btn,
+#         enable_btn,
+#         enable_btn,
+#     ]
+#     return
 
 
 block_css = """
@@ -1369,34 +1250,6 @@ def build_single_model_ui(models, add_promotion_links=False):
                 model_a_label = gr.Markdown("**Model A: Unknown**", visible=False)
                 model_b_label = gr.Markdown("**Model B: Unknown**", visible=False)
 
-            # gr.HTML("""
-            # <script>
-            # document.getElementById("play_btn_1").onclick = () => {
-            #     const audio = document.querySelector("#custom-audio-1 audio");
-            #     if (audio) audio.play();
-            # };
-            # document.getElementById("pause_btn_1").onclick = () => {
-            #     const audio = document.querySelector("#custom-audio-1 audio");
-            #     if (audio) audio.pause();
-            # };
-            # document.getElementById("stop_btn_1").onclick = () => {
-            #     const audio = document.querySelector("#custom-audio-1 audio");
-            #     if (audio) {
-            #         audio.pause();
-            #         audio.currentTime = 0;
-            #     }
-            # };
-            # </script>
-            # """)       
-        # # Ongoing
-        # gr.HTML("""
-        # <script>
-        # setTimeout(() => {
-        #     const audio1 = document.querySelector('#custom-audio-1 audio');
-        #     console.log("Audio 1 exists?", !!audio1);
-        # }, 500);
-        # </script>
-        # """)   
            
     download_file = gr.File(label="🎵 Download your voted music!", visible=False)
 

@@ -18,7 +18,7 @@ import warnings
 import requests
 
 from constants import LOGDIR
-from gradio_global_state import ArenaType
+# from gradio_global_state import ArenaType
 
 handler = None
 visited_loggers = set()
