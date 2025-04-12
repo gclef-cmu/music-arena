@@ -1,98 +1,41 @@
 """
-Global constants.
-[Source] https://github.com/lmarena/FastChat-dev/blob/yonghyun/txt2music-dev/fastchat/constants.py
+Global constants for Music Arena application.
 """
 
 from enum import IntEnum
 import os
 
-REPO_PATH = os.path.dirname(os.path.dirname(__file__))
+# Basic backend connection settings
+BACKEND_URL = os.getenv("BACKEND_URL", "http://treble.cs.cmu.edu:12000")
 
-# Webdev arena
-COLOR = "#008B8B"
-SURVEY_LINK = f"""<div style='text-align: left; margin: 20px 0;'>
-    <div style='display: inline-block; border: 2px solid {COLOR}; padding: 20px; padding-bottom: 10px; padding-top: 10px; border-radius: 5px;'>
-        <span style='color: {COLOR}; font-weight: bold;'>New Launch! WebDev Arena: <a href='https://web.lmarena.ai' style='color: {COLOR}; text-decoration: underline;'>web.lmarena.ai</a> - AI Battle to build the best website!</span>
-    </div>
-</div>"""
+# Survey link for feedback
+SURVEY_LINK = "Have feedback? Fill out our [survey](https://forms.gle/BRJmeHuxTgPcqoAr8)."
 
-# beta arena
-# COLOR = "#008B8B"
-# SURVEY_LINK = f"""<div style='text-align: left; margin: 20px 0;'>
-#     <div style='display: inline-block; border: 2px solid {COLOR}; padding: 20px; padding-bottom: 10px; padding-top: 10px; border-radius: 5px;'>
-#         <span style='color: {COLOR}; font-weight: bold;'>News: visit <a href='https://chatbot-arena.web.app/' style='color: {COLOR}; text-decoration: underline;'>chatbot-arena.web.app</a> for our new experimental UI and let us know your feedback!</span>
-#     </div>
-# </div>"""
+# Error messages
+SERVER_ERROR_MSG = "The server is currently experiencing high traffic. Please try again later."
+MODERATION_MSG = "Your message contains content that violates our content policy. Please revise your message and try again."
+CONVERSATION_LIMIT_MSG = "You have reached the conversation message limit. Please restart the conversation."
+RATE_LIMIT_MSG = "You have reached the rate limit. Please try again later."
 
-# SURVEY_LINK = ""
-
-##### For the gradio web server
-SERVER_ERROR_MSG = (
-    "**NETWORK ERROR DUE TO HIGH TRAFFIC. PLEASE REGENERATE OR REFRESH THIS PAGE.**"
-)
-TEXT_MODERATION_MSG = (
-    "$MODERATION$ YOUR TEXT VIOLATES OUR CONTENT MODERATION GUIDELINES."
-)
-IMAGE_MODERATION_MSG = (
-    "$MODERATION$ YOUR IMAGE VIOLATES OUR CONTENT MODERATION GUIDELINES."
-)
-MODERATION_MSG = "$MODERATION$ YOUR INPUT VIOLATES OUR CONTENT MODERATION GUIDELINES."
-CONVERSATION_LIMIT_MSG = "YOU HAVE REACHED THE CONVERSATION LENGTH LIMIT. PLEASE CLEAR HISTORY AND START A NEW CONVERSATION."
-INACTIVE_MSG = "THIS SESSION HAS BEEN INACTIVE FOR TOO LONG. PLEASE REFRESH THIS PAGE."
-SLOW_MODEL_MSG = (
-    "⚠️  Models are thinking. Please stay patient as it may take over a minute."
-)
-RATE_LIMIT_MSG = "**RATE LIMIT OF THIS MODEL IS REACHED. PLEASE COME BACK LATER OR USE <span style='color: red; font-weight: bold;'>[BATTLE MODE](https://lmarena.ai)</span> (the 1st tab).**"
-# Maximum input length
+# Configuration limits
 INPUT_CHAR_LEN_LIMIT = int(os.getenv("FASTCHAT_INPUT_CHAR_LEN_LIMIT", 12000))
-TXT2IMG_INPUT_CHAR_LEN_LIMIT = int(
-    os.getenv("FASTCHAT_TXT2IMG_INPUT_CHAR_LEN_LIMIT", 1500)
-)
-BLIND_MODE_INPUT_CHAR_LEN_LIMIT = int(
-    os.getenv("FASTCHAT_BLIND_MODE_INPUT_CHAR_LEN_LIMIT", 30000)
-)
-# Maximum conversation turns
-CONVERSATION_TURN_LIMIT = 50
-# Session expiration time
-SESSION_EXPIRATION_TIME = 3600
+CONVERSATION_TURN_LIMIT = 30
+SESSION_EXPIRATION_TIME = 3600  # seconds
+
 # The output dir of log files
 LOGDIR = os.getenv("LOGDIR", ".")
-# CPU Instruction Set Architecture
-CPU_ISA = os.getenv("CPU_ISA")
 
-##### For the controller and workers (could be overwritten through ENV variables.)
-CONTROLLER_HEART_BEAT_EXPIRATION = int(
-    os.getenv("FASTCHAT_CONTROLLER_HEART_BEAT_EXPIRATION", 90)
-)
-WORKER_HEART_BEAT_INTERVAL = int(os.getenv("FASTCHAT_WORKER_HEART_BEAT_INTERVAL", 45))
+# API timeouts
 WORKER_API_TIMEOUT = int(os.getenv("FASTCHAT_WORKER_API_TIMEOUT", 100))
-WORKER_API_EMBEDDING_BATCH_SIZE = int(
-    os.getenv("FASTCHAT_WORKER_API_EMBEDDING_BATCH_SIZE", 4)
-)
 
 
 class ErrorCode(IntEnum):
     """
-    https://platform.openai.com/docs/guides/error-codes/api-errors
+    Simple error codes for API responses
     """
-
-    VALIDATION_TYPE_ERROR = 40001
-
-    INVALID_AUTH_KEY = 40101
-    INCORRECT_AUTH_KEY = 40102
-    NO_PERMISSION = 40103
-
-    INVALID_MODEL = 40301
-    PARAM_OUT_OF_RANGE = 40302
-    CONTEXT_OVERFLOW = 40303
-
-    RATE_LIMIT = 42901
-    QUOTA_EXCEEDED = 42902
-    ENGINE_OVERLOADED = 42903
-
-    INTERNAL_ERROR = 50001
-    CUDA_OUT_OF_MEMORY = 50002
-    GRADIO_REQUEST_ERROR = 50003
-    GRADIO_STREAM_UNKNOWN_ERROR = 50004
-    CONTROLLER_NO_WORKER = 50005
-    CONTROLLER_WORKER_TIMEOUT = 50006
+    INVALID_REQUEST = 400
+    UNAUTHORIZED = 401
+    FORBIDDEN = 403
+    NOT_FOUND = 404
+    RATE_LIMIT_EXCEEDED = 429
+    INTERNAL_SERVER_ERROR = 500

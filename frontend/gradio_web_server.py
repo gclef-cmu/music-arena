@@ -22,6 +22,13 @@ import time
 import uuid
 from typing import List, Dict
 
+# Load environment variables from .env file if it exists
+try:
+    from dotenv import load_dotenv
+    load_dotenv()
+except ImportError:
+    pass
+
 import gradio as gr
 import requests
 
@@ -32,9 +39,10 @@ from io import BytesIO
 
 from functools import partial
 
+# Import constants
 from constants import (
-    LOGDIR, # The output dir of log files LOGDIR = os.getenv("LOGDIR", ".")
-    WORKER_API_TIMEOUT, # int(os.getenv("FASTCHAT_WORKER_API_TIMEOUT", 100))
+    LOGDIR,
+    WORKER_API_TIMEOUT,
     ErrorCode,
     MODERATION_MSG,
     CONVERSATION_LIMIT_MSG,
@@ -44,7 +52,9 @@ from constants import (
     CONVERSATION_TURN_LIMIT,
     SESSION_EXPIRATION_TIME,
     SURVEY_LINK,
+    BACKEND_URL,
 )
+print(f"Using BACKEND_URL={BACKEND_URL}")
 
 class ArenaType:
     TXT2MUSIC = "txt2music-arena"
@@ -158,7 +168,6 @@ enable_btn = gr.Button(interactive=True, visible=True)
 disable_btn = gr.Button(interactive=False)
 invisible_btn = gr.Button(interactive=False, visible=False)
 
-controller_url = None
 enable_moderation = False
 use_remote_storage = False
 
@@ -208,7 +217,7 @@ def generate_audio_pair(prompt: str, user_id: str):
     }
 
 
-    response = requests.post("http://localhost:12001/generate_audio_pair", json=payload)
+    response = requests.post(f"{BACKEND_URL}/generate_audio_pair", json=payload)
 
     if response.status_code == 200:
         return response.json()  # AudioPairResponse Format
@@ -228,7 +237,7 @@ def send_vote(pair_id: str, user_id: str, winning_model: str, losing_model: str,
         "prompt": prompt
     }
 
-    response = requests.post("http://localhost:12000/record_vote", json=payload)
+    response = requests.post(f"{BACKEND_URL}/record_vote", json=payload)
     if response.ok:
         print("✅ Vote recorded!")
     else:
@@ -260,7 +269,7 @@ def call_backend_and_get_music(prompt, user_id="test_user", seed=42):
     }
 
     try:
-        res = requests.post("http://localhost:12000/generate_audio_pair", json=payload)
+        res = requests.post(f"{BACKEND_URL}/generate_audio_pair", json=payload)
         res.raise_for_status()
         response_json = res.json()
 
@@ -296,12 +305,10 @@ def prepare_download_file(winning_index):
         return gr.update(visible=False)
 
 def set_global_vars(
-    controller_url_,
     enable_moderation_,
     use_remote_storage_,
 ):
-    global controller_url, enable_moderation, use_remote_storage
-    controller_url = controller_url_
+    global enable_moderation, use_remote_storage
     enable_moderation = enable_moderation_
     use_remote_storage = use_remote_storage_
 
@@ -1498,8 +1505,8 @@ if __name__ == "__main__":
     logger.info(f"args: {args}")
 
     # Set global variables
-    set_global_vars(args.controller_url, args.moderate, args.use_remote_storage)
-    print(f"args.controller_url: {args.controller_url}") # http://localhost:21001
+    set_global_vars(args.moderate, args.use_remote_storage)
+    # Controller not used
     print(f"ARENA_TYPE: {ARENA_TYPE}") # txt2music-arena
     print(f"register-api-endpoint-file: {args.register_api_endpoint_file}") # None
     models, all_models = [], []

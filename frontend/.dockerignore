@@ -1,0 +1,21 @@
+# Exclude large Git directories and artifacts
+.git
+.gitignore
+
+# Exclude any logs, caches or temp files
+*.log
+__pycache__/
+*.py[cod]
+*$py.class
+
+# Exclude development-specific files
+.DS_Store
+.env
+
+# Exclude any virtual environment folders
+venv/
+env/
+ENV/
+
+# Exclude Docker files themselves
+.dockerignore
