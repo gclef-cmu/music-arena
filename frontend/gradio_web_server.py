@@ -1037,7 +1037,7 @@ def build_single_model_ui(models, add_promotion_links=False):
         surprise_me_btn = gr.Button(value="🔮 Surprise me", interactive=True)
         new_round_btn = gr.Button(value="🎲 New Round", interactive=False)
         regenerate_btn = gr.Button(value="🔄 Regenerate", interactive=False)
-        share_btn = gr.Button(value="📷 Share", interactive=True)
+        # share_btn = gr.Button(value="📷 Share", interactive=True)
 
     if add_promotion_links: None
     
@@ -1248,11 +1248,11 @@ def build_single_model_ui(models, add_promotion_links=False):
         [state, textbox]
     )
 
-    share_btn.click(
-        lambda: "Shared successfully! 📤",
-        None,
-        [textbox]
-    )
+    # share_btn.click(
+    #     lambda: "Shared successfully! 📤",
+    #     None,
+    #     [textbox]
+    # )
     
     # play_btn1.click(None, None, [], js="""
     # () => {
@@ -1327,9 +1327,9 @@ def build_single_model_ui(models, add_promotion_links=False):
         inputs=None,
         outputs=[a_better_btn, b_better_btn, tie_btn, both_bad_btn]
     ).then(
-        fn=lambda: [gr.update(interactive=True)] * 3,
+        fn=lambda: [gr.update(interactive=True)] * 2,
         inputs=None,
-        outputs=[new_round_btn, regenerate_btn, share_btn]
+        outputs=[new_round_btn, regenerate_btn]
     )
 
     return [state, model_selector]
