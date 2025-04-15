@@ -1289,9 +1289,9 @@ def build_single_model_ui(models, add_promotion_links=False):
         inputs=None,
         outputs=[a_better_btn, b_better_btn, tie_btn, both_bad_btn]
     ).then(
-        fn=lambda: [gr.update(interactive=False)]+[gr.update(interactive=True)]+[gr.update(interactive=False)],
+        fn=lambda: [gr.update(interactive=False)]*2+[gr.update(interactive=True)]+[gr.update(interactive=False)],
         inputs=None,
-        outputs=[surprise_me_btn, new_round_btn, regenerate_btn]
+        outputs=[send_btn, surprise_me_btn, new_round_btn, regenerate_btn]
     ).then(
         fn=lambda: (
             0.0,  # reset a_listen_time
@@ -1368,6 +1368,7 @@ def build_single_model_ui(models, add_promotion_links=False):
             gr.update(interactive=False),  # b_better_btn
             gr.update(interactive=False),  # tie_btn
             gr.update(interactive=False),  # both_bad_btn
+            gr.update(interactive=True),  # send_btn
             gr.update(interactive=True),   # surprise_me_btn
             gr.update(interactive=False)   # regenerate_btn
         ),
@@ -1384,7 +1385,7 @@ def build_single_model_ui(models, add_promotion_links=False):
             download_file,
             status_text,
             vote_buttons[0], vote_buttons[1], vote_buttons[2], vote_buttons[3],
-            surprise_me_btn, regenerate_btn
+            send_btn, surprise_me_btn, regenerate_btn
         ]
     )
 
@@ -1508,12 +1509,27 @@ def build_single_model_ui(models, add_promotion_links=False):
     # Apr 3 (BACKEND)
     
     send_btn.click(
+        fn=lambda prompt: None,
+        inputs=[textbox],
+        outputs=[],
+        js="""
+        () => {
+            const textbox = document.querySelector('#custom-input-row textarea');
+            if (!textbox || textbox.value.trim() === "") {
+                alert("⚠️ Please enter a prompt before pressing Send.");
+                throw new Error("Prompt is empty");
+            }
+            return textbox.value;
+        }
+    """
+    ).then(
         fn=lambda: (
+            gr.update(interactive=False),
             gr.update(interactive=False),
             gr.update(interactive=False)
         ),
         inputs=None,
-        outputs=[surprise_me_btn, new_round_btn]
+        outputs=[send_btn, surprise_me_btn, new_round_btn]
     ).then(
         fn=call_backend_and_get_music,
         inputs=[textbox],
@@ -1543,6 +1559,7 @@ def build_single_model_ui(models, add_promotion_links=False):
         inputs=None,
         outputs=[new_round_btn, regenerate_btn]
     )
+
 
     return [state, model_selector]
 
