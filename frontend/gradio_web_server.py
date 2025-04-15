@@ -110,6 +110,38 @@ def on_pause_b(b_start_time, a_listen_time, b_listen_time):
     message = update_vote_status(a_listen_time, b_listen_time)
     return b_start_time, b_listen_time, buttons[0], buttons[1], buttons[2], buttons[3], message
 
+def load_random_mock_pair(json_path="surprise_me/mock_pairs.json"):
+    with open(json_path, "r") as f:
+        mock_data = json.load(f)
+
+    selected = random.choice(mock_data)
+    prompt = selected["prompt"]
+    basename = selected["basename"]
+
+    models = ["musicgen-small", "musicgen-large", "sao", "songgen"]
+    
+    model_a, model_b = random.sample(models, 2)
+
+    audio_dir = "surprise_me/audio"
+    audio_1_path = os.path.join(audio_dir, f"{basename}_{model_a}.mp3")
+    audio_2_path = os.path.join(audio_dir, f"{basename}_{model_b}.mp3")
+
+    pair_id = f"mock_{uuid.uuid4().hex[:8]}"
+
+    return (
+        pair_id,
+        audio_1_path,
+        audio_2_path,
+        f"**Model A: {model_a}**",
+        f"**Model B: {model_b}**",
+        audio_1_path,
+        audio_2_path,
+        pair_id,
+        model_a,
+        model_b,
+        prompt
+    )
+
 
 logger = build_logger("gradio_web_server", "gradio_web_server.log")
 
@@ -444,22 +476,24 @@ def both_bad_last_response(state, model_selector, request: gr.Request, model_a, 
     )
     return ("",) + (disable_btn,) * 4
 
-# To be fixed
-def regenerate(state, request: gr.Request):
-    ip = get_ip(request)
-    logger.info(f"regenerate. ip: {ip}")
-    if not state.regen_support:
-        state.skip_next = True
-        return (state, state.to_gradio_chatbot(), "", None) + (no_change_btn,) * 5
-    state.conv.update_last_message(None)
-    return (state, state.to_gradio_chatbot(), "") + (disable_btn,) * 5
+# # To be fixed
+# def regenerate(state, request: gr.Request):
+#     ip = get_ip(request)
+#     logger.info(f"regenerate. ip: {ip}")
+#     if not state.regen_support:
+#         state.skip_next = True
+#         return (state, state.to_gradio_chatbot(), "", None) + (no_change_btn,) * 5
+#     state.conv.update_last_message(None)
+#     return (state, state.to_gradio_chatbot(), "") + (disable_btn,) * 5
+def regenerate(prompt, user_id="test_user", seed=42):
+    return call_backend_and_get_music(prompt, user_id=user_id, seed=seed)
 
 
-def clear_history(request: gr.Request):
-    ip = get_ip(request)
-    logger.info(f"clear_history. ip: {ip}")
-    state = None
-    return (state, [], "") + (disable_btn,) * 5
+# def clear_history(request: gr.Request):
+#     ip = get_ip(request)
+#     logger.info(f"clear_history. ip: {ip}")
+#     state = None
+#     return (state, [], "") + (disable_btn,) * 5
 
 def get_random_lyrics_block():
     samples = [
@@ -863,7 +897,7 @@ def build_single_model_ui(models, add_promotion_links=False):
                 with gr.Column():
                     # Hidden Default Audio Player (will be controlled via JS)
                     gr.WaveformOptions(show_recording_waveform=False)
-                    music_player_1 = gr.Audio(label="Generated Music 1", interactive=False, 
+                    music_player_1 = gr.Audio(label="Generated Music A", interactive=False, 
                                                 elem_id="custom-audio-1", show_download_button=False,
                                                 show_share_button=False, visible=True)
 
@@ -878,7 +912,7 @@ def build_single_model_ui(models, add_promotion_links=False):
 
                 # Right Audio Player w/ Controls
                 with gr.Column():
-                    music_player_2 = gr.Audio(label="Generated Music 2", interactive=False, 
+                    music_player_2 = gr.Audio(label="Generated Music B", interactive=False, 
                                               elem_id="custom-audio-2", show_download_button=False,
                                               show_share_button=False, visible=True)
                     # music_player_2.pause(on_pause_b)
@@ -1019,7 +1053,8 @@ def build_single_model_ui(models, add_promotion_links=False):
         </style>'''
     )
         
-    
+    lyrics_info_text = gr.Markdown("🔒 Lyrics checkbox is currently disabled. (Coming Soon)")
+
     with gr.Row(elem_id="custom-input-row"):
         with gr.Column(scale=7, min_width=120):
             textbox = gr.Textbox(
@@ -1027,7 +1062,10 @@ def build_single_model_ui(models, add_promotion_links=False):
                 placeholder="👉 Enter your prompt and press ENTER"
             )
         with gr.Column(scale=1, min_width=120):
-            checkbox = gr.Checkbox(label="Lyrics")
+            checkbox = gr.Checkbox(
+                label="Lyrics", 
+                interactive=False
+            )
         with gr.Column(scale=2, min_width=120):
             send_btn = gr.Button(value="Send", variant="primary")
         
@@ -1131,6 +1169,10 @@ def build_single_model_ui(models, add_promotion_links=False):
     fn=prepare_download_file,
     inputs=[gr.State(0), audio_1_path_state, audio_2_path_state],
     outputs=[download_file]
+    ).then(
+    fn=lambda: gr.update(interactive=False),
+    inputs=None,
+    outputs=[regenerate_btn]
     )
 
 
@@ -1159,6 +1201,10 @@ def build_single_model_ui(models, add_promotion_links=False):
     fn=prepare_download_file,
     inputs=[gr.State(1), audio_1_path_state, audio_2_path_state],
     outputs=[download_file]
+    ).then(
+    fn=lambda: gr.update(interactive=False),
+    inputs=None,
+    outputs=[regenerate_btn]
     )
 
     tie_btn.click(
@@ -1186,6 +1232,10 @@ def build_single_model_ui(models, add_promotion_links=False):
     fn=prepare_download_file,
     inputs=[gr.State(-1), audio_1_path_state, audio_2_path_state],
     outputs=[download_file]
+    ).then(
+    fn=lambda: gr.update(interactive=False),
+    inputs=None,
+    outputs=[regenerate_btn]
     )
 
 
@@ -1214,6 +1264,10 @@ def build_single_model_ui(models, add_promotion_links=False):
     fn=prepare_download_file,
     inputs=[gr.State(-1), audio_1_path_state, audio_2_path_state],
     outputs=[download_file]
+    ).then(
+    fn=lambda: gr.update(interactive=False),
+    inputs=None,
+    outputs=[regenerate_btn]
     )
 
     
@@ -1224,11 +1278,66 @@ def build_single_model_ui(models, add_promotion_links=False):
     # )
     
     # Retrieve from existing text-audio pair
+    # surprise_me_btn.click(
+    #     fn=lambda: "Classical Piano Music",
+    #     inputs=None,
+    #     outputs=[textbox],
+    # )
+
     surprise_me_btn.click(
-        fn=lambda: "Classical Piano Music",
+        fn=lambda: [gr.update(interactive=False)] * 4,
         inputs=None,
-        outputs=[textbox],
+        outputs=[a_better_btn, b_better_btn, tie_btn, both_bad_btn]
+    ).then(
+        fn=lambda: [gr.update(interactive=False)]+[gr.update(interactive=True)]+[gr.update(interactive=False)],
+        inputs=None,
+        outputs=[surprise_me_btn, new_round_btn, regenerate_btn]
+    ).then(
+        fn=lambda: (
+            0.0,  # reset a_listen_time
+            0.0,  # reset b_listen_time
+            None, # reset a_start_time
+            None  # reset b_start_time
+        ),
+        inputs=None,
+        outputs=[
+            a_listen_time_state,
+            b_listen_time_state,
+            a_start_time_state,
+            b_start_time_state
+        ]
+    ).then(
+        fn=lambda: (
+            gr.update(visible=False),  # hide download file
+            "⚠️ You must listen to at least 5 seconds of each audio before voting is enabled."
+        ),
+        inputs=None,
+        outputs=[download_file, status_text]
+    ).then(
+        fn=lambda: (
+            gr.update(value="**Model A: Unknown**", visible=False),
+            gr.update(value="**Model B: Unknown**", visible=False)
+        ),
+        inputs=None,
+        outputs=[model_a_label, model_b_label]
+    ).then(
+        fn=load_random_mock_pair,
+        inputs=None,
+        outputs=[
+            pair_id_state,          # pair_id
+            music_player_1,         # audio 1
+            music_player_2,         # audio 2
+            model_a_label,          # Model A Markdown
+            model_b_label,          # Model B Markdown
+            audio_1_path_state,     # audio 1 path (for download)
+            audio_2_path_state,     # audio 2 path (for download)
+            pair_id_state,          # (again, redundant but safe)
+            model_a_state,          # Model A name
+            model_b_state,          # Model B name
+            textbox                 # prompt
+        ]
     )
+
 
     # surprise_me_btn.click(
     #     lambda: ("./mock_data/audio/classical_piece_1.wav", "./mock_data/audio/classical_piece_2.wav"),
@@ -1236,17 +1345,113 @@ def build_single_model_ui(models, add_promotion_links=False):
     #     [music_player_1, music_player_2]
     # )
 
+    # new_round_btn.click(
+    #     clear_history,
+    #     None,
+    #     [state, textbox]
+    # )
     new_round_btn.click(
-        clear_history,
-        None,
-        [state, textbox]
+        fn=lambda: (
+            None,           # state
+            "",             # textbox
+            None, None,     # music_player_1, music_player_2
+            gr.update(value="**Model A: Unknown**", visible=False),  # model_a_label
+            gr.update(value="**Model A: Unknown**", visible=False),  # model_a_label (duplicate in output list)
+            gr.update(value="**Model B: Unknown**", visible=False),  # model_b_label
+            gr.update(value="**Model B: Unknown**", visible=False),  # model_b_label (duplicate)
+            0.0, 0.0,       # a_listen_time_state, b_listen_time_state
+            None, None,     # a_start_time_state, b_start_time_state
+            "", "", "",     # model_a_state, model_b_state, pair_id_state
+            gr.update(visible=False),      # download_file
+            "⚠️ You must listen to at least 5 seconds of each audio before voting is enabled.",  # status_text
+            gr.update(interactive=False),  # a_better_btn
+            gr.update(interactive=False),  # b_better_btn
+            gr.update(interactive=False),  # tie_btn
+            gr.update(interactive=False),  # both_bad_btn
+            gr.update(interactive=True),   # surprise_me_btn
+            gr.update(interactive=False)   # regenerate_btn
+        ),
+        inputs=None,
+        outputs=[
+            state,
+            textbox,
+            music_player_1, music_player_2,
+            model_a_label, model_a_label,
+            model_b_label, model_b_label,
+            a_listen_time_state, b_listen_time_state,
+            a_start_time_state, b_start_time_state,
+            model_a_state, model_b_state, pair_id_state,
+            download_file,
+            status_text,
+            vote_buttons[0], vote_buttons[1], vote_buttons[2], vote_buttons[3],
+            surprise_me_btn, regenerate_btn
+        ]
     )
 
+    # regenerate_btn.click(
+    #     regenerate,
+    #     state,
+    #     [state, textbox]
+    # )
     regenerate_btn.click(
-        regenerate,
-        state,
-        [state, textbox]
+        fn=lambda: (
+            0.0,  # reset a_listen_time
+            0.0,  # reset b_listen_time
+            None, # reset a_start_time
+            None  # reset b_start_time
+        ),
+        inputs=None,
+        outputs=[
+            a_listen_time_state,
+            b_listen_time_state,
+            a_start_time_state,
+            b_start_time_state
+        ]
+    ).then(
+        fn=lambda: (
+            gr.update(interactive=False),  # hide voting buttons
+            gr.update(interactive=False),
+            gr.update(interactive=False),
+            gr.update(interactive=False)
+        ),
+        inputs=None,
+        outputs=[a_better_btn, b_better_btn, tie_btn, both_bad_btn]
+    ).then(
+        fn=lambda: (
+            gr.update(visible=False),  # hide download file
+            "⚠️ You must listen to at least 5 seconds of each audio before voting is enabled."
+        ),
+        inputs=None,
+        outputs=[download_file, status_text]
+    ).then(
+        fn=lambda: (
+            gr.update(value="**Model A: Unknown**", visible=False),
+            gr.update(value="**Model B: Unknown**", visible=False)
+        ),
+        inputs=None,
+        outputs=[model_a_label, model_b_label]
+    ).then(
+        fn=regenerate,
+        inputs=[textbox],
+        outputs=[
+            pair_id_state,
+            music_player_1,
+            music_player_2,
+            model_a_label,
+            model_b_label,
+            audio_1_path_state,
+            audio_2_path_state
+        ]
+    ).then(
+        fn=lambda pair_id, model_a_label, model_b_label: (
+            pair_id,
+            model_a_label.replace("**Model A: ", "").replace("**", ""),
+            model_b_label.replace("**Model B: ", "").replace("**", "")
+        ),
+        inputs=[pair_id_state, model_a_label, model_b_label],
+        outputs=[pair_id_state, model_a_state, model_b_state]
     )
+
 
     # share_btn.click(
     #     lambda: "Shared successfully! 📤",
@@ -1303,6 +1508,13 @@ def build_single_model_ui(models, add_promotion_links=False):
     # Apr 3 (BACKEND)
     
     send_btn.click(
+        fn=lambda: (
+            gr.update(interactive=False),
+            gr.update(interactive=False)
+        ),
+        inputs=None,
+        outputs=[surprise_me_btn, new_round_btn]
+    ).then(
         fn=call_backend_and_get_music,
         inputs=[textbox],
         outputs=[
