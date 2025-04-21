@@ -136,6 +136,7 @@ class LyricsMusicAPIProvider(BaseMusicAPIProvider):
             "json_prompt": json.dumps({
                 "style": prompt,
                 "instrumental": False,
+                "lyrics": lyricsText
             })
         }
 

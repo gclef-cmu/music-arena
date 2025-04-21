@@ -197,7 +197,8 @@ def generate_audio_pair(prompt: str, user_id: str):
     payload = {
         "prompt": prompt,
         "userId": user_id, 
-        "seed": seed
+        "seed": seed,
+        "lyrics": lyrics
     }
 
     response = requests.post(f"{BACKEND_URL}/generate_audio_pair", json=payload)
@@ -244,11 +245,29 @@ def decode_base64_audio(audio_base64: str, prompt: str, model: str) -> str:
 
     return file_path
 
-def call_backend_and_get_music(prompt, user_id="test_user", seed=42):
+def call_backend_and_get_music(prompt, lyrics="", user_id="test_user", seed=42):
+    # Compose full prompt
+    full_prompt = prompt + (f"\nLyrics: {lyrics}" if lyrics.strip() else "")
+    
+    print(f"DEBUG: full_prompt: {full_prompt}")
+    # Choose models
+    if lyrics.strip():
+        selected_models = ["songgen", "songgen-b"]
+    else:
+        selected_models = ["musicgen-small", "musicgen-large", "sao", "songgen"]
+        # You may exclude "songgen" if you want no overlap
+
+    print(f"DEBUG: selected_models: {selected_models}")
+
+    
+    model_a, model_b = random.sample(selected_models, 2)
+
     payload = {
         "prompt": prompt,
         "userId": user_id,
-        "seed": seed
+        "seed": seed,
+        "lyrics": bool(lyrics.strip()),
+        "lyrics_text": lyrics.strip() if lyrics.strip() else None
     }
 
     try:
@@ -278,6 +297,7 @@ def call_backend_and_get_music(prompt, user_id="test_user", seed=42):
     except Exception as e:
         print(f"Error calling backend: {e}")
         return None, None, None, "Model A: Error", "Model B: Error", None, None
+
     
 # BACKEND (END)
 
@@ -1053,7 +1073,6 @@ def build_single_model_ui(models, add_promotion_links=False):
         </style>'''
     )
         
-    lyrics_info_text = gr.Markdown("🔒 Lyrics checkbox is currently disabled. (Coming Soon)")
 
     with gr.Row(elem_id="custom-input-row"):
         with gr.Column(scale=7, min_width=120):
@@ -1064,15 +1083,31 @@ def build_single_model_ui(models, add_promotion_links=False):
         with gr.Column(scale=1, min_width=120):
             checkbox = gr.Checkbox(
                 label="Lyrics", 
-                interactive=False
+                interactive=True
             )
         with gr.Column(scale=2, min_width=120):
             send_btn = gr.Button(value="Send", variant="primary")
-        
+
+    lyrics_box = gr.Textbox(
+        label="Lyrics Input",
+        visible=False,
+        interactive=True,
+        lines=3,
+        placeholder="🖋️ Enter lyrics here",
+        elem_id="lyrics_input"
+    )
+
+    checkbox.change(
+        fn=lambda show: gr.update(visible=show),
+        inputs=checkbox,
+        outputs=lyrics_box
+    )
+    
+    lyrics_info_text = gr.Markdown("🔒 🔮 Surprise me is currently disabled — Coming Soon!")
 
     with gr.Row() as extra_button_row:
         # Yonghyun
-        surprise_me_btn = gr.Button(value="🔮 Surprise me", interactive=True)
+        surprise_me_btn = gr.Button(value="🔮 Surprise me", interactive=False)
         new_round_btn = gr.Button(value="🎲 New Round", interactive=False)
         regenerate_btn = gr.Button(value="🔄 Regenerate", interactive=False)
         # share_btn = gr.Button(value="📷 Share", interactive=True)
@@ -1369,7 +1404,7 @@ def build_single_model_ui(models, add_promotion_links=False):
             gr.update(interactive=False),  # tie_btn
             gr.update(interactive=False),  # both_bad_btn
             gr.update(interactive=True),  # send_btn
-            gr.update(interactive=True),   # surprise_me_btn
+            gr.update(interactive=False),   # surprise_me_btn
             gr.update(interactive=False)   # regenerate_btn
         ),
         inputs=None,
@@ -1509,17 +1544,18 @@ def build_single_model_ui(models, add_promotion_links=False):
     # Apr 3 (BACKEND)
     
     send_btn.click(
-        fn=lambda prompt: None,
-        inputs=[textbox],
+        fn=lambda prompt, lyrics: None,
+        inputs=[textbox, lyrics_box],
         outputs=[],
         js="""
         () => {
             const textbox = document.querySelector('#custom-input-row textarea');
+            const lyricsbox = document.querySelector('textarea#lyrics_input');
             if (!textbox || textbox.value.trim() === "") {
                 alert("⚠️ Please enter a prompt before pressing Send.");
                 throw new Error("Prompt is empty");
             }
-            return textbox.value;
+            return [textbox.value, lyricsbox ? lyricsbox.value : ""];
         }
     """
     ).then(
@@ -1532,7 +1568,7 @@ def build_single_model_ui(models, add_promotion_links=False):
         outputs=[send_btn, surprise_me_btn, new_round_btn]
     ).then(
         fn=call_backend_and_get_music,
-        inputs=[textbox],
+        inputs=[textbox, lyrics_box],
         outputs=[
             pair_id_state,
             music_player_1,
@@ -1680,7 +1716,7 @@ if __name__ == "__main__":
     demo.queue(
         default_concurrency_limit=args.concurrency_count,
         status_update_rate=10,
-        api_open=False,
+        api_open=False
     ).launch(
         server_name=args.host,
         server_port=args.port,
