@@ -67,38 +67,40 @@ class FastAPIApp:
         self.gcp_client = GCPClient()
         
         # Load model configurations
-        self.model_configs = self._load_model_configs()
-        logger.info(f"Loaded {len(self.model_configs)} model configurations")
+        self.instrumental_model_configs = self._load_model_configs("instrumental_model_config.json")
+        self.lyrics_model_configs = self._load_model_configs("lyrics_model_config.json")
+        logger.info(f"Loaded {len(self.instrumental_model_configs)} instrumental and {len(self.lyrics_model_configs)} lyrics model configurations")
 
         # Set up routes
         self.setup_routes()
         logger.info("API is starting up")
         
-    def _load_model_configs(self):
+    def _load_model_configs(self, config_filename):
         """Load model configurations from the config file."""
-        config_path = os.path.join("config", "model_config.json")
+        config_path = os.path.join("config", config_filename)
         try:
             with open(config_path, "r") as f:
                 model_configs = json.load(f)
             return model_configs
         except Exception as e:
-            logger.warning(f"Error loading model config: {str(e)}. Using default empty config")
+            logger.warning(f"Error loading model config {config_filename}: {str(e)}. Using default empty config")
             return {}
             
-    def sample_random_models(self, count=2):
-        """Sample random models from the loaded configurations.
+    def sample_random_models(self, model_configs, count=2):
+        """Sample random models from the provided configurations.
         
         Args:
+            model_configs (dict): Dictionary of model configurations to sample from
             count (int): Number of models to sample
             
         Returns:
             list: List of sampled model keys
         """
-        if not self.model_configs or len(self.model_configs) < count:
+        if not model_configs or len(model_configs) < count:
             raise Exception("Error reading model config")
         
         # Select random models from available models
-        model_keys = list(self.model_configs.keys())
+        model_keys = list(model_configs.keys())
         return random.sample(model_keys, count)
 
     def setup_routes(self):
@@ -160,15 +162,18 @@ class FastAPIApp:
                 # Create a unique pair ID
                 pair_id = str(uuid.uuid4())
                 
-                # Sample two random models
-                selected_model_keys = self.sample_random_models(2)
+                # Select the appropriate model config based on lyrics parameter
+                model_configs = self.lyrics_model_configs if request.lyrics else self.instrumental_model_configs
+                
+                # Sample two random models from the selected config
+                selected_model_keys = self.sample_random_models(model_configs, count=2)
                 
                 # Get music API providers for both models
-                music_api_1 = get_music_api_provider(model_key=selected_model_keys[0])
-                music_api_2 = get_music_api_provider(model_key=selected_model_keys[1])
+                music_api_1 = get_music_api_provider(model_key=selected_model_keys[0], lyrics=request.lyrics)
+                music_api_2 = get_music_api_provider(model_key=selected_model_keys[1], lyrics=request.lyrics)
                 
                 logger.info(
-                    f"Using music models: {music_api_1.model_name} and {music_api_2.model_name}"
+                    f"Using {'lyrics' if request.lyrics else 'instrumental'} music models: {music_api_1.model_name} and {music_api_2.model_name}"
                 )
 
                 # Generate audio IDs

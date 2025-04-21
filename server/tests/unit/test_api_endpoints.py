@@ -136,3 +136,52 @@ def test_record_vote(client, mock_firebase_client):
     assert "voteId" in response_data
     assert "timestamp" in response_data
     assert response_data["status"] == "success"
+
+def test_generate_audio_pair_with_lyrics(client, mock_firebase_client, mock_gcp_client):
+    """Test that generate_audio_pair samples from lyrics models when lyrics=True."""
+    # Mock the sample_random_models method to verify it's called with the correct config
+    with patch('src.api.app.FastAPIApp.sample_random_models') as mock_sample:
+        # Mock the return value of sample_random_models
+        mock_sample.return_value = ['songgen', 'songgen']
+        
+        # Test request with lyrics=True
+        request_data = {
+            "prompt": "Generate a song with lyrics",
+            "userId": "test-user-123",
+            "lyrics": True
+        }
+        
+        response = client.post("/generate_audio_pair", json=request_data)
+        
+        # Verify response
+        assert response.status_code == 200
+        
+        # Verify that sample_random_models was called with lyrics_model_configs
+        mock_sample.assert_called_once()
+        args, kwargs = mock_sample.call_args
+        assert args[0] == client.app.lyrics_model_configs  # Should use lyrics config
+        assert kwargs.get('count', 2) == 2  # Default count should be 2
+
+def test_generate_audio_pair_without_lyrics(client, mock_firebase_client, mock_gcp_client):
+    """Test that generate_audio_pair samples from instrumental models when lyrics=False."""
+    # Mock the sample_random_models method to verify it's called with the correct config
+    with patch('src.api.app.FastAPIApp.sample_random_models') as mock_sample:
+        # Mock the return value of sample_random_models
+        mock_sample.return_value = ['musicgen-small', 'musicgen-large']
+        
+        # Test request with lyrics=False (default)
+        request_data = {
+            "prompt": "Generate an instrumental piece",
+            "userId": "test-user-123"
+        }
+        
+        response = client.post("/generate_audio_pair", json=request_data)
+        
+        # Verify response
+        assert response.status_code == 200
+        
+        # Verify that sample_random_models was called with instrumental_model_configs
+        mock_sample.assert_called_once()
+        args, kwargs = mock_sample.call_args
+        assert args[0] == client.app.instrumental_model_configs  # Should use instrumental config
+        assert kwargs.get('count', 2) == 2  # Default count should be 2

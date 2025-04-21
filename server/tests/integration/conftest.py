@@ -2,17 +2,23 @@
 Configuration for integration tests.
 """
 import os
+import sys
 import pytest
 import requests
 from fastapi.testclient import TestClient
-from src.api.app import app
+
+# Add the parent directory to the path so we can import from src
+sys.path.insert(0, os.path.abspath(os.path.join(os.path.dirname(__file__), '../..')))
+
+from src.api.app import FastAPIApp
 
 @pytest.fixture
 def client():
     """
     Create a test client for the FastAPI app.
     """
-    return TestClient(app)
+    test_app = FastAPIApp()
+    return TestClient(test_app.app)
 
 @pytest.fixture
 def test_prompt():

@@ -1,0 +1,20 @@
+{
+    "songgen": {
+        "provider": "custom-server",
+        "model_name": "songgen",
+        "config": {
+            "base_url": "http://treble.cs.cmu.edu:5125",
+            "check_interval": 1.0,
+            "max_wait_time": 60.0
+        }
+    },
+    "songgen-b": {
+        "provider": "custom-server",
+        "model_name": "songgen",
+        "config": {
+            "base_url": "http://treble.cs.cmu.edu:5125",
+            "check_interval": 1.0,
+            "max_wait_time": 60.0
+        }
+    }
+} 

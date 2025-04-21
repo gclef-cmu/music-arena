@@ -6,6 +6,7 @@ class AudioPairRequest(BaseModel):
     prompt: str
     user_id: str = Field(..., alias="userId")
     seed: Optional[int] = None
+    lyrics: bool = False
     
 class AudioItem(BaseModel):
     """Model for an audio item with metadata and binary data."""

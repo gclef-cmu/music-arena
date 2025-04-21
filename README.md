@@ -38,7 +38,7 @@ python -m gradio_web_server --share
 4. Build and start the containers:
    ```
    cd server
-   docker-compose up -d
+   docker-compose up --build
    ```
 
 5. The API will be available at:
