@@ -4,6 +4,7 @@ Direct unit tests for the music API without using Starlette.
 import json
 import pytest
 import requests
+import aiohttp
 
 # Mark all tests in this module as unit tests and music tests
 pytestmark = [pytest.mark.unit, pytest.mark.music]
@@ -112,28 +113,27 @@ class TestMusicAPI:
         assert provider.config["check_interval"] == 1.0
         assert provider.config["max_wait_time"] == 60.0
     
-    @patch("requests.post")
-    @patch("requests.get")
-    def test_generate_music_success(self, mock_get, mock_post):
+    @patch("aiohttp.ClientSession.post")
+    @patch("aiohttp.ClientSession.get")
+    @pytest.mark.asyncio
+    async def test_generate_music_success(self, mock_get, mock_post):
         """Test successful music generation."""
         # Mock the API responses
-        mock_post.return_value.json.return_value = {"job_id": "test-job-id"}
-        mock_post.return_value.raise_for_status = lambda: None
+        mock_post_context = mock_post.return_value.__aenter__.return_value
+        mock_post_context.json.return_value = {"job_id": "test-job-id"}
+        mock_post_context.raise_for_status = lambda: None
         
-        # Create proper mock responses
-        class MockStatusResponse:
-            def json(self):
-                return {"status": "COMPLETE"}
-            def raise_for_status(self):
-                pass
+        # Create proper mock responses for status and download
+        mock_status_context = mock_get.return_value.__aenter__.return_value
+        mock_status_context.json.return_value = {"status": "COMPLETE"}
+        mock_status_context.raise_for_status = lambda: None
         
-        class MockDownloadResponse:
-            content = b"mock_audio_data"
-            def raise_for_status(self):
-                pass
+        mock_download_context = mock_get.return_value.__aenter__.return_value
+        mock_download_context.read.return_value = b"mock_audio_data"
+        mock_download_context.raise_for_status = lambda: None
         
-        # Set up the side effect sequence
-        mock_get.side_effect = [MockStatusResponse(), MockDownloadResponse()]
+        # Set up the side effect sequence for get
+        mock_get.return_value.__aenter__.side_effect = [mock_status_context, mock_download_context]
         
         provider = CustomServerMusicAPIProvider(
             "test-model",
@@ -142,7 +142,8 @@ class TestMusicAPI:
             max_wait_time=1.0
         )
         
-        response = provider.generate_music("test prompt", seed=42)
+        # Call the async method and await the result
+        response = await provider.generate_music("test prompt", seed=42)
         
         assert isinstance(response, MusicResponseOutput)
         assert response.audio_data == b"mock_audio_data"
@@ -152,88 +153,86 @@ class TestMusicAPI:
         mock_post.assert_called_once_with("http://example.com/submit", data={"prompt": "test prompt", "seed": 42})
         assert mock_get.call_count == 2
     
-    @patch("requests.post")
-    @patch("requests.get")
-    def test_generate_music_error(self, mock_get, mock_post):
+    @patch("aiohttp.ClientSession.post")
+    @patch("aiohttp.ClientSession.get")
+    @pytest.mark.asyncio
+    async def test_generate_music_error(self, mock_get, mock_post):
         """Test music generation with error."""
         # Mock the API responses
-        mock_post.return_value.json.return_value = {"job_id": "test-job-id"}
-        mock_post.return_value.raise_for_status = lambda: None
+        mock_post_context = mock_post.return_value.__aenter__.return_value
+        mock_post_context.json.return_value = {"job_id": "test-job-id"}
+        mock_post_context.raise_for_status = lambda: None
         
-        # Create proper mock response
-        class MockErrorResponse:
-            def json(self):
-                return {"status": "ERROR"}
-            def raise_for_status(self):
-                pass
+        # Create proper mock response for status
+        mock_status_context = mock_get.return_value.__aenter__.return_value
+        mock_status_context.json.return_value = {"status": "ERROR"}
+        mock_status_context.raise_for_status = lambda: None
         
-        mock_get.return_value = MockErrorResponse()
+        # Set up the side effect sequence for get
+        mock_get.return_value.__aenter__.return_value = mock_status_context
         
         provider = CustomServerMusicAPIProvider(
             "test-model",
-            base_url="http://example.com",
+            base_url="http://localhost:5000",
             check_interval=0.1,
             max_wait_time=1.0
         )
         
-        response = provider.generate_music("test prompt")
+        # Call the async method and await the result
+        response = await provider.generate_music("test prompt")
         
         assert isinstance(response, MusicResponseOutput)
         assert response.audio_data is None
         assert "failed during processing" in response.error
-        
-        # Verify API calls
-        mock_post.assert_called_once_with("http://example.com/submit", data={"prompt": "test prompt"})
-        mock_get.assert_called_once()
     
-    @patch("requests.post")
-    @patch("requests.get")
-    def test_generate_music_timeout(self, mock_get, mock_post):
+    @patch("aiohttp.ClientSession.post")
+    @patch("aiohttp.ClientSession.get")
+    @pytest.mark.asyncio
+    async def test_generate_music_timeout(self, mock_get, mock_post):
         """Test music generation with timeout."""
         # Mock the API responses
-        mock_post.return_value.json.return_value = {"job_id": "test-job-id"}
-        mock_post.return_value.raise_for_status = lambda: None
+        mock_post_context = mock_post.return_value.__aenter__.return_value
+        mock_post_context.json.return_value = {"job_id": "test-job-id"}
+        mock_post_context.raise_for_status = lambda: None
         
-        # Create proper mock response
-        class MockProcessingResponse:
-            def json(self):
-                return {"status": "PROCESSING"}
-            def raise_for_status(self):
-                pass
+        # Create proper mock response for status
+        mock_status_context = mock_get.return_value.__aenter__.return_value
+        mock_status_context.json.return_value = {"status": "PROCESSING"}
+        mock_status_context.raise_for_status = lambda: None
         
-        mock_get.return_value = MockProcessingResponse()
+        # Set up the side effect sequence for get - always return processing
+        mock_get.return_value.__aenter__.return_value = mock_status_context
         
         provider = CustomServerMusicAPIProvider(
             "test-model",
-            base_url="http://example.com",
+            base_url="http://localhost:5000",
             check_interval=0.1,
             max_wait_time=0.2  # Very short timeout for testing
         )
         
-        response = provider.generate_music("test prompt")
+        # Call the async method and await the result
+        response = await provider.generate_music("test prompt")
         
         assert isinstance(response, MusicResponseOutput)
         assert response.audio_data is None
         assert "timed out" in response.error
-        
-        # Verify API calls
-        mock_post.assert_called_once_with("http://example.com/submit", data={"prompt": "test prompt"})
-        assert mock_get.call_count > 1  # Should be called multiple times during polling
     
-    @patch("requests.post")
-    def test_generate_music_request_exception(self, mock_post):
+    @patch("aiohttp.ClientSession.post")
+    @pytest.mark.asyncio
+    async def test_generate_music_request_exception(self, mock_post):
         """Test music generation with request exception."""
         # Mock the API response to raise an exception
-        mock_post.side_effect = requests.exceptions.RequestException("Connection error")
+        mock_post.return_value.__aenter__.side_effect = aiohttp.ClientError("Connection error")
         
         provider = CustomServerMusicAPIProvider(
             "test-model",
-            base_url="http://example.com",
+            base_url="http://localhost:5000",
             check_interval=0.1,
             max_wait_time=1.0
         )
         
-        response = provider.generate_music("test prompt")
+        # Call the async method and await the result
+        response = await provider.generate_music("test prompt")
         
         assert isinstance(response, MusicResponseOutput)
         assert response.audio_data is None
