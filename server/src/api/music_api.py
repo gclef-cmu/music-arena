@@ -1,6 +1,7 @@
-import requests
 import time
+from asyncio import aiohttp
 import logging
+import asyncio
 from abc import ABC, abstractmethod
 from dataclasses import dataclass
 from typing import Optional
@@ -36,7 +37,7 @@ class CustomServerMusicAPIProvider(BaseMusicAPIProvider):
             if key not in self.config:
                 raise ValueError(f"Missing required config key: {key}")
 
-    def generate_music(
+    async def generate_music(
         self, prompt: str, seed: Optional[int] = None
     ) -> MusicResponseOutput:
         """
@@ -61,41 +62,46 @@ class CustomServerMusicAPIProvider(BaseMusicAPIProvider):
         self.log_gen_params(data)
 
         try:
-            # Submit the job
-            submit_response = requests.post(f"{base_url}/submit", data=data)
-            submit_response.raise_for_status()
-            job_id = submit_response.json()["job_id"]
-
-            # Poll for completion
-            start_time = time.time()
-            while time.time() - start_time < max_wait_time:
-                status_response = requests.get(
-                    f"{base_url}/status", params={"job_id": job_id}
+            # Import aiohttp for async HTTP requests
+            async with aiohttp.ClientSession() as session:
+                # Submit the job
+                async with session.post(f"{base_url}/submit", data=data) as submit_response:
+                    submit_response.raise_for_status()
+                    submit_data = await submit_response.json()
+                    job_id = submit_data["job_id"]
+    
+                # Poll for completion
+                start_time = time.time()
+                while time.time() - start_time < max_wait_time:
+                    async with session.get(
+                        f"{base_url}/status", params={"job_id": job_id}
+                    ) as status_response:
+                        status_response.raise_for_status()
+                        status_data = await status_response.json()
+                        status = status_data["status"]
+    
+                    if status == "COMPLETE":
+                        # Download the generated audio
+                        async with session.get(
+                            f"{base_url}/download", params={"job_id": job_id}
+                        ) as download_response:
+                            download_response.raise_for_status()
+                            content = await download_response.read()
+                            return MusicResponseOutput(audio_data=content)
+    
+                    elif status == "ERROR":
+                        return MusicResponseOutput(
+                            audio_data=None, error=f"Job {job_id} failed during processing"
+                        )
+    
+                    await asyncio.sleep(check_interval)
+    
+                return MusicResponseOutput(
+                    audio_data=None,
+                    error=f"Job {job_id} timed out after {max_wait_time} seconds",
                 )
-                status_response.raise_for_status()
-                status = status_response.json()["status"]
 
-                if status == "COMPLETE":
-                    # Download the generated audio
-                    download_response = requests.get(
-                        f"{base_url}/download", params={"job_id": job_id}
-                    )
-                    download_response.raise_for_status()
-                    return MusicResponseOutput(audio_data=download_response.content)
-
-                elif status == "ERROR":
-                    return MusicResponseOutput(
-                        audio_data=None, error=f"Job {job_id} failed during processing"
-                    )
-
-                time.sleep(check_interval)
-
-            return MusicResponseOutput(
-                audio_data=None,
-                error=f"Job {job_id} timed out after {max_wait_time} seconds",
-            )
-
-        except requests.exceptions.RequestException as e:
+        except Exception as e:
             return MusicResponseOutput(
                 audio_data=None, error=f"API request failed: {str(e)}"
             )

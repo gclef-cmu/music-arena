@@ -6,7 +6,8 @@ import uuid
 import base64
 import logging
 import traceback
-from typing import Dict, Any, Optional, List
+import asyncio
+from typing import Dict, Any, Optional, List, Tuple
 from fastapi import (
     FastAPI,
     HTTPException,
@@ -147,15 +148,13 @@ class FastAPIApp:
                 raise HTTPException(status_code=500, detail=str(e))
 
         @self.app.post("/generate_audio_pair")
-        async def generate_audio_pair(
-            request: AudioPairRequest, background_tasks: BackgroundTasks
-        ):
+        async def generate_audio_pair(request: AudioPairRequest, background_tasks: BackgroundTasks):
             """
             Generate a pair of audio samples from a text prompt.
-
             The audio files are stored in Google Cloud Storage, and metadata is stored in Firebase.
             """
             start_time = time.time()
+            latency_breakdown = {}
 
             try:
                 # Create a unique pair ID
@@ -172,21 +171,33 @@ class FastAPIApp:
                     f"Using music models: {music_api_1.model_name} and {music_api_2.model_name}"
                 )
 
-                # Generate first audio
+                # Generate audio IDs
                 audio_id_1 = generate_unique_id()
-                generation_start_1 = time.time()
-                response_1 = music_api_1.generate_music(
-                    prompt=request.prompt, seed=request.seed
-                )
-                generation_time_1 = time.time() - generation_start_1
-
-                # Generate second audio 
                 audio_id_2 = generate_unique_id()
-                generation_start_2 = time.time()
-                response_2 = music_api_2.generate_music(
-                    prompt=request.prompt, seed=request.seed
+
+                # Execute generation tasks in parallel
+                generation_start = time.time()
+                task1 = asyncio.create_task(
+                    self.timed_generate_music(
+                        api_provider=music_api_1,
+                        prompt=request.prompt,
+                        seed=request.seed,
+                        model_name=music_api_1.model_name
+                    )
                 )
-                generation_time_2 = time.time() - generation_start_2
+                task2 = asyncio.create_task(
+                    self.timed_generate_music(
+                        api_provider=music_api_2,
+                        prompt=request.prompt,
+                        seed=request.seed,
+                        model_name=music_api_2.model_name
+                    )
+                )
+                (response_1, latency_1), (response_2, latency_2) = await asyncio.gather(task1, task2)
+                generation_time = time.time() - generation_start
+                latency_breakdown["generation_time"] = generation_time
+                latency_breakdown["model1_latency"] = latency_1
+                latency_breakdown["model2_latency"] = latency_2
 
                 # Check for errors
                 if response_1.error:
@@ -206,15 +217,9 @@ class FastAPIApp:
                 gcs_path_2 = f"audio/{audio_id_2}.mp3"
 
                 logger.info(f"Uploading audio files to GCS bucket: {bucket_name}")
-                url_1 = self.gcp_client.upload_file(
-                    bucket_name, response_1.audio_data, gcs_path_1
-                )
-                url_2 = self.gcp_client.upload_file(
-                    bucket_name, response_2.audio_data, gcs_path_2
-                )
-                logger.info(
-                    f"Audio files uploaded successfully. URLs: {url_1}, {url_2}"
-                )
+                url_1 = self.gcp_client.upload_file(bucket_name, response_1.audio_data, gcs_path_1)
+                url_2 = self.gcp_client.upload_file(bucket_name, response_2.audio_data, gcs_path_2)
+                logger.info(f"Audio files uploaded successfully. URLs: {url_1}, {url_2}")
 
                 # Create metadata
                 metadata_1 = create_audio_metadata(
@@ -222,7 +227,7 @@ class FastAPIApp:
                     user_id=request.user_id,
                     prompt=request.prompt,
                     model=music_api_1.model_name,
-                    latency=generation_time_1,
+                    latency=latency_1,
                     seed=request.seed,
                     pair_audio_id=audio_id_2,
                     pair_index=0,
@@ -233,7 +238,7 @@ class FastAPIApp:
                     user_id=request.user_id,
                     prompt=request.prompt,
                     model=music_api_2.model_name,
-                    latency=generation_time_2,
+                    latency=latency_2,
                     seed=request.seed,
                     pair_audio_id=audio_id_1,
                     pair_index=1,
@@ -243,14 +248,12 @@ class FastAPIApp:
                 metadata_1["audioUrl"] = url_1
                 metadata_2["audioUrl"] = url_2
 
-                # Upload metadata to Firebase synchronously
+                # Upload metadata to Firebase
                 collection = self.settings["firebase_collections"]["audio_metadata"]
                 logger.info(f"Uploading metadata to Firebase collection: {collection}")
                 doc_id_1 = self.firebase_client.upload_data(collection, metadata_1)
                 doc_id_2 = self.firebase_client.upload_data(collection, metadata_2)
-                logger.info(
-                    f"Metadata uploaded successfully. Document IDs: {doc_id_1}, {doc_id_2}"
-                )
+                logger.info(f"Metadata uploaded successfully. Document IDs: {doc_id_1}, {doc_id_2}")
 
                 # Prepare response with Base64 encoded audio data
                 audio_item_1 = AudioItem(
@@ -266,18 +269,32 @@ class FastAPIApp:
                 response = AudioPairResponse(pairId=pair_id, audioItems=[audio_item_1, audio_item_2])
 
                 total_time = time.time() - start_time
-                logger.info(
-                    f"Generated audio pair in {total_time:.2f}s. Pair ID: {pair_id}"
-                )
+                latency_breakdown["total_time"] = total_time
+                logger.info(f"Generated audio pair in {total_time:.2f}s. Pair ID: {pair_id}")
+                logger.info(f"Latency breakdown: {latency_breakdown}")
 
                 return response
 
             except Exception as e:
-                error_msg = (
-                    f"Error generating audio pair: {str(e)}\n{traceback.format_exc()}"
-                )
+                error_msg = f"Error generating audio pair: {str(e)}\n{traceback.format_exc()}"
                 logger.error(error_msg)
                 raise HTTPException(status_code=500, detail=str(e))
+
+    async def timed_generate_music(self, api_provider, prompt, seed, model_name):
+        """Helper function to time music generation and track metrics."""
+        try:
+            print(f"Starting {api_provider.__class__.__name__}.generate_music for model {model_name}")
+            start_time = asyncio.get_event_loop().time()
+            result = await api_provider.generate_music(prompt=prompt, seed=seed)
+            end_time = asyncio.get_event_loop().time()
+            latency = end_time - start_time
+            print(
+                f"Finished {api_provider.__class__.__name__}.generate_music for model {model_name}. Took {latency:.4f} seconds"
+            )
+            return result, latency
+        except Exception as e:
+            print(f"Error caught in timed_generate_music by {model_name}: {e}")
+            raise e
 
 
 # Create the FastAPI application
