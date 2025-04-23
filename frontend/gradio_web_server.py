@@ -267,7 +267,7 @@ def call_backend_and_get_music(prompt, lyrics="", user_id="test_user", seed=42):
         "userId": user_id,
         "seed": seed,
         "lyrics": bool(lyrics.strip()),
-        "lyrics_text": lyrics.strip() if lyrics.strip() else None
+        "lyricsText": lyrics.strip() if lyrics.strip() else None
     }
 
     try:
@@ -1544,18 +1544,19 @@ def build_single_model_ui(models, add_promotion_links=False):
     # Apr 3 (BACKEND)
     
     send_btn.click(
-        fn=lambda prompt, lyrics: None,
-        inputs=[textbox, lyrics_box],
+        fn=lambda prompt, lyrics, show_lyrics: None,
+        inputs=[textbox, lyrics_box, checkbox],  # checkbox도 추가
         outputs=[],
         js="""
         () => {
             const textbox = document.querySelector('#custom-input-row textarea');
             const lyricsbox = document.querySelector('textarea#lyrics_input');
+            const checkbox = document.querySelector('#custom-input-row input[type="checkbox"]');
             if (!textbox || textbox.value.trim() === "") {
                 alert("⚠️ Please enter a prompt before pressing Send.");
                 throw new Error("Prompt is empty");
             }
-            return [textbox.value, lyricsbox ? lyricsbox.value : ""];
+            return [textbox.value, lyricsbox ? lyricsbox.value : "", checkbox?.checked];
         }
     """
     ).then(
@@ -1567,8 +1568,10 @@ def build_single_model_ui(models, add_promotion_links=False):
         inputs=None,
         outputs=[send_btn, surprise_me_btn, new_round_btn]
     ).then(
-        fn=call_backend_and_get_music,
-        inputs=[textbox, lyrics_box],
+        fn=lambda prompt, lyrics, show_lyrics: call_backend_and_get_music(
+            prompt, lyrics=lyrics if show_lyrics else ""
+        ),
+        inputs=[textbox, lyrics_box, checkbox],
         outputs=[
             pair_id_state,
             music_player_1,
