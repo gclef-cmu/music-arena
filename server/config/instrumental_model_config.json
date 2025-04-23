@@ -5,7 +5,7 @@
         "config": {
             "base_url": "http://treble.cs.cmu.edu:22709",
             "check_interval": 1.0,
-            "max_wait_time": 60.0
+            "max_wait_time": 600.0
         }
     },
     "sao": {
@@ -14,7 +14,7 @@
         "config": {
             "base_url": "http://treble.cs.cmu.edu:22105",
             "check_interval": 1.0,
-            "max_wait_time": 60.0
+            "max_wait_time": 600.0
         }
     },
     "musicgen-large": {
@@ -23,7 +23,7 @@
         "config": {
             "base_url": "http://treble.cs.cmu.edu:25009",
             "check_interval": 1.0,
-            "max_wait_time": 120.0
+            "max_wait_time": 600.0
         }
     }
 } 
