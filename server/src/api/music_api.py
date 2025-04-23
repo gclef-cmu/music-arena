@@ -115,7 +115,7 @@ class LyricsMusicAPIProvider(BaseMusicAPIProvider):
                 raise ValueError(f"Missing required config key: {key}")
 
     async def generate_music(
-        self, prompt: str, seed: Optional[int] = None
+        self, prompt: str, seed: Optional[int] = None, lyricsText: str = ""
     ) -> MusicResponseOutput:
         """
         Generate music with lyrics from a text prompt using the custom Flask server.

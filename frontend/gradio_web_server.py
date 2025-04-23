@@ -192,21 +192,21 @@ api_endpoint_info = {}
 ARENA_TYPE = ArenaType.TXT2MUSIC #ArenaType.TXT2MUSIC # ArenaType.TEXT
 
 # BACKEND (START)
-def generate_audio_pair(prompt: str, user_id: str):
-    # Referred to server/api/models.py
-    payload = {
-        "prompt": prompt,
-        "userId": user_id, 
-        "seed": seed,
-        "lyrics": lyrics
-    }
+# def generate_audio_pair(prompt: str, user_id: str):
+#     # Referred to server/api/models.py
+#     payload = {
+#         "prompt": prompt,
+#         "userId": user_id, 
+#         "seed": seed,
+#         "lyrics": lyrics
+#     }
 
-    response = requests.post(f"{BACKEND_URL}/generate_audio_pair", json=payload)
+#     response = requests.post(f"{BACKEND_URL}/generate_audio_pair", json=payload)
 
-    if response.status_code == 200:
-        return response.json()  # AudioPairResponse Format
-    else:
-        print("Error:", response.status_code, response.text)
+#     if response.status_code == 200:
+#         return response.json()  # AudioPairResponse Format
+#     else:
+#         print("Error:", response.status_code, response.text)
         
 def send_vote(pair_id: str, user_id: str, winning_model: str, losing_model: str,
               winning_audio_id: str, losing_audio_id: str, winning_index: int, prompt: str):
@@ -259,13 +259,13 @@ def call_backend_and_get_music(prompt, lyrics="", user_id="test_user", seed=42):
 
     print(f"DEBUG: selected_models: {selected_models}")
 
-    
     model_a, model_b = random.sample(selected_models, 2)
+    print(f"DEBUG | model_a, model_b: {model_a}, {model_b}")
 
     payload = {
         "prompt": prompt,
         "userId": user_id,
-        "seed": seed,
+        "seed": None,
         "lyrics": bool(lyrics.strip()),
         "lyricsText": lyrics.strip() if lyrics.strip() else None
     }
@@ -280,8 +280,12 @@ def call_backend_and_get_music(prompt, lyrics="", user_id="test_user", seed=42):
         model_a = response_json["audioItems"][0]["model"]
         model_b = response_json["audioItems"][1]["model"]
         pair_id = response_json["pairId"]
+        
+        print(f"model_a: {model_a}")
+        print(f"model_b: {model_b}")
 
         audio_1 = decode_base64_audio(audio_1_base64, prompt, model_a)
+        time.sleep(1)
         audio_2 = decode_base64_audio(audio_2_base64, prompt, model_b)
 
         return (

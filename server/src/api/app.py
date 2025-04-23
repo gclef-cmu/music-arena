@@ -161,7 +161,7 @@ class FastAPIApp:
             try:
                 # Create a unique pair ID
                 pair_id = str(uuid.uuid4())
-                
+                    
                 # Select the appropriate model config based on lyrics parameter
                 model_configs = self.lyrics_model_configs if request.lyrics else self.instrumental_model_configs
                 

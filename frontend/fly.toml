@@ -1,9 +1,10 @@
-# fly.toml app configuration file generated for music-arena-dev on 2025-04-21T17:36:01-04:00
+# fly.toml app configuration file generated for music-arena-demo on 2025-04-23T12:25:29-04:00
 #
 # See https://fly.io/docs/reference/configuration/ for information about how to use this file.
 #
 
-app = 'music-arena-dev'
+# Yonghyun fly.io
+app = 'music-arena-demo'
 primary_region = 'atl'
 
 [build]
