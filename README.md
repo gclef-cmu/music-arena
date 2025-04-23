@@ -3,7 +3,7 @@
 A FastAPI server that handles JSON uploads to Firebase and audio file uploads to Google Cloud Storage.
 
 ## Front-End
-Before diving into the back-end setup, here’s a quick guide on how to launch the front end.
+Before diving into the back-end setup, here's a quick guide on how to launch the front end.
 
 The main front-end component is implemented in `frontend/gradio_web_server.py`.
 
@@ -114,3 +114,76 @@ Form data:
 - `file`: Audio file
 - `user_id`: User ID
 - `metadata`: Optional JSON metadata string
+
+# Secret Store
+
+A secure command-line tool for managing encrypted secrets in your repository.
+
+## Installation
+
+### From Source
+
+1. Clone this repository:
+   ```bash
+   git clone <repository-url>
+   cd <repository-directory>
+   ```
+
+2. Install the package in development mode:
+   ```bash
+   cd secrets_lib
+   pip install -e .
+   ```
+
+## Usage
+
+### CLI
+
+```bash
+# Add a new secret
+secret-store add MY_API_KEY "your-secret-value"
+
+# Show a secret
+secret-store show MY_API_KEY
+
+# List all secret keys
+secret-store list
+
+# Delete a secret
+secret-store delete MY_API_KEY
+```
+
+### Python API
+
+```python
+from secret_store import get_secret
+
+# Get a secret
+api_key = get_secret("MY_API_KEY")
+```
+
+## Security Notes
+
+- Secrets are encrypted using Fernet (symmetric encryption)
+- Encryption key is stored in memory (tmpfs) and cleared on system reboot
+- Keys expire after 1 week of inactivity
+- Invalid passwords are detected and cached keys are cleared
+- The encrypted secrets file (`secrets.enc`) is stored in your repository directory
+- The key file is stored in `/dev/shm/secrets` and cleared on system reboot
+
+## Best Practices
+
+1. Never commit the password to version control
+2. Share the password securely with team members
+3. Rotate secrets regularly
+4. Use different keys for different environments (e.g., `MY_API_KEY_DEV`, `MY_API_KEY_PROD`)
+5. Add `secrets.enc` to your version control (it's encrypted)
+6. The key file is automatically cleared on system reboot
+
+## Version Control
+
+The secrets are stored in two locations:
+- `secrets.enc`: Encrypted secrets file (in repository directory)
+- `.key.json`: Cached encryption key (in `/dev/shm/secrets`, cleared on reboot)
+
+The encrypted secrets file can be safely committed to version control. The key file is stored in memory and cleared on system reboot for added security.
