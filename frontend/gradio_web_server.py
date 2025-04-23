@@ -1097,7 +1097,7 @@ def build_single_model_ui(models, add_promotion_links=False):
         visible=False,
         interactive=True,
         lines=3,
-        placeholder="🖋️ Enter lyrics here",
+        placeholder="🖋️ Enter lyrics here, or leave blank to automatically generate lyrics",
         elem_id="lyrics_input"
     )
 
