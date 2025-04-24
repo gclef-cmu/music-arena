@@ -232,12 +232,12 @@ def sanitize_filename(text):
     words = re.findall(r'\w+', text)
     return "_".join(words[:3])
 
-def decode_base64_audio(audio_base64: str, prompt: str, model: str) -> str:
+def decode_base64_audio(audio_base64: str, prompt: str, model: str, audio_type: str) -> str:
     audio_bytes = base64.b64decode(audio_base64)
 
     timestamp = datetime.datetime.now().strftime("%Y-%m-%d-%H-%M-%S")
     sanitized_prompt = sanitize_filename(prompt)
-    filename = f"{timestamp}_{sanitized_prompt}_{model}.mp3"
+    filename = f"{timestamp}_{sanitized_prompt}_Model {audio_type}_{model}.mp3"
 
     file_path = f"/tmp/{filename}"
     with open(file_path, "wb") as f:
@@ -262,11 +262,20 @@ def call_backend_and_get_music(prompt, lyrics="", user_id="test_user", seed=42):
     model_a, model_b = random.sample(selected_models, 2)
     print(f"DEBUG | model_a, model_b: {model_a}, {model_b}")
 
+    # Same format with AudioPairRequest in API
+    '''
+    prompt: str
+    user_id: str = Field(..., alias="userId")
+    seed: Optional[int] = None
+    lyrics: bool = False
+    lyricsText: Optional[str] = None
+    '''
+    print(f'lyrics.strip(): {lyrics.strip()}')
     payload = {
         "prompt": prompt,
         "userId": user_id,
-        "seed": None,
-        "lyrics": bool(lyrics.strip()),
+        "seed": seed,
+        "lyrics": show_lyrics,
         "lyricsText": lyrics.strip() if lyrics.strip() else None
     }
 
@@ -280,13 +289,9 @@ def call_backend_and_get_music(prompt, lyrics="", user_id="test_user", seed=42):
         model_a = response_json["audioItems"][0]["model"]
         model_b = response_json["audioItems"][1]["model"]
         pair_id = response_json["pairId"]
-        
-        print(f"model_a: {model_a}")
-        print(f"model_b: {model_b}")
 
-        audio_1 = decode_base64_audio(audio_1_base64, prompt, model_a)
-        time.sleep(1)
-        audio_2 = decode_base64_audio(audio_2_base64, prompt, model_b)
+        audio_1 = decode_base64_audio(audio_1_base64, prompt, model_a, "A")
+        audio_2 = decode_base64_audio(audio_2_base64, prompt, model_b, "B")
 
         return (
             pair_id,
