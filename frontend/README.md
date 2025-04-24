@@ -8,7 +8,7 @@ To run the application locally:
 
 ```bash
 cd frontend
-python -m frontend.gradio_web_server --port 8080 --share --show-terms-of-use
+python -m gradio_web_server --port 8080 --share --show-terms-of-use
 ```
 
 ## Deploying to Fly.io
@@ -59,7 +59,7 @@ python -m frontend.gradio_web_server --port 8080 --share --show-terms-of-use
 After making changes to your code:
 
 ```bash
-fly deploy
+fly deploy --app 'your-backend-url'
 ```
 
 ### Managing Your Application
