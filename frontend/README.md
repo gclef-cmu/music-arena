@@ -51,7 +51,7 @@ python -m gradio_web_server --port 8080 --share --show-terms-of-use
    or
    ```bash
    fly secrets set BACKEND_URL=http://treble.cs.cmu.edu:12000 -a your-backend-url
-   ```bash
+   ```
 
 5. Open your deployed application
    ```bash
