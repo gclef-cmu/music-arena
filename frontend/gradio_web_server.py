@@ -118,7 +118,7 @@ def load_random_mock_pair(json_path="surprise_me/mock_pairs.json"):
     prompt = selected["prompt"]
     basename = selected["basename"]
 
-    models = ["musicgen-small", "musicgen-large", "sao", "songgen"]
+    models = ["musicgen-small", "musicgen-large", "sao", "songgen", "acestep"]
     
     model_a, model_b = random.sample(models, 2)
 
@@ -245,16 +245,16 @@ def decode_base64_audio(audio_base64: str, prompt: str, model: str, audio_type: 
 
     return file_path
 
-def call_backend_and_get_music(prompt, lyrics="", user_id="test_user", seed=42):
+def call_backend_and_get_music(prompt, lyrics="", user_id="test_user", seed=42, show_lyrics=False):
     # Compose full prompt
     full_prompt = prompt + (f"\nLyrics: {lyrics}" if lyrics.strip() else "")
     
     print(f"DEBUG: full_prompt: {full_prompt}")
     # Choose models
     if lyrics.strip():
-        selected_models = ["songgen", "songgen-b"]
+        selected_models = ["songgen", "acestep"]
     else:
-        selected_models = ["musicgen-small", "musicgen-large", "sao", "songgen"]
+        selected_models = ["musicgen-small", "musicgen-large", "sao", "songgen", "acestep"]
         # You may exclude "songgen" if you want no overlap
 
     print(f"DEBUG: selected_models: {selected_models}")
@@ -304,6 +304,8 @@ def call_backend_and_get_music(prompt, lyrics="", user_id="test_user", seed=42):
         )
 
     except Exception as e:
+        if "[Errno 111]" in str(e) or "Connection refused" in str(e).lower():
+            raise gr.Error("🛠️ The AI model service is temporarily unavailable, possibly for maintenance. Please try again in a little while. We apologize for any inconvenience.", duration=10)
         print(f"Error calling backend: {e}")
         return None, None, None, "Model A: Error", "Model B: Error", None, None
 
@@ -514,8 +516,8 @@ def both_bad_last_response(state, model_selector, request: gr.Request, model_a, 
 #         return (state, state.to_gradio_chatbot(), "", None) + (no_change_btn,) * 5
 #     state.conv.update_last_message(None)
 #     return (state, state.to_gradio_chatbot(), "") + (disable_btn,) * 5
-def regenerate(prompt, user_id="test_user", seed=42):
-    return call_backend_and_get_music(prompt, user_id=user_id, seed=seed)
+# def regenerate(prompt, user_id="test_user", seed=42):
+#     return call_backend_and_get_music(prompt, user_id=user_id, seed=seed)
 
 
 # def clear_history(request: gr.Request):
@@ -764,6 +766,7 @@ def get_model_description_md_from_json(json_path, display_model_list):
         "MusicGen - Large": "musicgen-large",
         "Stable Audio Open": "sao",
         "SongGen": "songgen",
+        "ACE-Step": "acestep"
     }
 
     with open(json_path, "r") as f:
@@ -875,7 +878,7 @@ def build_single_model_ui(models, add_promotion_links=False):
                 allow_custom_value=True
             )
         with gr.Row():
-            model_list = ["MusicGen - Small", "MusicGen - Large", "Stable Audio Open", "SongGen"]
+            model_list = ["MusicGen - Small", "MusicGen - Large", "Stable Audio Open", "SongGen", "ACE-Step"]
             with gr.Accordion(f"🔍 Expand to see the descriptions of {len(model_list)} models", open=False):
                 model_description_md = get_model_description_md_from_json("model/model_descriptions.json", model_list)
                 gr.Markdown(model_description_md, elem_id="model_description_markdown")
@@ -1476,8 +1479,12 @@ def build_single_model_ui(models, add_promotion_links=False):
         inputs=None,
         outputs=[model_a_label, model_b_label]
     ).then(
-        fn=regenerate,
-        inputs=[textbox],
+        fn=lambda prompt, lyrics, show_lyrics: call_backend_and_get_music(
+            prompt=prompt,
+            lyrics=lyrics,
+            show_lyrics=show_lyrics
+        ),
+        inputs=[textbox, lyrics_box, checkbox],
         outputs=[
             pair_id_state,
             music_player_1,
@@ -1554,7 +1561,7 @@ def build_single_model_ui(models, add_promotion_links=False):
     
     send_btn.click(
         fn=lambda prompt, lyrics, show_lyrics: None,
-        inputs=[textbox, lyrics_box, checkbox],  # checkbox도 추가
+        inputs=[textbox, lyrics_box, checkbox],
         outputs=[],
         js="""
         () => {
@@ -1578,7 +1585,7 @@ def build_single_model_ui(models, add_promotion_links=False):
         outputs=[send_btn, surprise_me_btn, new_round_btn]
     ).then(
         fn=lambda prompt, lyrics, show_lyrics: call_backend_and_get_music(
-            prompt, lyrics=lyrics if show_lyrics else ""
+            prompt, lyrics=lyrics, show_lyrics=show_lyrics
         ),
         inputs=[textbox, lyrics_box, checkbox],
         outputs=[

@@ -14,5 +14,9 @@
     "songgen": {
       "link": "https://www.songgen.ai/",
       "description": "Interactive AI songwriting assistant for co-creative and personalized music generation"
+    },
+    "acestep": {
+      "link": "https://ace-step.github.io/",
+      "description": "Open-source foundation model for controllable music generation, featuring a versatile architecture for diverse music AI tasks"
     }
   }

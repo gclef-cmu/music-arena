@@ -3,8 +3,8 @@
 # See https://fly.io/docs/reference/configuration/ for information about how to use this file.
 #
 
-# Yonghyun fly.io
-app = 'music-arena-demo'
+# gclef-at-cmu fly.io
+app = 'music-arena'
 primary_region = 'atl'
 
 [build]
