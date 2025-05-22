@@ -1,0 +1,151 @@
+.prose {
+    font-size: 105% !important;
+}
+
+#arena_leaderboard_dataframe table {
+    font-size: 105%;
+}
+#full_leaderboard_dataframe table {
+    font-size: 105%;
+}
+
+#vote_button_row {
+    display: flex; /* 버튼들을 가로로 배열 */
+    flex-wrap: nowrap; /* 버튼들이 다음 줄로 넘어가지 않도록 설정 (공간 부족 시 버튼 크기가 줄어듦) */
+    width: 100%;    /* 행 전체 너비 사용 */
+    box-sizing: border-box;
+    align-items: stretch; /* 모든 버튼의 높이를 동일하게 만듦 */
+    gap: 50px; /* 버튼 사이의 간격 (옵션) */
+}
+
+#vote_button_row > button { /* vote_button_row 내부의 모든 Gradio 버튼 */
+    flex-grow: 1;   /* 가용 공간이 있을 때 버튼들이 동일하게 늘어나도록 함 */
+    flex-shrink: 1; /* 공간이 부족할 때 버튼들이 동일하게 줄어들도록 함 */
+    flex-basis: 0;  /* 초기 크기를 0으로 설정하여 grow/shrink 비율에 따라 크기 결정 */
+    /* 또는 flex-basis: auto; 로 설정하여 내용물 크기를 기본으로 할 수도 있습니다. */
+
+    min-width: 0; /* 버튼이 내용물 크기보다 작게 줄어들 수 있도록 허용 (중요) */
+    padding: 8px 5px; /* 버튼 내부의 좌우 패딩을 줄여서 너비 확보 */
+    font-size: 0.9em; /* 버튼 내 폰트 크기를 약간 줄임 (예: 14px 또는 90%) */
+    /* white-space: nowrap; */ /* 버튼 내 텍스트가 여러 줄로 바뀌는 것을 방지 (필요시) */
+    text-align: center; /* 버튼 내 텍스트 중앙 정렬 */
+    margin: 0; /* 개별 버튼의 마진은 row의 gap으로 제어하거나 여기서 미세 조정 */
+}
+
+.tab-nav button {
+    font-size: 18px;
+}
+
+.chatbot h1 {
+    font-size: 130%;
+}
+.chatbot h2 {
+    font-size: 120%;
+}
+.chatbot h3 {
+    font-size: 110%;
+}
+
+#chatbot .prose {
+    font-size: 90% !important;
+}
+
+.sponsor-image-about img {
+    margin: 0 20px;
+    margin-top: 20px;
+    height: 40px;
+    max-height: 100%;
+    width: auto;
+    float: left;
+}
+
+.cursor {
+    display: inline-block;
+    width: 7px;
+    height: 1em;
+    background-color: black;
+    vertical-align: middle;
+    animation: blink 1s infinite;
+}
+
+.dark .cursor {
+    display: inline-block;
+    width: 7px;
+    height: 1em;
+    background-color: white;
+    vertical-align: middle;
+    animation: blink 1s infinite;
+}
+
+@keyframes blink {
+    0%, 50% { opacity: 1; }
+    50.1%, 100% { opacity: 0; }
+}
+
+.app {
+  max-width: 100% !important;
+  padding-left: 5% !important;
+  padding-right: 5% !important;
+}
+
+a {
+    color: #1976D2; /* Your current link color, a shade of blue */
+    text-decoration: none; /* Removes underline from links */
+}
+a:hover {
+    color: #63A4FF; /* This can be any color you choose for hover */
+    text-decoration: underline; /* Adds underline on hover */
+}
+
+.block {
+  overflow-y: hidden !important;
+}
+
+#custom-repochat-dataset .table {
+    text-align: left !important;
+}
+
+#custom-repochat-dataset th {
+    text-align: left !important;
+}
+
+#txt2img-prompt {
+    font-size: 115%;
+    text-align: center;
+}
+
+.grecaptcha-badge {
+    visibility: hidden;
+}
+
+.explorer {
+    overflow: hidden;
+    height: 60vw;
+    border: 1px solid lightgrey; 
+    border-radius: 10px;
+}
+
+@media screen and (max-width: 769px) {
+    .explorer {
+        height: 180vw;
+        overflow-y: scroll;
+        width: 100%;
+        overflow-x: hidden;
+    }
+}
+
+#_Transparent_Rectangle_ {
+    display: none;
+}
+
+#input_box textarea {
+    padding-top: 6px !important;
+    padding-bottom: 6px !important;
+    min-height: 36px !important;
+    line-height: 1 !important;
+}
+
+#custom-input-row {
+    align-items: center !important;
+    gap: 6px;
+}

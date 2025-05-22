@@ -39,3 +39,13 @@ class ErrorCode(IntEnum):
     NOT_FOUND = 404
     RATE_LIMIT_EXCEEDED = 429
     INTERNAL_SERVER_ERROR = 500
+
+KEY_TO_DISPLAY_NAME = {
+    "musicgen-small": "MusicGen - Small",
+    "musicgen-large": "MusicGen - Large",
+    "sao": "Stable Audio Open",
+    "songgen": "SongGen",
+    "acestep": "ACE-Step"
+}
+
+DISPLAY_NAME_TO_KEY = {v: k for k, v in KEY_TO_DISPLAY_NAME.items()}

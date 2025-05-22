@@ -4,7 +4,7 @@
 #
 
 # gclef-at-cmu fly.io
-app = 'music-arena'
+app = 'music-arena-dev'
 primary_region = 'atl'
 
 [build]

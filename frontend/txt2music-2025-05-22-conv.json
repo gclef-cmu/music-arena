@@ -1,0 +1,1 @@
+{"tstamp": 1747886915.8906, "type": "a_better", "model": null, "model_a": "sao", "model_b": "musicgen-large", "a_listen_time": 5.93, "b_listen_time": 5.12, "ip": "143.215.16.9", "prompt": "Jazz Music", "pair_id": "eb58d720-f320-495f-a609-bcd6a5370310", "winning_model": "sao", "losing_model": "musicgen-large", "winning_audio_id": "", "losing_audio_id": "", "winning_index": 0}

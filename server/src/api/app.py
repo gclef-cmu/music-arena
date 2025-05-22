@@ -161,7 +161,7 @@ class FastAPIApp:
             try:
                 # Create a unique pair ID
                 pair_id = str(uuid.uuid4())
-                
+                    
                 # Select the appropriate model config based on lyrics parameter
                 model_configs = self.lyrics_model_configs if request.lyrics else self.instrumental_model_configs
                 
@@ -187,8 +187,7 @@ class FastAPIApp:
                         api_provider=music_api_1,
                         prompt=request.prompt,
                         seed=request.seed,
-                        model_name=music_api_1.model_name,
-                        lyricsText="Hello Everyone! My name is Yonghyun. How are you?" if request.lyrics else None
+                        model_name=music_api_1.model_name
                     )
                 )
                 task2 = asyncio.create_task(
@@ -196,8 +195,7 @@ class FastAPIApp:
                         api_provider=music_api_2,
                         prompt=request.prompt,
                         seed=request.seed,
-                        model_name=music_api_2.model_name,
-                        lyricsText=request.lyricsText if request.lyrics else None
+                        model_name=music_api_2.model_name
                     )
                 )
                 (response_1, latency_1), (response_2, latency_2) = await asyncio.gather(task1, task2)
@@ -287,15 +285,12 @@ class FastAPIApp:
                 logger.error(error_msg)
                 raise HTTPException(status_code=500, detail=str(e))
 
-    async def timed_generate_music(self, api_provider, prompt, seed, model_name, lyricsText=None):
+    async def timed_generate_music(self, api_provider, prompt, seed, model_name):
         """Helper function to time music generation and track metrics."""
         try:
             print(f"Starting {api_provider.__class__.__name__}.generate_music for model {model_name}")
             start_time = asyncio.get_event_loop().time()
-            if model_name != "songgen":
-                result = await api_provider.generate_music(prompt=prompt, seed=seed)  # lyricsText (songgen)
-            else:
-                result = await api_provider.generate_music(prompt=prompt, seed=seed, lyricsText=lyricsText)
+            result = await api_provider.generate_music(prompt=prompt, seed=seed)
             end_time = asyncio.get_event_loop().time()
             latency = end_time - start_time
             print(

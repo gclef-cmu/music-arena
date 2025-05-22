@@ -1,13 +1,9 @@
 """
 The gradio demo server for chatting with a single model.
-
-Debugging Ongoing (Yonghyun)
-
 ```
 cd frontend
 python -m frontend.gradio_web_server --share
 ```
-
 """
 
 import argparse
@@ -20,6 +16,7 @@ import os
 import random
 import time
 import uuid
+import pandas as pd
 from typing import List, Dict
 
 # Load environment variables from .env file if it exists
@@ -53,15 +50,16 @@ from constants import (
     SESSION_EXPIRATION_TIME,
     SURVEY_LINK,
     BACKEND_URL,
+    KEY_TO_DISPLAY_NAME,
+    DISPLAY_NAME_TO_KEY
 )
 print(f"Using BACKEND_URL={BACKEND_URL}")
 
 class ArenaType:
     TXT2MUSIC = "txt2music-arena"
 
-
-# MUSICARENA (Previous version; TODO)
-from api_provider import get_music_api_provider
+# # MUSICARENA (Previous version; TODO)
+# from api_provider import get_music_api_provider
 
 from remote_logger import (
     get_remote_logger,
@@ -77,16 +75,21 @@ from utils import (
     get_music_directory_name_and_remote_storage_flag,
 )
 
-def enable_vote_buttons_if_ready(a_listen_time, b_listen_time):
+def enable_vote_buttons_if_ready(a_listen_time, b_listen_time, vote_cast):
+    if vote_cast:
+        return [gr.update(interactive=False)] * 4
     if a_listen_time >= 5.0 and b_listen_time >= 5.0:
         return [gr.update(interactive=True)] * 4
     return [gr.update(interactive=False)] * 4
 
-def update_vote_status(a_listen_time, b_listen_time):
-    if a_listen_time >= 5.0 and b_listen_time >= 5.0:
-        return "✅ You can now vote!"
+def update_vote_status(a_listen_time, b_listen_time, vote_cast):
+    if vote_cast: # 이미 투표했다면
+        return "🫶 Thank you for voting!"
     else:
-        return "⚠️ You must listen to at least 5 seconds of each audio before voting is enabled."
+        if a_listen_time >= 5.0 and b_listen_time >= 5.0:
+            return "✅ You can now vote!"
+        else:
+            return "⚠️ You must listen to at least 5 seconds of each audio before voting is enabled."
 
 def on_play_a(a_start_time):
     return time.time()
@@ -94,20 +97,20 @@ def on_play_a(a_start_time):
 def on_play_b(b_start_time):
     return time.time()
 
-def on_pause_a(a_start_time, a_listen_time, b_listen_time):
+def on_pause_a(a_start_time, a_listen_time, b_listen_time, current_vote_cast):
     if a_start_time:
         a_listen_time += time.time() - a_start_time
         a_start_time = None
-    buttons = enable_vote_buttons_if_ready(a_listen_time, b_listen_time)
-    message = update_vote_status(a_listen_time, b_listen_time)
+    buttons = enable_vote_buttons_if_ready(a_listen_time, b_listen_time, current_vote_cast)
+    message = update_vote_status(a_listen_time, b_listen_time, current_vote_cast)
     return a_start_time, a_listen_time, buttons[0], buttons[1], buttons[2], buttons[3], message
 
-def on_pause_b(b_start_time, a_listen_time, b_listen_time):
+def on_pause_b(b_start_time, a_listen_time, b_listen_time, current_vote_cast):
     if b_start_time:
         b_listen_time += time.time() - b_start_time
         b_start_time = None
-    buttons = enable_vote_buttons_if_ready(a_listen_time, b_listen_time)
-    message = update_vote_status(a_listen_time, b_listen_time)
+    buttons = enable_vote_buttons_if_ready(a_listen_time, b_listen_time, current_vote_cast)
+    message = update_vote_status(a_listen_time, b_listen_time, current_vote_cast)
     return b_start_time, b_listen_time, buttons[0], buttons[1], buttons[2], buttons[3], message
 
 def load_random_mock_pair(json_path="surprise_me/mock_pairs.json"):
@@ -155,58 +158,307 @@ invisible_btn = gr.Button(interactive=False, visible=False)
 enable_moderation = False
 use_remote_storage = False
 
-acknowledgment_md = """
-### Terms of Service
+# --- START: LEADERBOARD RELATED FUNCTIONS ---
+LEADERBOARD_DATA_URL = f"{BACKEND_URL}/get_leaderboard_data"
+# Path to your model descriptions JSON file
+MODEL_DESCRIPTIONS_PATH = "model/model_descriptions.json"
 
-Users are required to agree to the following terms before using the service:
+def load_model_descriptions(path):
+    """Loads model descriptions from a JSON file."""
+    try:
+        # Ensure the path is correct, especially if running from a different directory
+        base_dir = os.path.dirname(os.path.abspath(__file__)) # Gets the directory of the current script
+        full_path = os.path.join(base_dir, path)
+        
+        # If the above doesn't work (e.g. __file__ is not defined in interactive environments),
+        # you might need a more robust way to set the base path or use an absolute path.
+        # For simplicity, if __file__ is not defined, try relative path directly.
+        if not os.path.exists(full_path) and not os.path.isabs(path):
+             # Try relative path if the script dir approach failed or __file__ not defined
+            full_path = path # Fallback to using the path as is (e.g. if it's already absolute or correctly relative)
 
-The service is a research preview. It only provides limited safety measures and may generate offensive content.
-It must not be used for any illegal, harmful, violent, racist, or sexual purposes.
-Please do not upload any private information.
-The service collects user dialogue data, including both text and images, and reserves the right to distribute it under a Creative Commons Attribution (CC-BY) or a similar license.
 
-#### Please report any bug or issue to our [Discord](https://discord.gg/6GXcFg3TH8)/arena-feedback.
+        if not os.path.exists(full_path):
+            print(f"Warning: Model descriptions file not found at {full_path}. Using empty metadata.")
+            return {}
+            
+        with open(full_path, 'r', encoding='utf-8') as f:
+            descriptions = json.load(f)
+        return descriptions
+    except FileNotFoundError:
+        print(f"Error: The file {MODEL_DESCRIPTIONS_PATH} was not found. Full path attempted: {full_path}")
+        return {}
+    except json.JSONDecodeError:
+        print(f"Error: Could not decode JSON from {MODEL_DESCRIPTIONS_PATH}. Check for syntax errors.")
+        return {}
+    except Exception as e:
+        print(f"An unexpected error occurred while loading {MODEL_DESCRIPTIONS_PATH}: {e}")
+        return {}
 
-### Acknowledgment
-We thank [UC Berkeley SkyLab](https://sky.cs.berkeley.edu/), [a16z](https://a16z.com/announcing-our-latest-open-source-ai-grants/), [Sequoia](https://www.sequoiacap.com/article/building-the-future-meet-the-2024-sequoia-open-source-fellows/), [Fireworks AI](https://fireworks.ai/), [Together AI](https://together.ai/), [RunPod](https://runpod.io), [Anyscale](https://anyscale.com/), [Replicate](https://replicate.com/), [Fal AI](https://fal.ai/), [Hyperbolic](https://hyperbolic.xyz/), [Kaggle](https://www.kaggle.com/), [MBZUAI](https://mbzuai.ac.ae/), [HuggingFace](https://huggingface.co/) for their generous sponsorship.
+# Load model descriptions once when the script/module is loaded
+music_ai_models_metadata = load_model_descriptions(MODEL_DESCRIPTIONS_PATH)
 
-<div class="sponsor-image-about">
-    <a href="https://sky.cs.berkeley.edu/"><img src="https://storage.googleapis.com/public-arena-asset/skylab.png" alt="SkyLab"></a>
-    <a href="https://a16z.com/announcing-our-latest-open-source-ai-grants/"><img src="https://storage.googleapis.com/public-arena-asset/a16z.jpeg" alt="a16z"></a>
-    <a href="https://www.sequoiacap.com/article/building-the-future-meet-the-2024-sequoia-open-source-fellows/"><img src="https://storage.googleapis.com/public-arena-asset/sequoia.png" alt="Sequoia" style="padding-top:10px; padding-bottom:10px;"></a>
-    <a href="https://fireworks.ai/"><img src="https://storage.googleapis.com/public-arena-asset/fireworks.png" alt="Fireworks AI" style="padding-top:10px; padding-bottom:10px;"></a>
-    <a href="https://together.ai/"><img src="https://storage.googleapis.com/public-arena-asset/together.png" alt="Together AI"></a>
-    <a href="https://runpod.io/"><img src="https://storage.googleapis.com/public-arena-asset/runpod-logo.jpg" alt="RunPod"></a>
-    <a href="https://anyscale.com/"><img src="https://storage.googleapis.com/public-arena-asset/anyscale.png" alt="AnyScale"></a>
-    <a href="https://replicate.com/"><img src="https://storage.googleapis.com/public-arena-asset/replicate.png" alt="Replicate" style="padding-top:3px; padding-bottom:3px;"></a>
-    <a href="https://fal.ai/"><img src="https://storage.googleapis.com/public-arena-asset/fal.png" alt="Fal" style="padding-top:3px; padding-bottom:3px;"></a>
-    <a href="https://hyperbolic.xyz/"><img src="https://storage.googleapis.com/public-arena-asset/hyperbolic_logo.png" alt="Hyperbolic"></a>
-    <a href="https://www.kaggle.com/"><img src="https://storage.googleapis.com/public-arena-asset/kaggle.png" alt="Kaggle"></a>
-    <a href="https://mbzuai.ac.ae/"><img src="https://storage.googleapis.com/public-arena-asset/mbzuai.jpeg" alt="MBZUAI"></a>
-    <a href="https://huggingface.co/"><img src="https://storage.googleapis.com/public-arena-asset/huggingface.png" alt="HuggingFace"></a>
-</div>
+def get_model_meta(model_key, field, default="N/A"):
+    """Helper to safely get metadata for a model."""
+    return music_ai_models_metadata.get(model_key, {}).get(field, default)
+
+def infer_organization_license(model_key, description):
+    """Infers organization and license based on description or model key."""
+    # Basic inference, can be expanded
+    organization = "N/A"
+    license_type = "N/A"
+
+    if "Meta" in description:
+        organization = "Meta"
+        license_type = "Research/Proprietary" # Meta's licenses vary
+    elif "Stability AI" in description:
+        organization = "Stability AI"
+        license_type = "Open Source (Non-Commercial)"
+    elif "SongGen" in model_key or "songgen.ai" in get_model_meta(model_key, "link", ""):
+        organization = "SongGen AI"
+        license_type = "Proprietary"
+    elif "ACE-Step" in model_key or "ace-step.github.io" in get_model_meta(model_key, "link", ""):
+        organization = "ACE-Step Team"
+        license_type = "Open Source"
+    
+    # Fallback for models from JSON that don't match above
+    if model_key in music_ai_models_metadata:
+        # You could add 'organization' and 'license' fields directly to your JSON
+        # For now, we use the inferred ones or defaults.
+        if organization == "N/A" and "organization" in music_ai_models_metadata[model_key]:
+             organization = music_ai_models_metadata[model_key]["organization"]
+        if license_type == "N/A" and "license" in music_ai_models_metadata[model_key]:
+             license_type = music_ai_models_metadata[model_key]["license"]
+
+
+    return organization, license_type
+
+
+def fetch_and_format_leaderboard_data_global():
+    """
+    Fetches and formats leaderboard data, using Music AI model metadata loaded from JSON.
+    Returns a dictionary containing the DataFrame for the table and summary stats.
+    """
+    display_headers = [
+        "Rank (UB)", "Rank (StyleCtrl)", "Model", "Arena Score",
+        "95% CI", "Votes", "Organization", "License",
+    ]
+    summary_stats = {
+        "total_models": "N/A", "total_votes_str": "N/A", "last_updated": "N/A",
+    }
+
+    try:
+        # ... (real data fetching logic would go here) ...
+
+        # Mock data generation using loaded metadata
+        logger.warning("Using MOCK leaderboard data with JSON metadata. Implement backend endpoint for real data.")
+        
+        music_leaderboard_entries = []
+        # Define some base scores and vote counts for mock data generation
+        base_scores = {
+            "musicgen-large": 1520, "sao": 1485, "musicgen-small": 1450,
+            "acestep": 1410, "songgen": 1375
+        }
+        base_votes = {
+            "musicgen-large": 6200, "sao": 5500, "musicgen-small": 4800,
+            "acestep": 3900, "songgen": 3200
+        }
+        # Sort models by a predefined score for ranking, or use keys from JSON
+        sorted_model_keys = sorted(base_scores.keys(), key=lambda k: base_scores[k], reverse=True)
+
+        for rank, model_key in enumerate(sorted_model_keys):
+            if model_key not in music_ai_models_metadata:
+                print(f"Warning: Metadata for model key '{model_key}' not found in loaded JSON data. Skipping.")
+                continue
+
+            meta = music_ai_models_metadata[model_key]
+            description = meta.get("description", "No description available.")
+            org, lic = infer_organization_license(model_key, description)
+            
+            elo = base_scores.get(model_key, 1200)
+            votes = base_votes.get(model_key, 100)
+            ci_delta_lower = votes % 15 + 5 # Just some pseudo-random CI
+            ci_delta_upper = votes % 18 + 5 # Just some pseudo-random CI
+
+            music_leaderboard_entries.append({
+                "rank_ub": rank + 1,
+                "rank_stylectrl": rank + 1, # Assuming same rank for mock
+                "model_name": meta.get("model_display_name", KEY_TO_DISPLAY_NAME.get(model_key, model_key.replace('-', ' ').title())),
+                "link": meta.get("link", ""),
+                "elo_rating": elo,
+                "elo_rating_q025": elo - ci_delta_lower,
+                "elo_rating_q975": elo + ci_delta_upper,
+                "num_battles": votes,
+                "organization": org,
+                "license": lic
+            })
+        
+        mock_backend_response = {
+            "leaderboard": music_leaderboard_entries,
+            "summary": {
+                "total_models": len(music_leaderboard_entries) if music_leaderboard_entries else "N/A",
+                "total_votes_str": f"{sum(entry['num_battles'] for entry in music_leaderboard_entries):,}" if music_leaderboard_entries else "N/A",
+                "last_updated": "2025-05-22", # Example date
+            }
+        }
+        data_from_backend = mock_backend_response.get("leaderboard", [])
+        summary_stats.update(mock_backend_response.get("summary", {}))
+
+        if not data_from_backend:
+            return pd.DataFrame(columns=display_headers), summary_stats
+
+        df = pd.DataFrame(data_from_backend)
+        
+        # Column processing (same as before)
+        df["rank_ub"] = df.get("rank_ub", pd.Series(0, index=df.index, dtype=int))
+        df["rank_stylectrl"] = df.get("rank_stylectrl", pd.Series("N/A", index=df.index, dtype=str))
+        df["model_name"] = df.get("model_name", pd.Series("N/A", index=df.index, dtype=str))
+        df["link"] = df.get("link", pd.Series(None, index=df.index, dtype=object))
+        df["elo_rating"] = df.get("elo_rating", pd.Series(0.0, index=df.index, dtype=float))
+        df["elo_rating_q025"] = df.get("elo_rating_q025", df["elo_rating"])
+        df["elo_rating_q975"] = df.get("elo_rating_q975", df["elo_rating"])
+        df["num_battles"] = df.get("num_battles", pd.Series(0, index=df.index, dtype=int))
+        df["organization"] = df.get("organization", pd.Series("N/A", index=df.index, dtype=str))
+        df["license"] = df.get("license", pd.Series("N/A", index=df.index, dtype=str))
+
+        df_display = pd.DataFrame()
+        df_display["Rank (UB)"] = df["rank_ub"]
+        df_display["Rank (StyleCtrl)"] = df["rank_stylectrl"]
+        df_display["Model"] = df.apply(
+            lambda row: f"[{row['model_name']}]({row['link']})" if pd.notna(row['link']) and row['link'] else row['model_name'],
+            axis=1
+        )
+        df_display["Arena Score"] = df["elo_rating"].round(0).astype(int)
+        df_display["95% CI"] = df.apply(
+            lambda row: f"+{max(0, round(row['elo_rating_q975'] - row['elo_rating'])):.0f}/-{max(0, round(row['elo_rating'] - row['elo_rating_q025'])):.0f}"
+            if pd.notna(row['elo_rating_q025']) and pd.notna(row['elo_rating_q975']) and pd.notna(row['elo_rating'])
+            else "N/A",
+            axis=1
+        )
+        df_display["Votes"] = df["num_battles"]
+        df_display["Organization"] = df["organization"]
+        df_display["License"] = df["license"]
+        df_display = df_display[display_headers]
+
+        return df_display, summary_stats
+
+    except Exception as e: # Broader exception for mock data generation issues as well
+        # logger.error(f"Error in fetch_and_format_leaderboard_data_global: {e}", exc_info=True)
+        print(f"Error in fetch_and_format_leaderboard_data_global: {e}") # Print error for visibility
+        error_row = ["Error processing data"] + ["-"] * (len(display_headers) - 1)
+        return pd.DataFrame([error_row], columns=display_headers), summary_stats
+
+
+def build_leaderboard_ui():
+    with gr.Column():
+        gr.Markdown("## 📊 Model Leaderboard")
+        
+    with gr.Column():
+        summary_md = gr.Markdown()
+        with gr.Row():
+            # Using category options from your previous image for consistency
+            category_dropdown = gr.Dropdown(label="Category", choices=["Overall", "User Prompts Only", "Pre-generated Prompts (Surprise Me) Only"], value="Overall", interactive=True)
+            with gr.Column(scale=1):
+                style_control_checkbox = gr.Checkbox(label="Style Control", info="Apply style control adjustments", interactive=True)
+                deprecated_checkbox = gr.Checkbox(label="Show Deprecated", interactive=True)
+
+        leaderboard_display_headers = ["Rank (UB)", "Rank (StyleCtrl)", "Model", "Arena Score", "95% CI", "Votes", "Organization", "License"]
+        datatypes = ["number", "str", "markdown", "number", "str", "number", "str", "str"]
+        leaderboard_df_display = gr.DataFrame(
+            headers=leaderboard_display_headers, datatype=datatypes, interactive=False,
+            row_count=(15, "dynamic"), col_count=(len(leaderboard_display_headers), "fixed"), wrap=True,
+        )
+        refresh_button = gr.Button("🔄 Refresh Leaderboard")
+        with gr.Accordion("View Column Explanations", open=False):
+            gr.Markdown( # ... (explanations markdown, same as before) ...
+                """
+                - **Rank (UB):** Model's ranking (upper-bound). Defined as 1 + (number of models statistically better than this one). Model A is statistically better than model B if A's lower-bound score (from 95% CI) is greater than B's upper-bound score (from 95% CI).
+                - **Rank (StyleCtrl):** Model's ranking when style control is applied. This adjusts for factors like response length and use of markdown to try and decouple raw model capability from these stylistic choices. *(This may not be available for all categories or models).*
+                - **Model:** The name of the generative Music AI model. Clickable if a link to more information is available.
+                - **Arena Score:** The Elo rating of the model based on head-to-head battles. Higher scores indicate better performance.
+                - **95% CI:** The 95% confidence interval for the Arena Score, shown as `+Upper Error / -Lower Error` relative to the score. This indicates the range within which the true score likely lies.
+                - **Votes:** The total number of votes (or battles) this model has participated in to calculate its current score.
+                - **Organization:** The primary organization or research group behind the model.
+                - **License:** The usage license associated with the model.
+                """
+            )
+        
+        # This combined function will handle updates from button, dropdown, checkboxes
+        def handle_leaderboard_update(category_val, style_control_val, show_deprecated_val):
+            # logger.info(f"Updating leaderboard. Category: {category_val}, StyleControl: {style_control_val}, Deprecated: {show_deprecated_val}")
+            # NOTE: The fetch_and_format_leaderboard_data_global function currently doesn't use
+            # style_control_val or show_deprecated_val. You'd need to pass these to the backend
+            # or modify the function to filter/process based on them if handled client-side (less likely for complex logic).
+            
+            # For now, only category is used in fetch_and_format_leaderboard_data_global mock.
+            # df_data, summary_data = fetch_and_format_leaderboard_data_global(category=category_val) # If you adapt fetch function
+            df_data, summary_data = fetch_and_format_leaderboard_data_global() # Current mock doesn't filter by category yet.
+
+            total_models_val = summary_data.get('total_models', 'N/A')
+            total_votes_val = summary_data.get('total_votes_str', 'N/A')
+            last_updated_val = summary_data.get('last_updated', 'N/A')
+            summary_text = (
+                f"Category: **{category_val}** (Style Control: {style_control_val}, Show Deprecated: {show_deprecated_val})\n\n" # Reflecting filter states
+                f"Total #models: **{total_models_val}**. Total #votes: **{total_votes_val}**. Last updated: **{last_updated_val}**.\n\n"
+                "Code to recreate leaderboard tables and plots in [our analysis notebook](YOUR_MUSIC_ARENA_NOTEBOOK_LINK). " 
+            )
+            return summary_text, df_data
+
+        # Inputs for the handler function
+        update_inputs = [category_dropdown, style_control_checkbox, deprecated_checkbox]
+        
+        refresh_button.click(handle_leaderboard_update, inputs=update_inputs, outputs=[summary_md, leaderboard_df_display])
+        category_dropdown.change(handle_leaderboard_update, inputs=update_inputs, outputs=[summary_md, leaderboard_df_display])
+        style_control_checkbox.change(handle_leaderboard_update, inputs=update_inputs, outputs=[summary_md, leaderboard_df_display])
+        deprecated_checkbox.change(handle_leaderboard_update, inputs=update_inputs, outputs=[summary_md, leaderboard_df_display])
+        
+    # Return components that might be needed by a .load() event if this is part of a larger Blocks app
+    # and also the input components if they need to be referenced for initial load.
+    return summary_md, leaderboard_df_display, category_dropdown, style_control_checkbox, deprecated_checkbox
+
+# --- END: LEADERBOARD RELATED FUNCTIONS ---
+
+
+about_md = """
+## About Us
+Welcome to the Music Arena Leaderboard! This platform ranks Text-to-Music AI models 
+based on crowdsourced human preferences. Models are evaluated in head-to-head battles, 
+and their Elo ratings are updated dynamically. Explore the top models, their performance 
+metrics, and learn more about their capabilities.
+Powered by insights from CMU [Generative Creativity Lab (G-CLef)](https://chrisdonahue.com/#group), 
+Georgia Tech [Music Informatics Group](https://musicinformatics.gatech.edu/), 
+and [LM Arena](https://blog.lmarena.ai/about/).
+"""
+open_source_md = """
+## Open-source contributors
+Leads: [Wayne Chi](https://www.waynechi.com/), [Chris Donahue](https://chrisdonahue.com/), [Yonghyun Kim](https://yonghyunk1m.com)
 """
 
-api_endpoint_info = {}
+terms_of_service_md = """
+## Terms of Service
 
-ARENA_TYPE = ArenaType.TXT2MUSIC #ArenaType.TXT2MUSIC # ArenaType.TEXT
+Users are required to agree to the following terms before using the Music AI Arena service:
 
-# BACKEND (START)
-# def generate_audio_pair(prompt: str, user_id: str):
-#     # Referred to server/api/models.py
-#     payload = {
-#         "prompt": prompt,
-#         "userId": user_id, 
-#         "seed": seed,
-#         "lyrics": lyrics
-#     }
+1.  **Research Preview:** This service is a research preview intended for evaluating and comparing AI music generation models. It is provided "as is" without warranties of any kind.
+2.  **Prohibited Uses:** The service must not be used for any illegal, harmful, defamatory, or infringing purposes. Do not use prompts intended to generate such content.
+3.  **Privacy:** Please do not submit any private or sensitive personal information in your text prompts.
+4.  **Data Collection and Use:** The service collects data including your text prompts, your preferences (votes) regarding generated audio, and anonymized interaction data. This data is crucial for research to advance music generation technology and to improve this platform.
+5.  **Data Distribution:** We reserve the right to publicly release collected text prompts and voting data (but not the generated audio itself, which is subject to the terms of the individual AI models) under a Creative Commons Attribution (CC-BY) license or a similar open license.
+6.  **Feedback:** Your feedback is valuable. Please report any bugs, issues, or surprising outputs.
 
-#     response = requests.post(f"{BACKEND_URL}/generate_audio_pair", json=payload)
+#### Please report any bugs or issues to our [Discord](https://discord.gg/6GXcFg3TH8)/arena-feedback channel.
+"""
 
-#     if response.status_code == 200:
-#         return response.json()  # AudioPairResponse Format
-#     else:
-#         print("Error:", response.status_code, response.text)
+acknowledgment_md = """
+## Acknowledgment
+We are incredibly grateful for the support from the following organizations, which makes this research and platform possible:
+[LM Arena](https://blog.lmarena.ai/about/).
+
+<div class="sponsor-image-about">
+    <a href="https://blog.lmarena.ai"><img src="https://media.licdn.com/dms/image/v2/D560BAQFN6nC2aa-L6Q/company-logo_200_200/B56Zbuv79gGoAI-/0/1747762266220/lmarena_logo?e=1753315200&amp;v=beta&amp;t=Ee-WCpcVCrhhXqY2MGXQ_laqU8WFiwOBSjbeO_T6hzE" loading="lazy" alt="LMArena logo" style="height:50px;"></a>
+</div>
+"""
+ARENA_TYPE = ArenaType.TXT2MUSIC
         
 def send_vote(pair_id: str, user_id: str, winning_model: str, losing_model: str,
               winning_audio_id: str, losing_audio_id: str, winning_index: int, prompt: str):
@@ -246,31 +498,24 @@ def decode_base64_audio(audio_base64: str, prompt: str, model: str, audio_type: 
     return file_path
 
 def call_backend_and_get_music(prompt, lyrics="", user_id="test_user", seed=42, show_lyrics=False):
-    # Compose full prompt
-    full_prompt = prompt + (f"\nLyrics: {lyrics}" if lyrics.strip() else "")
-    
-    print(f"DEBUG: full_prompt: {full_prompt}")
-    # Choose models
-    if lyrics.strip():
-        selected_models = ["songgen", "acestep"]
-    else:
-        selected_models = ["musicgen-small", "musicgen-large", "sao", "songgen", "acestep"]
-        # You may exclude "songgen" if you want no overlap
 
+    full_prompt = prompt + (f"\nLyrics: {lyrics}" if lyrics.strip() else "")
+    print(f"DEBUG: full_prompt: {full_prompt}")
+
+    if lyrics.strip(): selected_models = ["songgen", "acestep"]
+    else: selected_models = ["musicgen-small", "musicgen-large", "sao", "songgen", "acestep"]
     print(f"DEBUG: selected_models: {selected_models}")
 
-    model_a, model_b = random.sample(selected_models, 2)
-    print(f"DEBUG | model_a, model_b: {model_a}, {model_b}")
+    # model_a, model_b = random.sample(selected_models, 2) # Commented; Random Selection will be happened in the API-level
 
-    # Same format with AudioPairRequest in API
     '''
+    # Same format with AudioPairRequest in API
     prompt: str
     user_id: str = Field(..., alias="userId")
     seed: Optional[int] = None
     lyrics: bool = False
     lyricsText: Optional[str] = None
     '''
-    print(f'lyrics.strip(): {lyrics.strip()}')
     payload = {
         "prompt": prompt,
         "userId": user_id,
@@ -278,7 +523,6 @@ def call_backend_and_get_music(prompt, lyrics="", user_id="test_user", seed=42, 
         "lyrics": show_lyrics,
         "lyricsText": lyrics.strip() if lyrics.strip() else None
     }
-
     try:
         res = requests.post(f"{BACKEND_URL}/generate_audio_pair", json=payload)
         res.raise_for_status()
@@ -308,9 +552,6 @@ def call_backend_and_get_music(prompt, lyrics="", user_id="test_user", seed=42, 
             raise gr.Error("🛠️ The AI model service is temporarily unavailable, possibly for maintenance. Please try again in a little while. We apologize for any inconvenience.", duration=10)
         print(f"Error calling backend: {e}")
         return None, None, None, "Model A: Error", "Model B: Error", None, None
-
-    
-# BACKEND (END)
 
 def prepare_download_file(winning_index, audio_1_path, audio_2_path):
     if winning_index == 0:
@@ -454,6 +695,7 @@ def a_better_last_response(state, model_selector, request: gr.Request, model_a, 
         gr.update(interactive=False),
         gr.update(interactive=False), 
         gr.update(interactive=False),
+        True # vote_cast_state
     )
 
 def b_better_last_response(state, model_selector, request: gr.Request, model_a, model_b, pair_id, audio_id_a, audio_id_b, current_prompt, a_listen_time, b_listen_time):
@@ -471,7 +713,7 @@ def b_better_last_response(state, model_selector, request: gr.Request, model_a, 
         a_listen_time=a_listen_time,
         b_listen_time=b_listen_time,
     )
-    return ("",) + (disable_btn,) * 4
+    return ("",) + (disable_btn,) * 4 + (True,)
 
 def tie_last_response(state, model_selector, request: gr.Request, model_a, model_b, pair_id, audio_id_a, audio_id_b, current_prompt, a_listen_time, b_listen_time):
     ip = get_ip(request)
@@ -488,7 +730,7 @@ def tie_last_response(state, model_selector, request: gr.Request, model_a, model
         a_listen_time=a_listen_time,
         b_listen_time=b_listen_time,
     )
-    return ("",) + (disable_btn,) * 4 
+    return ("",) + (disable_btn,) * 4 + (True,)
 
 def both_bad_last_response(state, model_selector, request: gr.Request, model_a, model_b, pair_id, audio_id_a, audio_id_b, current_prompt, a_listen_time, b_listen_time):
     ip = get_ip(request)
@@ -505,41 +747,8 @@ def both_bad_last_response(state, model_selector, request: gr.Request, model_a, 
         a_listen_time=a_listen_time,
         b_listen_time=b_listen_time,
     )
-    return ("",) + (disable_btn,) * 4
+    return ("",) + (disable_btn,) * 4 + (True,)
 
-# # To be fixed
-# def regenerate(state, request: gr.Request):
-#     ip = get_ip(request)
-#     logger.info(f"regenerate. ip: {ip}")
-#     if not state.regen_support:
-#         state.skip_next = True
-#         return (state, state.to_gradio_chatbot(), "", None) + (no_change_btn,) * 5
-#     state.conv.update_last_message(None)
-#     return (state, state.to_gradio_chatbot(), "") + (disable_btn,) * 5
-# def regenerate(prompt, user_id="test_user", seed=42):
-#     return call_backend_and_get_music(prompt, user_id=user_id, seed=seed)
-
-
-# def clear_history(request: gr.Request):
-#     ip = get_ip(request)
-#     logger.info(f"clear_history. ip: {ip}")
-#     state = None
-#     return (state, [], "") + (disable_btn,) * 5
-
-def get_random_lyrics_block():
-    samples = [
-        "Let the rhythm take control",
-        "Feel the beat within your soul",
-        "Under stars, we lose it all",
-        "Walking through the midnight rain",
-        "Singing softly through the pain",
-        "Hope will find us once again",
-        "Colors swirling in the sky",
-        "Lift your wings and learn to fly, Every note a lullaby.",
-        "Dreams we chase with open eyes",
-        "Melodies that never lie, Hearts collide and harmonize.",
-    ]
-    return random.choice(samples)
 
 def get_ip(request: gr.Request):
     if "cf-connecting-ip" in request.headers:
@@ -607,137 +816,6 @@ def is_limit_reached(model_name, ip):
         logger.info(f"monitor error: {e}")
         return None
 
-block_css = """
-.prose {
-    font-size: 105% !important;
-}
-
-#arena_leaderboard_dataframe table {
-    font-size: 105%;
-}
-#full_leaderboard_dataframe table {
-    font-size: 105%;
-}
-
-.tab-nav button {
-    font-size: 18px;
-}
-
-.chatbot h1 {
-    font-size: 130%;
-}
-.chatbot h2 {
-    font-size: 120%;
-}
-.chatbot h3 {
-    font-size: 110%;
-}
-
-#chatbot .prose {
-    font-size: 90% !important;
-}
-
-.sponsor-image-about img {
-    margin: 0 20px;
-    margin-top: 20px;
-    height: 40px;
-    max-height: 100%;
-    width: auto;
-    float: left;
-}
-
-.cursor {
-    display: inline-block;
-    width: 7px;
-    height: 1em;
-    background-color: black;
-    vertical-align: middle;
-    animation: blink 1s infinite;
-}
-
-.dark .cursor {
-    display: inline-block;
-    width: 7px;
-    height: 1em;
-    background-color: white;
-    vertical-align: middle;
-    animation: blink 1s infinite;
-}
-
-@keyframes blink {
-    0%, 50% { opacity: 1; }
-    50.1%, 100% { opacity: 0; }
-}
-
-.app {
-  max-width: 100% !important;
-  padding-left: 5% !important;
-  padding-right: 5% !important;
-}
-
-a {
-    color: #1976D2; /* Your current link color, a shade of blue */
-    text-decoration: none; /* Removes underline from links */
-}
-a:hover {
-    color: #63A4FF; /* This can be any color you choose for hover */
-    text-decoration: underline; /* Adds underline on hover */
-}
-
-.block {
-  overflow-y: hidden !important;
-}
-
-#custom-repochat-dataset .table {
-    text-align: left !important;
-}
-
-#custom-repochat-dataset th {
-    text-align: left !important;
-}
-
-#txt2img-prompt {
-    font-size: 115%;
-    text-align: center;
-}
-
-.grecaptcha-badge {
-    visibility: hidden;
-}
-
-.explorer {
-    overflow: hidden;
-    height: 60vw;
-    border: 1px solid lightgrey; 
-    border-radius: 10px;
-}
-
-@media screen and (max-width: 769px) {
-    .explorer {
-        height: 180vw;
-        overflow-y: scroll;
-        width: 100%;
-        overflow-x: hidden;
-    }
-}
-
-#_Transparent_Rectangle_ {
-    display: none;
-}
-
-#input_box textarea {
-    padding-top: 6px !important;
-    padding-bottom: 6px !important;
-    min-height: 36px !important;
-    line-height: 1 !important;
-}
-
-#custom-input-row {
-    align-items: center !important;
-    gap: 6px;
-}
-"""
-
 def get_model_description_md(models):
     model_description_md = """
 | | | |
@@ -761,14 +839,6 @@ def get_model_description_md(models):
     return model_description_md
 
 def get_model_description_md_from_json(json_path, display_model_list):
-    DISPLAY_NAME_TO_KEY = {
-        "MusicGen - Small": "musicgen-small",
-        "MusicGen - Large": "musicgen-large",
-        "Stable Audio Open": "sao",
-        "SongGen": "songgen",
-        "ACE-Step": "acestep"
-    }
-
     with open(json_path, "r") as f:
         model_info = json.load(f)
 
@@ -791,48 +861,6 @@ def get_model_description_md_from_json(json_path, display_model_list):
 
     return md
 
-def build_about():
-    about_markdown = """
-# About Us
-Chatbot Arena is an open platform for crowdsourced AI benchmarking, hosted by researchers at UC Berkeley [SkyLab](https://sky.cs.berkeley.edu/) and [LMArena](https://blog.lmarena.ai/about/). We open-source the [FastChat](https://github.com/lm-sys/FastChat) project at GitHub and release open datasets. We always welcome contributions from the community. If you're interested in collaboration, we'd love to hear from you!
-
-## Open-source contributors
-- Leads: [Wei-Lin Chiang](https://x.com/infwinston), [Anastasios Angelopoulos](https://x.com/ml_angelopoulos)
-- Contributors: [Lianmin Zheng](https://lmzheng.net/), [Ying Sheng](https://sites.google.com/view/yingsheng/home), [Lisa Dunlap](https://www.lisabdunlap.com/), [Christopher Chou](https://www.linkedin.com/in/chrisychou), [Tianle Li](https://codingwithtim.github.io/), [Evan Frick](https://efrick2002.github.io/), [Aryan Vichare](https://www.aryanvichare.dev/), [Naman Jain](https://naman-ntc.github.io/), [Manish Shetty](https://manishs.org/), [Dacheng Li](https://dachengli1.github.io/), [Kelly Tang](https://www.linkedin.com/in/kelly-yuguo-tang/), [Siyuan Zhuang](https://www.linkedin.com/in/siyuanzhuang)
-- Advisors: [Ion Stoica](http://people.eecs.berkeley.edu/~istoica/), [Joseph E. Gonzalez](https://people.eecs.berkeley.edu/~jegonzal/), [Hao Zhang](https://cseweb.ucsd.edu/~haozhang/), [Trevor Darrell](https://people.eecs.berkeley.edu/~trevor/)
-
-## Learn more
-- Chatbot Arena [paper](https://arxiv.org/abs/2403.04132), [launch blog](https://blog.lmarena.ai/), [dataset](https://github.com/lm-sys/FastChat/blob/main/docs/dataset_release.md), [policy](https://blog.lmarena.ai/blog/2024/policy/)
-- LMSYS-Chat-1M dataset [paper](https://arxiv.org/abs/2309.11998), LLM Judge [paper](https://arxiv.org/abs/2306.05685)
-
-## Contact Us
-- Follow our [X](https://x.com/lmarena_ai), [Discord](https://discord.gg/6GXcFg3TH8), [小红书](https://www.xiaohongshu.com/user/profile/6184a3dd000000001000a8fc) or email us at `lmarena.ai@gmail.com`
-- File issues on [GitHub](https://github.com/lm-sys/FastChat)
-- Download our datasets and models on [HuggingFace](https://huggingface.co/lmarena-ai)
-
-## Acknowledgment
-We thank [SkyPilot](https://github.com/skypilot-org/skypilot) and [Gradio](https://github.com/gradio-app/gradio) team for their system support.
-We also thank [UC Berkeley SkyLab](https://sky.cs.berkeley.edu/), [a16z](https://a16z.com/announcing-our-latest-open-source-ai-grants/), [Sequoia](https://www.sequoiacap.com/article/building-the-future-meet-the-2024-sequoia-open-source-fellows/), [Fireworks AI](https://fireworks.ai/), [Together AI](https://together.ai/), [RunPod](https://runpod.io), [Anyscale](https://anyscale.com/), [Replicate](https://replicate.com/), [Fal AI](https://fal.ai/), [Hyperbolic](https://hyperbolic.xyz/), [Kaggle](https://www.kaggle.com/), [MBZUAI](https://mbzuai.ac.ae/), [HuggingFace](https://huggingface.co/) for their generous sponsorship. Contact us to learn more about partnership.
-
-<div class="sponsor-image-about">
-    <a href="https://sky.cs.berkeley.edu/"><img src="https://storage.googleapis.com/public-arena-asset/skylab.png" alt="SkyLab"></a>
-    <a href="https://a16z.com/announcing-our-latest-open-source-ai-grants/"><img src="https://storage.googleapis.com/public-arena-asset/a16z.jpeg" alt="a16z"></a>
-    <a href="https://www.sequoiacap.com/article/building-the-future-meet-the-2024-sequoia-open-source-fellows/"><img src="https://storage.googleapis.com/public-arena-asset/sequoia.png" alt="Sequoia" style="padding-top:10px; padding-bottom:10px;"></a>
-    <a href="https://fireworks.ai/"><img src="https://storage.googleapis.com/public-arena-asset/fireworks.png" alt="Fireworks AI" style="padding-top:10px; padding-bottom:10px;"></a>
-    <a href="https://together.ai/"><img src="https://storage.googleapis.com/public-arena-asset/together.png" alt="Together AI"></a>
-    <a href="https://runpod.io/"><img src="https://storage.googleapis.com/public-arena-asset/runpod-logo.jpg" alt="RunPod"></a>
-    <a href="https://anyscale.com/"><img src="https://storage.googleapis.com/public-arena-asset/anyscale.png" alt="AnyScale"></a>
-    <a href="https://replicate.com/"><img src="https://storage.googleapis.com/public-arena-asset/replicate.png" alt="Replicate" style="padding-top:3px; padding-bottom:3px;"></a>
-    <a href="https://fal.ai/"><img src="https://storage.googleapis.com/public-arena-asset/fal.png" alt="Fal" style="padding-top:3px; padding-bottom:3px;"></a>
-    <a href="https://hyperbolic.xyz/"><img src="https://storage.googleapis.com/public-arena-asset/hyperbolic_logo.png" alt="Hyperbolic"></a>
-    <a href="https://www.kaggle.com/"><img src="https://storage.googleapis.com/public-arena-asset/kaggle.png" alt="Kaggle"></a>
-    <a href="https://mbzuai.ac.ae/"><img src="https://storage.googleapis.com/public-arena-asset/mbzuai.jpeg" alt="MBZUAI"></a>
-    <a href="https://huggingface.co/"><img src="https://storage.googleapis.com/public-arena-asset/huggingface.png" alt="HuggingFace"></a>
-</div>
-</div>
-"""
-    gr.Markdown(about_markdown, elem_id="about_markdown")
-
 def toggle_lyrics_box(show_lyrics):
     return (
         gr.update(visible=show_lyrics),
@@ -840,32 +868,15 @@ def toggle_lyrics_box(show_lyrics):
     )
 
 def build_single_model_ui(models, add_promotion_links=False):
-    promotion = (
-        f"""
-[小红书](https://www.xiaohongshu.com/user/profile/6184a3dd000000001000a8fc) | [Twitter](https://twitter.com/lmarena_ai) | [Discord](https://discord.gg/6GXcFg3TH8) | [Blog](https://blog.lmarena.ai/) | [GitHub](https://github.com/lm-sys/FastChat) | [Paper](https://arxiv.org/abs/2403.04132) | [Dataset](https://github.com/lm-sys/FastChat/blob/main/docs/dataset_release.md) | [Kaggle Competition](https://www.kaggle.com/competitions/wsdm-cup-multilingual-chatbot-arena)
-
-{SURVEY_LINK}
-
-## 👇 Choose any model to chat
-"""
-        if add_promotion_links
-        else ""
-    )
-
-    notice_markdown = f"""
-# 🎧 Music Arena: Free AI Music Generation to Compare & Test Best Music Generative AIs
-{promotion}
-"""
+    #notice_markdown = f"""# 🎧 Music Arena: Free AI Music Generation to Compare & Test Best Music Generative AIs"""
 
     state = gr.State()
-    gr.Markdown(notice_markdown, elem_id="notice_markdown")
-    audio_id_a_state = gr.State("")
-    audio_id_b_state = gr.State("")
+    #gr.Markdown(notice_markdown, elem_id="notice_markdown")
     prompt_state = gr.State("")
-    a_listen_time_state = gr.State(0.0)
-    b_listen_time_state = gr.State(0.0)
-    a_start_time_state = gr.State(None)
-    b_start_time_state = gr.State(None)
+    audio_id_a_state, audio_id_b_state = gr.State(""), gr.State("")
+    a_listen_time_state, b_listen_time_state = gr.State(0.0), gr.State(0.0)
+    a_start_time_state, b_start_time_state = gr.State(None), gr.State(None)
+    vote_cast_state = gr.State(False)
     
     with gr.Group(elem_id="share-region-named"):
         with gr.Row(elem_id="model_selector_row"):
@@ -875,204 +886,38 @@ def build_single_model_ui(models, add_promotion_links=False):
                 interactive=True,
                 show_label=False,
                 container=False,
-                allow_custom_value=True
+                allow_custom_value=True,
+                visible=False
             )
         with gr.Row():
             model_list = ["MusicGen - Small", "MusicGen - Large", "Stable Audio Open", "SongGen", "ACE-Step"]
             with gr.Accordion(f"🔍 Expand to see the descriptions of {len(model_list)} models", open=False):
                 model_description_md = get_model_description_md_from_json("model/model_descriptions.json", model_list)
                 gr.Markdown(model_description_md, elem_id="model_description_markdown")
-                
-        # Yonghyun (Add Gradio Audio Component for playing music)
-        # Custom CSS for hiding default waveform & time info
-        custom_css = """
-        /* Hide waveform and time info */
-        #custom-audio-1 canvas, 
-        #custom-audio-1 canvas,
-        #custom-audio-2 .waveform, 
-        #custom-audio-2 .time-info {
-            display: none !important;
-        }"""
 
-        def on_play():
-            print("Audio started playing.")
-        
-
-        with gr.Blocks(css=custom_css) as music_player:
-            
-            # html_audio = gr.HTML("""
-            # <audio id="audio1" src="audio_path.wav"></audio>
-
-            # <script>
-            # function playAudio() {
-            #     const audio = document.getElementById("audio1");
-            #     audio.play();
-            # }
-            # function pauseAudio() {
-            #     const audio = document.getElementById("audio1");
-            #     audio.pause();
-            # }
-            # function stopAudio() {
-            #     const audio = document.getElementById("audio1");
-            #     audio.pause();
-            #     audio.currentTime = 0;
-            # }
-            # </script>
-            # """)
-            # with gr.Row():
-            #     gr.HTML('<button onclick="playAudio()">▶️ Play</button>')
-            #     gr.HTML('<button onclick="pauseAudio()">⏸️ Pause</button>')
-            #     gr.HTML('<button onclick="stopAudio()">⏹️ Stop</button>')
-                        
+        with gr.Blocks() as music_player:
             with gr.Row():
-                # Left Audio Player w/ Controls
                 with gr.Column():
-                    # Hidden Default Audio Player (will be controlled via JS)
-                    gr.WaveformOptions(show_recording_waveform=False)
-                    music_player_1 = gr.Audio(label="Generated Music A", interactive=False, 
-                                                elem_id="custom-audio-1", show_download_button=False,
+                    music_player_A = gr.Audio(label="Generated Music A", interactive=False,
+                                                elem_id="music-A", show_download_button=False,
                                                 show_share_button=False, visible=True)
-
-                    # music_player_1.pause(on_pause_a)
-                    # music_player_1.stop(on_pause_a)
-                    # with gr.Row():
-                    #     play_btn1 = gr.Button("▶️ Play", elem_id="play_btn_1", interactive=False)
-                    #     pause_btn1 = gr.Button("⏸️ Pause", elem_id="pause_btn_1", interactive=False)
-                    #     stop_btn1 = gr.Button("⏹️ Stop", elem_id="stop_btn_1", interactive=False)
-                    #     forward_btn1 = gr.Button("⏩ +10s", elem_id="forward_btn_1", interactive=False)
-                    #     backward_btn1 = gr.Button("⏪ -10s", elem_id="backward_btn_1", interactive=False)
-
-                # Right Audio Player w/ Controls
                 with gr.Column():
-                    music_player_2 = gr.Audio(label="Generated Music B", interactive=False, 
-                                              elem_id="custom-audio-2", show_download_button=False,
+                    music_player_B = gr.Audio(label="Generated Music B", interactive=False, 
+                                              elem_id="music-B", show_download_button=False,
                                               show_share_button=False, visible=True)
-                    # music_player_2.pause(on_pause_b)
-                    # music_player_2.stop(on_pause_b)
-                    # with gr.Row():
-                    #     play_btn2 = gr.Button("▶️ Play", elem_id="play_btn_2", interactive=False)
-                    #     pause_btn2 = gr.Button("⏸️ Pause", elem_id="pause_btn_2", interactive=False)
-                    #     stop_btn2 = gr.Button("⏹️ Stop", elem_id="stop_btn_2", interactive=False)
-                    #     forward_btn2 = gr.Button("⏩ +10s", elem_id="forward_btn_2", interactive=False)
-                    #     backward_btn2 = gr.Button("⏪ -10s", elem_id="backward_btn_2", interactive=False)
-
+                
             with gr.Row():
                 model_a_label = gr.Markdown("**Model A: Unknown**", visible=False)
                 model_b_label = gr.Markdown("**Model B: Unknown**", visible=False)
-
            
     download_file = gr.File(label="🎵 Download your voted music!", visible=False)
-
     status_text = gr.Markdown("⚠️ You must listen to at least 5 seconds of each audio before voting is enabled.")
 
     with gr.Row() as button_row:
-        # Yonghyun
-        a_better_btn = gr.Button(value="👈 A is better", interactive=False)
-        b_better_btn = gr.Button(value="👉 B is better", interactive=False)
-        tie_btn = gr.Button(value="🤝 Tie", interactive=False)
-        both_bad_btn = gr.Button(value="👎 Both are bad", interactive=False)
-        
-        # music_player_1.play(on_play_a)
-        music_player_1.play(
-            on_play_a,
-            inputs=[a_start_time_state],
-            outputs=[a_start_time_state],
-        )
-        # music_player_1.pause(
-        #     on_pause_a,
-        #     outputs=[a_better_btn, b_better_btn, tie_btn, both_bad_btn, status_text]
-        # )
-        music_player_1.pause(
-            on_pause_a,
-            inputs=[a_start_time_state, a_listen_time_state, b_listen_time_state],
-            outputs=[
-                a_start_time_state,
-                a_listen_time_state,
-                a_better_btn,
-                b_better_btn,
-                tie_btn,
-                both_bad_btn,
-                status_text
-            ],
-        )
-        #music_player_1.pause(lambda: enable_vote_buttons_if_ready(), outputs=[a_better_btn, b_better_btn, tie_btn, both_bad_btn])
-        #music_player_1.stop(lambda: enable_vote_buttons_if_ready(), outputs=[a_better_btn, b_better_btn, tie_btn, both_bad_btn])
-        #music_player_2.play(on_play_b)
-        music_player_2.play(
-            on_play_b,
-            inputs=[b_start_time_state],
-            outputs=[b_start_time_state],
-        )
-        # music_player_2.pause(
-        #     on_pause_b,
-        #     outputs=[a_better_btn, b_better_btn, tie_btn, both_bad_btn, status_text]
-        # )
-        music_player_2.pause(
-            on_pause_b,
-            inputs=[b_start_time_state, a_listen_time_state, b_listen_time_state],
-            outputs=[
-                b_start_time_state,
-                b_listen_time_state,
-                a_better_btn,
-                b_better_btn,
-                tie_btn,
-                both_bad_btn,
-                status_text
-            ],
-        )
-        #music_player_2.pause(lambda: enable_vote_buttons_if_ready(), outputs=[a_better_btn, b_better_btn, tie_btn, both_bad_btn])
-        #music_player_2.stop(lambda: enable_vote_buttons_if_ready(), outputs=[a_better_btn, b_better_btn, tie_btn, both_bad_btn])
-        
-    html_code = """
-    <div id="audio-container">
-        <audio id="audio-player-1" controls></audio>
-        <audio id="audio-player-2" controls></audio>
-    </div>
-
-    <script>
-        function checkAudioLoaded() {
-            const audio1 = document.getElementById("audio-player-1");
-            const audio2 = document.getElementById("audio-player-2");
-
-            let audio1Loaded = false;
-            let audio2Loaded = false;
-
-            audio1.addEventListener("loadeddata", () => {
-                audio1Loaded = true;
-                enableButtonsIfReady();
-            });
-
-            audio2.addEventListener("loadeddata", () => {
-                audio2Loaded = true;
-                enableButtonsIfReady();
-            });
-
-            function enableButtonsIfReady() {
-                if (audio1Loaded && audio2Loaded) {
-                    console.log("✅ Both audio files loaded successfully!");
-                    document.getElementById("play-btn-1").disabled = false;
-                    document.getElementById("pause-btn-1").disabled = false;
-                    document.getElementById("stop-btn-1").disabled = false;
-                    document.getElementById("forward-btn-1").disabled = false;
-                    document.getElementById("backward-btn-1").disabled = false;
-
-                    document.getElementById("play-btn-2").disabled = false;
-                    document.getElementById("pause-btn-2").disabled = false;
-                    document.getElementById("stop-btn-2").disabled = false;
-                    document.getElementById("forward-btn-2").disabled = false;
-                    document.getElementById("backward-btn-2").disabled = false;
-                }
-            }
-        }
-
-        window.onload = checkAudioLoaded;
-    </script>
-    """
-
-    def load_audio():
-        audio_path_1 = "./mock_data/audio/classical_piece_1.wav"
-        audio_path_2 = "./mock_data/audio/classical_piece_2.wav"
-        return f"<script>checkAudioLoaded();</script>"
+        a_better_btn = gr.Button(value="👈 A is better", interactive=False, scale=1)
+        b_better_btn = gr.Button(value="👉 B is better", interactive=False, scale=1)
+        tie_btn = gr.Button(value="🤝 Tie", interactive=False, scale=1)
+        both_bad_btn = gr.Button(value="👎 Both are bad", interactive=False, scale=1, visible=False) # Temporarily hidden (visible=False)
 
     gr.HTML('''
         <style>
@@ -1085,7 +930,6 @@ def build_single_model_ui(models, add_promotion_links=False):
         </style>'''
     )
         
-
     with gr.Row(elem_id="custom-input-row"):
         with gr.Column(scale=7, min_width=120):
             textbox = gr.Textbox(
@@ -1118,77 +962,58 @@ def build_single_model_ui(models, add_promotion_links=False):
     lyrics_info_text = gr.Markdown("🔒 🔮 Surprise me is currently disabled — Coming Soon!")
 
     with gr.Row() as extra_button_row:
-        # Yonghyun
         surprise_me_btn = gr.Button(value="🔮 Surprise me", interactive=False)
         new_round_btn = gr.Button(value="🎲 New Round", interactive=False)
         regenerate_btn = gr.Button(value="🔄 Regenerate", interactive=False)
-        # share_btn = gr.Button(value="📷 Share", interactive=True)
 
     if add_promotion_links: None
-    
+
+    """Music Player"""
+    music_player_A.play(
+        on_play_a,
+        inputs=[a_start_time_state],
+        outputs=[a_start_time_state],
+    )
+    music_player_A.pause(
+        on_pause_a,
+        inputs=[a_start_time_state, a_listen_time_state, b_listen_time_state, vote_cast_state],
+        outputs=[
+            a_start_time_state,
+            a_listen_time_state,
+            a_better_btn,
+            b_better_btn,
+            tie_btn,
+            both_bad_btn,
+            status_text
+        ],
+    )
+
+    music_player_B.play(
+        on_play_b,
+        inputs=[b_start_time_state],
+        outputs=[b_start_time_state],
+    )
+
+    music_player_B.pause(
+        on_pause_b,
+        inputs=[b_start_time_state, a_listen_time_state, b_listen_time_state, vote_cast_state],
+        outputs=[
+            b_start_time_state,
+            b_listen_time_state,
+            a_better_btn,
+            b_better_btn,
+            tie_btn,
+            both_bad_btn,
+            status_text
+        ],
+    )
     # Declare model_a_state, model_b_state, pair_id_state at the top of `build_single_model_ui`:
     model_a_state = gr.State("")
     model_b_state = gr.State("")
     pair_id_state = gr.State("")
     audio_1_path_state = gr.State("")
     audio_2_path_state = gr.State("")
-
     
-    gr.HTML("""
-    <script>
-    
-    function getAudioById(id) {
-        const wrapper = document.getElementById(id);
-        return wrapper ? wrapper.querySelector("audio") : null;
-    }
-
-    function playAudio(id) {
-        const audio = getAudioById(id);
-        if (audio) audio.play();
-    }
-
-    function pauseAudio(id) {
-        const audio = getAudioById(id);
-        if (audio) audio.pause();
-    }
-
-    function stopAudio(id) {
-        const audio = getAudioById(id);
-        if (audio) {
-            audio.pause();
-            audio.currentTime = 0;
-        }
-    }
-
-    function forwardAudio(id) {
-        const audio = getAudioById(id);
-        if (audio) audio.currentTime += 10;
-    }
-
-    function backwardAudio(id) {
-        const audio = getAudioById(id);
-        if (audio) audio.currentTime -= 10;
-    }
-    </script>
-    """)
-
-    # button_js_pairs = [
-    #     (play_btn1, "playAudio('custom-audio-1')"),
-    #     (pause_btn1, "pauseAudio('custom-audio-1')"),
-    #     (stop_btn1, "stopAudio('custom-audio-1')"),
-    #     (forward_btn1, "forwardAudio('custom-audio-1')"),
-    #     (backward_btn1, "backwardAudio('custom-audio-1')"),
-    #     (play_btn2, "playAudio('custom-audio-2')"),
-    #     (pause_btn2, "pauseAudio('custom-audio-2')"),
-    #     (stop_btn2, "stopAudio('custom-audio-2')"),
-    #     (forward_btn2, "forwardAudio('custom-audio-2')"),
-    #     (backward_btn2, "backwardAudio('custom-audio-2')")
-    # ]
-
-    # for button, js_code in button_js_pairs:
-    #     button.click(None, None, [], js=f"() => {js_code}")
-        
-        
     vote_buttons = [a_better_btn, b_better_btn, tie_btn, both_bad_btn]
     
     a_better_btn.click(
@@ -1196,7 +1021,7 @@ def build_single_model_ui(models, add_promotion_links=False):
         inputs=[state, model_selector, model_a_state, model_b_state, 
          pair_id_state, audio_id_a_state, audio_id_b_state, 
          textbox, a_listen_time_state, b_listen_time_state],
-        outputs=[textbox] + vote_buttons
+        outputs=[textbox] + vote_buttons + [vote_cast_state]
     ).then(
         lambda: "Press \"🎲 New Round\" to start over👇 (Note: Your vote shapes the leaderboard, please vote RESPONSIBLY!)",
         None,
@@ -1222,13 +1047,12 @@ def build_single_model_ui(models, add_promotion_links=False):
     outputs=[regenerate_btn]
     )
 
-
     b_better_btn.click(
         fn=b_better_last_response,
         inputs=[state, model_selector, model_a_state, model_b_state, 
          pair_id_state, audio_id_a_state, audio_id_b_state, 
          textbox, a_listen_time_state, b_listen_time_state],
-        outputs=[textbox] + vote_buttons
+        outputs=[textbox] + vote_buttons + [vote_cast_state]
     ).then(
         lambda: "Press \"🎲 New Round\" to start over👇 (Note: Your vote shapes the leaderboard, please vote RESPONSIBLY!)",
         None,
@@ -1259,7 +1083,7 @@ def build_single_model_ui(models, add_promotion_links=False):
         inputs=[state, model_selector, model_a_state, model_b_state, 
          pair_id_state, audio_id_a_state, audio_id_b_state, 
          textbox, a_listen_time_state, b_listen_time_state],
-        outputs=[textbox] + vote_buttons
+        outputs=[textbox] + vote_buttons + [vote_cast_state]
     ).then(
         lambda: "Press \"🎲 New Round\" to start over👇 (Note: Your vote shapes the leaderboard, please vote RESPONSIBLY!)",
         None,
@@ -1284,14 +1108,13 @@ def build_single_model_ui(models, add_promotion_links=False):
     inputs=None,
     outputs=[regenerate_btn]
     )
-
 
     both_bad_btn.click(
         fn=both_bad_last_response,
         inputs=[state, model_selector, model_a_state, model_b_state, 
          pair_id_state, audio_id_a_state, audio_id_b_state, 
          textbox, a_listen_time_state, b_listen_time_state],
-        outputs=[textbox] + vote_buttons
+        outputs=[textbox] + vote_buttons + [vote_cast_state]
     ).then(
         lambda: "Press \"🎲 New Round\" to start over👇 (Note: Your vote shapes the leaderboard, please vote RESPONSIBLY!)",
         None,
@@ -1316,20 +1139,6 @@ def build_single_model_ui(models, add_promotion_links=False):
     inputs=None,
     outputs=[regenerate_btn]
     )
-
-    
-    # lyrics_surprise_me_btn.click(
-    #     fn=get_random_lyrics_block,
-    #     inputs=None,
-    #     outputs=[lyric_textbox],
-    # )
-    
-    # Retrieve from existing text-audio pair
-    # surprise_me_btn.click(
-    #     fn=lambda: "Classical Piano Music",
-    #     inputs=None,
-    #     outputs=[textbox],
-    # )
 
     surprise_me_btn.click(
         fn=lambda: [gr.update(interactive=False)] * 4,
@@ -1372,8 +1181,8 @@ def build_single_model_ui(models, add_promotion_links=False):
         inputs=None,
         outputs=[
             pair_id_state,          # pair_id
-            music_player_1,         # audio 1
-            music_player_2,         # audio 2
+            music_player_A,         # audio 1
+            music_player_B,         # audio 2
             model_a_label,          # Model A Markdown
             model_b_label,          # Model B Markdown
             audio_1_path_state,     # audio 1 path (for download)
@@ -1385,23 +1194,11 @@ def build_single_model_ui(models, add_promotion_links=False):
         ]
     )
 
-
-    # surprise_me_btn.click(
-    #     lambda: ("./mock_data/audio/classical_piece_1.wav", "./mock_data/audio/classical_piece_2.wav"),
-    #     None,
-    #     [music_player_1, music_player_2]
-    # )
-
-    # new_round_btn.click(
-    #     clear_history,
-    #     None,
-    #     [state, textbox]
-    # )
     new_round_btn.click(
         fn=lambda: (
             None,           # state
             "",             # textbox
-            None, None,     # music_player_1, music_player_2
+            None, None,     # music_player_A, music_player_B
             gr.update(value="**Model A: Unknown**", visible=False),  # model_a_label
             gr.update(value="**Model A: Unknown**", visible=False),  # model_a_label (duplicate in output list)
             gr.update(value="**Model B: Unknown**", visible=False),  # model_b_label
@@ -1417,13 +1214,14 @@ def build_single_model_ui(models, add_promotion_links=False):
             gr.update(interactive=False),  # both_bad_btn
             gr.update(interactive=True),  # send_btn
             gr.update(interactive=False),   # surprise_me_btn
-            gr.update(interactive=False)   # regenerate_btn
+            gr.update(interactive=False),   # regenerate_btn
+            False # vote_cast_state
         ),
         inputs=None,
         outputs=[
             state,
             textbox,
-            music_player_1, music_player_2,
+            music_player_A, music_player_B,
             model_a_label, model_a_label,
             model_b_label, model_b_label,
             a_listen_time_state, b_listen_time_state,
@@ -1432,15 +1230,10 @@ def build_single_model_ui(models, add_promotion_links=False):
             download_file,
             status_text,
             vote_buttons[0], vote_buttons[1], vote_buttons[2], vote_buttons[3],
-            send_btn, surprise_me_btn, regenerate_btn
+            send_btn, surprise_me_btn, regenerate_btn, vote_cast_state
         ]
     )
 
-    # regenerate_btn.click(
-    #     regenerate,
-    #     state,
-    #     [state, textbox]
-    # )
     regenerate_btn.click(
         fn=lambda: (
             0.0,  # reset a_listen_time
@@ -1457,7 +1250,7 @@ def build_single_model_ui(models, add_promotion_links=False):
         ]
     ).then(
         fn=lambda: (
-            gr.update(interactive=False),  # hide voting buttons
+            gr.update(interactive=False), # hide voting buttons
             gr.update(interactive=False),
             gr.update(interactive=False),
             gr.update(interactive=False)
@@ -1487,8 +1280,8 @@ def build_single_model_ui(models, add_promotion_links=False):
         inputs=[textbox, lyrics_box, checkbox],
         outputs=[
             pair_id_state,
-            music_player_1,
-            music_player_2,
+            music_player_A,
+            music_player_B,
             model_a_label,
             model_b_label,
             audio_1_path_state,
@@ -1503,61 +1296,6 @@ def build_single_model_ui(models, add_promotion_links=False):
         inputs=[pair_id_state, model_a_label, model_b_label],
         outputs=[pair_id_state, model_a_state, model_b_state]
     )
-
-
-    # share_btn.click(
-    #     lambda: "Shared successfully! 📤",
-    #     None,
-    #     [textbox]
-    # )
-    
-    # play_btn1.click(None, None, [], js="""
-    # () => {
-    #     setTimeout(() => {
-    #         const audio = document.querySelector('#custom-audio-1 audio');
-    #         if (audio) audio.play();
-    #     }, 200);
-    # }
-    # """)
-    # pause_btn1.click(None, None, [], js="() => { const audio = document.querySelector('#custom-audio-1 audio'); if (audio) audio.pause(); }")
-    # stop_btn1.click(None, None, [], js="() => { const audio = document.querySelector('#custom-audio-1 audio'); if (audio) { audio.pause(); audio.currentTime = 0; } }")
-
-
-    # play_btn1.click(
-    #     lambda: """
-    #         const audioPlayer = document.getElementById("custom-audio-1");
-    #         if (audioPlayer) {
-    #             audioPlayer.play();
-    #         }
-    #     """,
-    #     inputs=None,
-    #     outputs=None
-    # )
-    
-    # Original
-    # send_btn.click(
-    #     fn=add_text,
-    #     inputs=[state, model_selector, textbox],
-    #     outputs=[state, music_player_1, music_player_2, textbox]
-    # ).then( # Retrieve the specific music 
-    #     fn=lambda: (
-    #         "./mock_data/audio/classical_piece_1.mp3",
-    #         "./mock_data/audio/classical_piece_2.mp3",
-    #     ),
-    #     inputs=None,
-    #     outputs=[music_player_1, music_player_2]
-    # ).then( # This will be fixed (Try to make the users can vote after hearing both songs at least @ sconds)
-    #     fn=lambda:[gr.update(interactive=True)] * 10,
-    #     inputs=None, 
-    #     outputs=[play_btn1, pause_btn1, stop_btn1, forward_btn1, backward_btn1,
-    #                 play_btn2, pause_btn2, stop_btn2, forward_btn2, backward_btn2]
-    # ).then(
-    #     fn=lambda:[gr.update(interactive=True)] * 7,
-    #     inputs=None,
-    #     outputs=[a_better_btn, b_better_btn, tie_btn, both_bad_btn,
-    #                 new_round_btn, regenerate_btn, share_btn])
-
-    # Apr 3 (BACKEND)
     
     send_btn.click(
         fn=lambda prompt, lyrics, show_lyrics: None,
@@ -1573,8 +1311,7 @@ def build_single_model_ui(models, add_promotion_links=False):
                 throw new Error("Prompt is empty");
             }
             return [textbox.value, lyricsbox ? lyricsbox.value : "", checkbox?.checked];
-        }
-    """
+        }"""
     ).then(
         fn=lambda: (
             gr.update(interactive=False),
@@ -1590,8 +1327,8 @@ def build_single_model_ui(models, add_promotion_links=False):
         inputs=[textbox, lyrics_box, checkbox],
         outputs=[
             pair_id_state,
-            music_player_1,
-            music_player_2,
+            music_player_A,
+            music_player_B,
             model_a_label,
             model_b_label,
             audio_1_path_state,
@@ -1615,38 +1352,44 @@ def build_single_model_ui(models, add_promotion_links=False):
         outputs=[new_round_btn, regenerate_btn]
     )
 
-
     return [state, model_selector]
 
 
 def build_demo(models):
     with gr.Blocks(
         title="Music Arena: Free Music AI Generation to Compare & Test Best Music Generative AIs",
-        theme=gr.themes.Default(),
-        css=block_css,
+        css="style.css",
     ) as demo:
         url_params = gr.JSON(visible=False)
-
-        state, model_selector = build_single_model_ui(models)
+        notice_markdown = f"""# 🎧 Music Arena: Free AI Music Generation to Compare & Test Best Music Generative AIs"""
+        gr.Markdown(notice_markdown, elem_id="notice_markdown")
+        #state, model_selector = build_single_model_ui(models)
+        
+        with gr.Tabs(elem_id="main_tabs"):
+            with gr.TabItem("⚔️ Arena", elem_id="arena_tab"):
+                state, model_selector = build_single_model_ui(models)
+                state_component_from_arena = state
+                model_selector_component_from_arena = model_selector
+            with gr.TabItem("📊 Leaderboard", elem_id="leaderboard_tab"):
+                leaderboard_display_component = build_leaderboard_ui()
+            with gr.TabItem("📜 About & Terms", elem_id="about_tab"):
+                gr.Markdown(about_md, elem_id="about_markdown")
+                gr.Markdown(open_source_md, elem_id="open_source_markdown")
+                gr.Markdown(terms_of_service_md, elem_id="terms_of_service_markdown")
+                gr.Markdown(acknowledgment_md, elem_id="acknowledgment_markdown")
 
         if args.model_list_mode not in ["once", "reload"]:
             raise ValueError(f"Unknown model list mode: {args.model_list_mode}")
 
-        if args.show_terms_of_use:
-            load_js = get_window_url_params_with_tos_js
-        else:
-            load_js = get_window_url_params_js
+        if args.show_terms_of_use: load_js = get_window_url_params_with_tos_js
+        else: load_js = get_window_url_params_js
 
         demo.load(
             load_demo,
             [url_params],
-            [
-                state,
-                model_selector,
-            ],
+            [state,model_selector],
             js=load_js,
         )
-
     return demo
 
 
@@ -1689,16 +1432,6 @@ if __name__ == "__main__":
         help="Shows term of use before loading the demo",
     )
     parser.add_argument(
-        "--register-api-endpoint-file",
-        type=str,
-        help="Register API-based model endpoints from a JSON file",
-    )
-    parser.add_argument(
-        "--gradio-auth-path",
-        type=str,
-        help='Set the gradio authentication file path. The file should contain one or more user:password pairs in this format: "u1:p1,u2:p2,u3:p3"',
-    )
-    parser.add_argument(
         "--gradio-root-path",
         type=str,
         help="Sets the gradio root path, eg /abc/def. Useful when running behind a reverse-proxy or at a custom URL path prefix",
@@ -1712,23 +1445,8 @@ if __name__ == "__main__":
     args = parser.parse_args()
     logger.info(f"args: {args}")
 
-    # Set global variables
     set_global_vars(args.moderate, args.use_remote_storage)
-    # Controller not used
-    print(f"ARENA_TYPE: {ARENA_TYPE}") # txt2music-arena
-    print(f"register-api-endpoint-file: {args.register_api_endpoint_file}") # None
     models, all_models = [], []
-    # models, all_models = get_model_list(
-    #     args.controller_url, args.register_api_endpoint_file, ARENA_TYPE
-    # )
-
-    # # Set authorization credentials
-    auth = None
-    # if args.gradio_auth_path is not None:
-    #     auth = parse_gradio_auth_creds(args.gradio_auth_path)
-    
-    # print(f"auth: {auth}") # None
-    # print(f"models: {models}") # []
 
     # Launch the demo
     demo = build_demo(models)
@@ -1741,6 +1459,6 @@ if __name__ == "__main__":
         server_port=args.port,
         share=args.share,
         max_threads=200,
-        auth=auth,
+        auth=None,
         root_path=args.gradio_root_path,
     )
