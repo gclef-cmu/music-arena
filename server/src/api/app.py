@@ -44,6 +44,7 @@ logging.basicConfig(
 )
 logger = logging.getLogger(__name__)
 
+AUDIO_MODEL_MAP = {}
 
 class FastAPIApp:
     def __init__(self):
@@ -262,12 +263,12 @@ class FastAPIApp:
 
                 # Prepare response with Base64 encoded audio data
                 audio_item_1 = AudioItem(
-                    **metadata_1,
+                    **{k: v for k, v in metadata_1.items() if k != 'model'}, # Omit 'model' for anonymization
                     audioDataBase64=base64.b64encode(response_1.audio_data).decode('utf-8')
                 )
                 
                 audio_item_2 = AudioItem(
-                    **metadata_2,
+                    **{k: v for k, v in metadata_2.items() if k != 'model'},
                     audioDataBase64=base64.b64encode(response_2.audio_data).decode('utf-8')
                 )
                 
@@ -285,6 +286,16 @@ class FastAPIApp:
                 logger.error(error_msg)
                 raise HTTPException(status_code=500, detail=str(e))
 
+        @self.app.get("/get_model_name/{audio_id}")
+        async def get_model_name_endpoint(audio_id: str):
+            model_name = AUDIO_MODEL_MAP.get(audio_id) # Safely get from the dictionary
+
+            if model_name:
+                return {"modelName": model_name}
+            else:
+                # Handle cases where the audio_id might not be found (e.g., server restart, very old ID)
+                raise HTTPException(status_code=404, detail=f"Model name not found for audio_id: {audio_id}")
+                
     async def timed_generate_music(self, api_provider, prompt, seed, model_name):
         """Helper function to time music generation and track metrics."""
         try:
