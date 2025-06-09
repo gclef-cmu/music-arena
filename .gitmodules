@@ -1,0 +1,3 @@
+[submodule "ow-backend"]
+	path = ow-backend
+	url = git@github.com:gclef-cmu/audio-arena.git
