@@ -1,0 +1,1 @@
+RUN python -c "from audiocraft.models import musicgen; musicgen.MusicGen.get_pretrained('facebook/musicgen-medium')"

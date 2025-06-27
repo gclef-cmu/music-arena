@@ -1,0 +1,98 @@
+[
+    {
+        "input": "a song about a road trip with my friend Alice",
+        "output": {
+            "is_okay": true,
+            "instrumental": false,
+            "duration": null
+        }
+    },
+    {
+        "input": "hyperpop song with the lyrics 'row row row your boat'",
+        "output": {
+            "is_okay": true,
+            "instrumental": false,
+            "duration": null
+        }
+    },
+    {
+        "input": "a metal song with the lyrics 'fuck yeah'",
+        "output": {
+            "is_okay": true,
+            "instrumental": false,
+            "duration": null
+        }
+    },
+    {
+        "input": "a pop song",
+        "output": {
+            "is_okay": true,
+            "instrumental": true,
+            "duration": null
+        }
+    },
+    {
+        "input": "an a capella rap",
+        "output": {
+            "is_okay": true,
+            "instrumental": false,
+            "duration": null
+        }
+    },
+    {
+        "input": "a song about a road trip with my friend Alice",
+        "output": {
+            "is_okay": true,
+            "instrumental": false,
+            "duration": null
+        }
+    },
+    {
+        "input": "a song about a road trip with my friend Alice. lyrics: 'Alice I ride with you, Alice I love you'",
+        "output": {
+            "is_okay": true,
+            "instrumental": false,
+            "duration": null
+        }
+    },
+    {
+        "input": "a short 30s about a road trip with my friend Alice",
+        "output": {
+            "is_okay": true,
+            "instrumental": false,
+            "duration": 30.0
+        }
+    },
+    {
+        "input": "a 3m song about a road trip with my friend Alice",
+        "output": {
+            "is_okay": true,
+            "instrumental": false,
+            "duration": 180.0
+        }
+    },
+    {
+        "input": "a short song about a road trip with my friend Alice",
+        "output": {
+            "is_okay": true,
+            "instrumental": false,
+            "duration": null
+        }
+    },
+    {
+        "input": "a disco funk song",
+        "output": {
+            "is_okay": true,
+            "instrumental": true,
+            "duration": null
+        }
+    },
+    {
+        "input": "a disco funk song about a cat",
+        "output": {
+            "is_okay": true,
+            "instrumental": false,
+            "duration": null
+        }
+    }
+]

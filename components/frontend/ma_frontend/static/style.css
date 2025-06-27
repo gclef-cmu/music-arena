@@ -1,0 +1,11 @@
+time {
+    display: none;
+}
+
+.no-style-group {
+    border: none !important;
+    background: none !important;
+    padding: 0 !important;
+    margin: 0 !important;
+    gap: inherit !important;
+}

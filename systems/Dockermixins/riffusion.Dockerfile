@@ -1,0 +1,1 @@
+RUN python -m pip install --no-cache-dir 'git+https://github.com/corpusant-ai/riff-api.git@1cca272'

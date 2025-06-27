@@ -1,0 +1,261 @@
+# This is the main systems registry for Music Arena.
+# To add a system, add a new entry here. Also update:
+# TODO(chrisdonahue): add list of files to update
+
+# =============================================================================
+# Open, instrumental-only
+# =============================================================================
+
+musicgen-small:
+  display_name: "MusicGen Small"
+  description: "300M model for fast and efficient text-to-music generation by Meta"
+  organization: "Meta"
+  access: "OPEN"
+  supports_lyrics: false
+  model_type: "Codec Language Model"
+  training_data:
+    type: "Licensed Stock"
+    sources:
+      - "Internal"
+      - "ShutterStock"
+      - "Pond5"
+    num_tracks: 400000
+    num_hours: 20000
+  citation: "Copet+ 23"
+  links:
+    paper: "https://arxiv.org/abs/2306.05284"
+    code: "https://github.com/facebookresearch/audiocraft"
+  variants:
+    "initial":
+      module_name: "musicgen"
+      class_name: "MusicGenSmall"
+
+musicgen-medium:
+  display_name: "MusicGen Medium"
+  description: "1.5B model for expressive and high-fidelity music generation by Meta"
+  organization: "Meta"
+  access: "OPEN"
+  supports_lyrics: false
+  model_type: "Codec Language Model"
+  training_data:
+    type: "Licensed Stock"
+    sources:
+      - "Internal"
+      - "ShutterStock"
+      - "Pond5"
+    num_tracks: 400000
+    num_hours: 20000
+  citation: "Copet+ 23"
+  links:
+    paper: "https://arxiv.org/abs/2306.05284"
+    code: "https://github.com/facebookresearch/audiocraft"
+  variants:
+    "initial":
+      module_name: "musicgen"
+      class_name: "MusicGenMedium"
+
+musicgen-large:
+  display_name: "MusicGen Large"
+  description: "3.3B model for expressive and high-fidelity music generation by Meta"
+  organization: "Meta"
+  access: "OPEN"
+  supports_lyrics: false
+  model_type: "Codec Language Model"
+  training_data:
+    type: "Licensed Stock"
+    sources:
+      - "Internal"
+      - "ShutterStock"
+      - "Pond5"
+    num_tracks: 400000
+    num_hours: 20000
+  citation: "Copet+ 23"
+  links:
+    paper: "https://arxiv.org/abs/2306.05284"
+    code: "https://github.com/facebookresearch/audiocraft"
+  variants:
+    "initial":
+      module_name: "musicgen"
+      class_name: "MusicGenLarge"
+
+sao:
+  display_name: "Stable Audio Open"
+  description: "Latent diffusion model for high-quality text-to-audio generation by Stability AI"
+  organization: "Stability AI"
+  access: "OPEN"
+  supports_lyrics: false
+  model_type: "Latent Diffusion"
+  training_data:
+    type: "Creative Commons"
+    sources:
+      - "Freesound"
+      - "Free Music Archive"
+    num_tracks: 486492
+    num_hours: 7300
+  citation: "Evans+ 24"
+  links:
+    paper: "https://arxiv.org/abs/2407.14358"
+    code: "https://github.com/Stability-AI/stable-audio-tools"
+  variants:
+    "initial":
+      module_name: "sao"
+      class_name: "StableAudioOpenV1"
+      secrets:
+        - "HUGGINGFACE_READ_TOKEN"
+
+sao-small:
+  display_name: "Stable Audio Open Small"
+  description: "Latent diffusion model for high-quality text-to-audio generation by Stability AI"
+  organization: "Stability AI"
+  access: "OPEN"
+  supports_lyrics: false
+  model_type: "Latent Diffusion"
+  training_data:
+    type: "Creative Commons"
+    sources:
+      - "Freesound"
+      - "Free Music Archive"
+    num_tracks: 486492
+    num_hours: 7300
+  citation: "Novack+ 25"
+  links:
+    paper: "https://arxiv.org/abs/2505.08175"
+    code: "https://github.com/Stability-AI/stable-audio-tools"
+    home: "https://huggingface.co/stabilityai/stable-audio-open-small"
+  variants:
+    "initial":
+      module_name: "sao"
+      class_name: "StableAudioOpenSmall"
+      secrets:
+        - "HUGGINGFACE_READ_TOKEN"
+
+audioldm2:
+  display_name: "AudioLDM2"
+  description: "Latent diffusion model for high-quality text-to-audio generation by University of Surrey, CVSSP"
+  organization: "Academic (Multiple Institutions)"
+  access: "OPEN"
+  supports_lyrics: false
+  model_type: "Latent Diffusion"
+  training_data:
+    type: "Mixed"
+    sources:
+      - "AudioSet"
+      - "Freesound"
+      - "BBC Sound Effects Library"
+    num_hours: 5000
+  citation: "Liu/Chen+ 23"
+  links:
+    paper: "https://arxiv.org/abs/2301.12503"
+    code: "https://github.com/haoheliu/AudioLDM2"
+  variants:
+    "initial":
+      module_name: "audioldm2"
+      class_name: "AudioLDM2"
+
+# =============================================================================
+# Open, supports lyrics conditioning
+# =============================================================================
+
+# https://arxiv.org/abs/2506.00045
+acestep:
+  display_name: "ACE-Step"
+  description: "Open-source music generation model with lyrics conditioning."
+  organization: "ACE Studio"
+  access: "OPEN"
+  supports_lyrics: true
+  model_type: "Latent Diffusion"
+  training_data:
+    type: "Unspecified"
+  citation: "Gong+ 25"
+  links:
+    paper: "https://arxiv.org/abs/2506.00045"
+    code: "https://github.com/ace-studio/ACE-Step"
+  variants:
+    "initial":
+      module_name: "acestep"
+      class_name: "ACE-Step"
+      description: "Lyrics generated by ChatGPT 4o."
+      secrets:
+        - "OPENAI_API_KEY"
+      init_kwargs:
+        lyrics_config: "4o-v00"
+
+songgen:
+  display_name: "SongGen"
+  description: "Single-stage LM for song generation with lyrics conditioning."
+  organization: "Academic (Multiple Institutions)"
+  access: "OPEN"
+  supports_lyrics: true
+  model_type: "Codec Language Model"
+  training_data:
+    type: "Commercial"
+    sources:
+      - "Million Song Dataset"
+      - "Free Music Archive"
+      - "MTG-Jamendo"
+    num_tracks: 540000
+    num_hours: 2000
+  citation: "Liu+ 25"
+  links:
+    paper: "https://arxiv.org/abs/2502.13128"
+    code: "https://github.com/LiuZH-19/SongGen"
+  variants:
+    "initial":
+      module_name: "songgen"
+      class_name: "SongGen"
+      description: "Lyrics generated by ChatGPT 4o."
+      secrets:
+        - "OPENAI_API_KEY"
+      init_kwargs:
+        lyrics_config: "4o-v00"
+
+# =============================================================================
+# Proprietary, supports lyrics
+# =============================================================================
+
+riffusion:
+  display_name: "Riffusion"
+  description: "Riffusion is a generative AI instrument for instantly creating, remixing, and sharing studio-quality songs from simple prompts."
+  organization: "Riffusion"
+  access: "PROPRIETARY"
+  supports_lyrics: true
+  links:
+    home: "https://www.riffusion.com"
+  variants:
+    "initial":
+      module_name: "riffusion"
+      class_name: "Riffusion"
+      secrets:
+        - "RIFFUSION_API_KEY"
+
+# =============================================================================
+# DSP systems for testing
+# =============================================================================
+
+noise:
+  display_name: "Noise"
+  description: "Noise generator for testing."
+  organization: "ACME"
+  access: "OPEN"
+  supports_lyrics: true
+  requires_gpu: false
+  model_type: "DSP"
+  training_data:
+    type: "None"
+  links:
+    home: "#"
+  variants:
+    "loud":
+      module_name: "dsp"
+      class_name: "Noise"
+      description: "Slightly louder noise."
+      init_kwargs:
+        gain: 0.01
+        lyrics: "Foo"
+    "quiet":
+      module_name: "dsp"
+      class_name: "Noise"
+      description: "Slightly quieter noise."
+      init_kwargs:
+        gain: 0.005
+        lyrics: "Bar"

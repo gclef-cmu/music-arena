@@ -1,0 +1,21 @@
+repos:
+  - repo: https://github.com/psf/black-pre-commit-mirror
+    rev: 24.4.2
+    hooks:
+      - id: black
+        language_version: python3.10
+  - repo: https://github.com/pycqa/isort
+    rev: 5.13.2
+    hooks:
+      - id: isort 
+  # TODO: Re-enable these
+  #- repo: https://github.com/PyCQA/flake8
+  #  rev: 7.1.0
+  #  hooks:
+  #    - id: flake8
+  #      args: ["--max-line-length=88", "--extend-ignore=E203,W503,E501,E731"]
+  #- repo: https://github.com/pre-commit/mirrors-mypy
+  #  rev: v1.10.1
+  #  hooks:
+  #    - id: mypy
+  #      args: ["--ignore-missing-imports", "--python-version=3.10"]

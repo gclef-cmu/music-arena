@@ -1,0 +1,32 @@
+# Frontend dev deployment
+systems:
+  "noise:quiet":
+    port: 10000
+    args:
+      max_batch_size: 1
+      max_delay: 4.0
+  "noise:loud":
+    port: 10001
+    args:
+      max_batch_size: 1
+      max_delay: 4.0
+
+weights:
+  "noise:quiet/noise:loud": 1.0
+
+components:
+  frontend:
+    enabled: true
+    port: 11001
+    vars:
+      GATEWAY_URL: "http://host.docker.internal:11000"
+      MINIMUM_LISTEN_TIME: 0.01
+  gateway:
+    enabled: true
+    port: 11000
+    args:
+      public_base_url: "http://localhost"
+      systems_base_url: "http://host.docker.internal"
+      flakiness: 0.1
+  systems:
+    enabled: true

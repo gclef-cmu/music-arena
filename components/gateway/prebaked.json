@@ -1,0 +1,42 @@
+[
+    {
+        "overall_prompt": "Orchestral symphony with sweeping strings and brass",
+        "instrumental": true
+    },
+    {
+        "overall_prompt": "Ambient electronic soundscape with ethereal pads",
+        "instrumental": true
+    },
+    {
+        "overall_prompt": "Fingerpicked acoustic guitar folk melody",
+        "instrumental": true
+    },
+    {
+        "overall_prompt": "Jazz fusion with electric bass and synthesizers",
+        "instrumental": true
+    },
+    {
+        "overall_prompt": "Post-rock cinematic build with reverb-drenched guitars",
+        "instrumental": true
+    },
+    {
+        "overall_prompt": "Emotional pop ballad with heartfelt vocals",
+        "instrumental": false
+    },
+    {
+        "overall_prompt": "Aggressive heavy metal with powerful screaming vocals",
+        "instrumental": false
+    },
+    {
+        "overall_prompt": "Smooth R&B with soulful vocal runs",
+        "instrumental": false
+    },
+    {
+        "overall_prompt": "Country song with storytelling vocals and twang",
+        "instrumental": false
+    },
+    {
+        "overall_prompt": "Indie rock with melodic alternative vocals",
+        "instrumental": false
+    }
+]
