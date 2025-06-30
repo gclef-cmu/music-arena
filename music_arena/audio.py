@@ -12,15 +12,11 @@ class AudioEncoding(enum.Enum):
     WAV_S16 = "WAV_S16"
     WAV_F32 = "WAV_F32"
     MP3_V0 = "MP3_V0"
+    MP3_V2 = "MP3_V2"
 
     @property
     def extension(self) -> str:
-        if self == AudioEncoding.WAV_S16:
-            return "wav"
-        elif self == AudioEncoding.WAV_F32:
-            return "wav"
-        elif self == AudioEncoding.MP3_V0:
-            return "mp3"
+        return self.value.lower()[:3]
 
 
 class Audio:
@@ -122,6 +118,10 @@ class Audio:
             sf_write_kwargs["format"] = "MP3"
             sf_write_kwargs["bitrate_mode"] = "VARIABLE"
             sf_write_kwargs["compression_level"] = 0
+        elif encoding == AudioEncoding.MP3_V2:
+            sf_write_kwargs["format"] = "MP3"
+            sf_write_kwargs["bitrate_mode"] = "VARIABLE"
+            sf_write_kwargs["compression_level"] = 2
         else:
             raise ValueError(f"Unsupported encoding: {encoding}")
         sf.write(file, self.samples, self.sample_rate, **sf_write_kwargs)
