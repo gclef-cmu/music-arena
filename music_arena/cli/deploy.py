@@ -12,9 +12,11 @@ from ..docker import (
     component_kill_command,
     component_run_command,
     system_build_command,
+    system_dockerfile_path,
     system_kill_command,
     system_port,
     system_run_command,
+    system_write_dockerfile,
 )
 from ..env import EXECUTING_IN_CONTAINER
 from ..path import REPO_DIR
@@ -156,12 +158,19 @@ def get_systems_commands(config: Dict[str, Any], config_name: str) -> List[Comma
     """Generate systems deployment commands."""
     commands = []
     systems_config = config.get("systems", [])
+
     for system_key_str, system_config in systems_config.items():
         system_key = SystemKey.from_string(system_key_str)
         args_cmd = _args_to_cmd(system_config.get("args", {}))
         port = system_config.get("port", system_port(system_key))
         port_mapping = [(port, port)]
         args_cmd += ["--port", str(port)]
+
+        # Write dockerfile
+        dockerfile_path = system_dockerfile_path(system_key)
+        system_write_dockerfile(system_key, dockerfile_path)
+
+        # Build command
         commands.append(
             Command(
                 command=[
