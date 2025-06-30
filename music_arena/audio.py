@@ -121,7 +121,7 @@ class Audio:
         elif encoding == AudioEncoding.MP3_V2:
             sf_write_kwargs["format"] = "MP3"
             sf_write_kwargs["bitrate_mode"] = "VARIABLE"
-            sf_write_kwargs["compression_level"] = 2
+            sf_write_kwargs["compression_level"] = 0.25
         else:
             raise ValueError(f"Unsupported encoding: {encoding}")
         sf.write(file, self.samples, self.sample_rate, **sf_write_kwargs)
