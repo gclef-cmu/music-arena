@@ -1033,6 +1033,7 @@ if __name__ == "__main__":
     parser.add_argument(
         "--share", action="store_true", help="Generate a public, shareable link"
     )
+    parser.add_argument("--queue", action="store_true", help="Enable Gradio queue")
     parser.add_argument(
         "--concurrency-count",
         type=int,
@@ -1059,11 +1060,13 @@ if __name__ == "__main__":
     demo = build_demo(debug=args.debug)
     _LOGGER.info("Demo built")
 
-    demo.queue(
-        default_concurrency_limit=args.concurrency_count,
-        status_update_rate="auto",
-        api_open=False,
-    )
+    if args.queue:
+        _LOGGER.info("Enabling Gradio queue")
+        demo.queue(
+            default_concurrency_limit=args.concurrency_count,
+            status_update_rate="auto",
+            api_open=False,
+        )
 
     app, local_url, share_url = demo.launch(
         server_name=args.host,
