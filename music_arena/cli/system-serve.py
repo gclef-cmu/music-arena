@@ -54,7 +54,7 @@ async def generate(prompt_dict: dict):
     # Wait for result
     try:
         response = await future
-        result = response.as_json_dict_with_encoding(AudioEncoding.MP3_V0)
+        result = response.as_json_dict_with_encoding(AudioEncoding.MP3_V2)
     except Exception as e:
         raise fastapi.HTTPException(status_code=500, detail=str(e))
 
