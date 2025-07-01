@@ -35,8 +35,9 @@ class Command:
 def _args_to_cmd(args: dict[str, Any]) -> list[str]:
     cmd = []
     for key, value in args.items():
-        if isinstance(value, bool) and value:
-            cmd.append(f"--{key}")
+        if isinstance(value, bool):
+            if value:
+                cmd.append(f"--{key}")
         else:
             cmd.append(f"--{key}")
             cmd.append(str(value))
