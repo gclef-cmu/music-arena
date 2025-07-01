@@ -1,4 +1,5 @@
 import functools
+import json
 import os
 import secrets
 
@@ -11,6 +12,22 @@ _SECRETS_DIR.mkdir(parents=True, exist_ok=True)
 
 def get_secret_var_name(tag: str) -> str:
     return f"{SECRET_VAR_PREFIX}{tag.upper()}"
+
+
+@functools.lru_cache(maxsize=None)
+def get_secret_json(tag: str) -> dict:
+    secrets_path = _SECRETS_DIR / f"{tag}.json"
+    if secrets_path.exists():
+        secret = json.load(secrets_path.open())
+    else:
+        # Prompt user to enter secret
+        json_path = input(f"Enter JSON path for tag {tag}: ").strip()
+        if not json_path:
+            raise ValueError(f"JSON path for tag {tag} not found")
+        secret = json.load(open(json_path))
+    if not secrets_path.exists():
+        secrets_path.write_text(json.dumps(secret, indent=2))
+    return secret
 
 
 @functools.lru_cache(maxsize=None)

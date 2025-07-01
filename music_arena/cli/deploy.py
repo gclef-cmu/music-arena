@@ -18,6 +18,7 @@ from ..docker import (
 )
 from ..env import EXECUTING_IN_CONTAINER
 from ..path import REPO_DIR
+from ..secret import get_secret_json
 
 CONFIGS_DIR = REPO_DIR / "deploy"
 
@@ -103,7 +104,8 @@ def get_gateway_commands(config: Dict[str, Any], config_name: str) -> List[Comma
         return commands
 
     # Build command
-    cmd = gateway_config.get("cmd", []) + _args_to_cmd(gateway_config.get("args", {}))
+    args = gateway_config.get("args", {})
+    cmd = gateway_config.get("cmd", []) + _args_to_cmd(args)
 
     # Hostname
     host = gateway_config.get("host", "0.0.0.0")
@@ -129,6 +131,10 @@ def get_gateway_commands(config: Dict[str, Any], config_name: str) -> List[Comma
         weights.append(f"{pair}/{weight}")
     if len(weights) > 0:
         cmd.extend(["--weights", ",".join(weights)])
+
+    # Secrets
+    if "bucket_metadata" in args or "bucket_audio" in args:
+        get_secret_json("GCP_BUCKET_SERVICE_ACCOUNT")
 
     # Build command
     commands.append(
