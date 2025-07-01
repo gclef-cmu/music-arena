@@ -805,7 +805,7 @@ def build_ui_battle(debug=False):
             battle_uuid = gr.Markdown("", visible=False, elem_id="battle-uuid")
 
         # Lyrics overview
-        with gr.Row():
+        with gr.Row(visible=False):
             with gr.Column():
                 a_lyrics = gr.Markdown("", visible=False, elem_id="a-lyrics")
             with gr.Column():
