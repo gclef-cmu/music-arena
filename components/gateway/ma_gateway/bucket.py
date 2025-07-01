@@ -1,4 +1,5 @@
 import abc
+import datetime
 import pathlib
 import shutil
 from typing import IO, Optional
@@ -15,12 +16,11 @@ class BucketBase:
         self,
         key: str,
         value: IO[bytes],
-        public: bool = False,
         allow_overwrite: bool = False,
     ) -> None: ...
 
     @abc.abstractmethod
-    def get_url(self, key: str) -> str: ...
+    def get_public_url(self, key: str) -> str: ...
 
     @abc.abstractmethod
     def delete(self, key: str) -> None: ...
@@ -46,7 +46,6 @@ class LocalBucket(BucketBase):
         self,
         key: str,
         value: IO[bytes],
-        public: bool = False,
         allow_overwrite: bool = False,
     ) -> None:
         path = self.path / key
@@ -54,12 +53,8 @@ class LocalBucket(BucketBase):
             raise FileExistsError(f"File {key} already exists")
         with path.open("wb") as f:
             shutil.copyfileobj(value, f)
-        if public:
-            path.chmod(0o644)
-        else:
-            path.chmod(0o600)
 
-    def get_url(self, key: str) -> str:
+    def get_public_url(self, key: str) -> str:
         if self.public_url is None:
             raise ValueError("Public URL is not set")
         return f"{self.public_url}/{key}"
@@ -69,10 +64,19 @@ class LocalBucket(BucketBase):
 
 
 class GCPBucket(BucketBase):
-    def __init__(self, bucket_name: str):
+    def __init__(
+        self,
+        bucket_name: str,
+        credentials: Optional[dict] = None,
+        signed_urls: bool = False,
+    ):
         self.bucket_name = bucket_name
-        self.client = storage.Client()
+        if credentials is None:
+            self.client = storage.Client()
+        else:
+            self.client = storage.Client.from_service_account_info(credentials)
         self.bucket = self.client.bucket(bucket_name)
+        self.signed_urls = signed_urls
 
     def get(self, key: str, file: Optional[IO[bytes]] = None) -> IO[bytes]:
         blob = self.bucket.blob(key)
@@ -86,19 +90,22 @@ class GCPBucket(BucketBase):
         self,
         key: str,
         value: IO[bytes],
-        public: bool = False,
         allow_overwrite: bool = False,
     ) -> None:
         blob = self.bucket.blob(key)
         if not allow_overwrite and blob.exists():
             raise FileExistsError(f"File {key} already exists")
         blob.upload_from_file(value)
-        if public:
-            blob.make_public()
 
-    def get_url(self, key: str) -> str:
+    def get_public_url(self, key: str) -> str:
         blob = self.bucket.blob(key)
-        return blob.public_url
+        if self.signed_urls:
+            expiration = datetime.datetime.now(
+                datetime.timezone.utc
+            ) + datetime.timedelta(days=1)
+            return blob.generate_signed_url(expiration=expiration)
+        else:
+            return blob.public_url
 
     def delete(self, key: str) -> None:
         blob = self.bucket.blob(key)

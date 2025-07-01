@@ -25,6 +25,7 @@ from music_arena.exceptions import PromptContentException
 from music_arena.helper import create_uuid
 from music_arena.logging import get_battle_logger
 from music_arena.path import CONTAINER_IO_DIR
+from music_arena.secret import get_secret_json
 
 from .battle import BattleGenerator
 from .bucket import BucketBase, GCPBucket, LocalBucket
@@ -73,7 +74,6 @@ def _update_battle(battle: Battle):
         f"{battle.uuid}.json",
         io.BytesIO(json.dumps(battle.as_json_dict(), indent=2).encode("utf-8")),
         allow_overwrite=True,
-        public=isinstance(_BUCKET_METADATA, LocalBucket),
     )
 
 
@@ -183,10 +183,10 @@ async def generate_battle(data: dict):
     a_audio_key = f"{battle_uuid}-a.mp3"
     b_audio_key = f"{battle_uuid}-b.mp3"
     try:
-        _BUCKET_AUDIO.put(a_audio_key, io.BytesIO(a_audio_bytes), public=True)
-        _BUCKET_AUDIO.put(b_audio_key, io.BytesIO(b_audio_bytes), public=True)
-        battle.a_audio_url = _BUCKET_AUDIO.get_url(a_audio_key)
-        battle.b_audio_url = _BUCKET_AUDIO.get_url(b_audio_key)
+        _BUCKET_AUDIO.put(a_audio_key, io.BytesIO(a_audio_bytes))
+        _BUCKET_AUDIO.put(b_audio_key, io.BytesIO(b_audio_bytes))
+        battle.a_audio_url = _BUCKET_AUDIO.get_public_url(a_audio_key)
+        battle.b_audio_url = _BUCKET_AUDIO.get_public_url(b_audio_key)
     except Exception as e:
         raise HTTPException(status_code=500, detail=f"Error uploading audio: {e}")
 
@@ -348,7 +348,11 @@ def main():
             metadata_dir, f"{args.public_base_url}:{args.port}/static/metadata"
         )
     else:
-        _BUCKET_METADATA = GCPBucket(args.bucket_metadata)
+        _BUCKET_METADATA = GCPBucket(
+            args.bucket_metadata,
+            credentials=get_secret_json("GCP_BUCKET_SERVICE_ACCOUNT"),
+            signed_urls=True,
+        )
     if args.bucket_audio is None:
         audio_dir = _STATIC_DIR / "audio"
         audio_dir.mkdir(parents=True, exist_ok=True)
@@ -356,7 +360,11 @@ def main():
             audio_dir, f"{args.public_base_url}:{args.port}/static/audio"
         )
     else:
-        _BUCKET_AUDIO = GCPBucket(args.bucket_audio)
+        _BUCKET_AUDIO = GCPBucket(
+            args.bucket_audio,
+            credentials=get_secret_json("GCP_BUCKET_SERVICE_ACCOUNT"),
+            signed_urls=True,
+        )
 
     # Set up flakiness
     global _FLAKINESS
