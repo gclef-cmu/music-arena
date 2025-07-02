@@ -206,6 +206,8 @@ def handle_new_battle(session, user, debug=False):
         gr.update(visible=False),  # download_file
         gr.update(visible=debug),  # new_round_btn
         gr.update(visible=debug),  # regenerate_btn
+        gr.update(active=False),  # a_vote_timer - stop timer when new battle starts
+        gr.update(active=False),  # b_vote_timer - stop timer when new battle starts
     ]
 
 
@@ -502,15 +504,50 @@ def bind_ui_events(ui, state, debug=False):
     # Audio transport events
     for name in ["a", "b"]:
         player = u["battle"][f"{name}_music_player"]
+        timer = u["battle"][f"{name}_vote_timer"]
+        other_name = "b" if name == "a" else "a"
+        other_player = u["battle"][f"{other_name}_music_player"]
+
+        # Play
         player.play(
             fn=functools.partial(record_audio_event, name=name, event=ListenEvent.PLAY),
             inputs=[s["vote"]],
             outputs=[s["vote"]],
+        ).then(
+            fn=lambda: gr.update(active=True),
+            outputs=[timer],
         )
-        player.pause(
-            fn=functools.partial(
-                record_audio_event, name=name, event=ListenEvent.PAUSE
-            ),
+
+        # Pause
+        for event, fn in [
+            (ListenEvent.PAUSE, player.pause),
+            (ListenEvent.STOP, player.stop),
+        ]:
+            fn(
+                fn=functools.partial(record_audio_event, name=name, event=event),
+                inputs=[s["vote"]],
+                outputs=[s["vote"]],
+            ).then(
+                fn=lambda: gr.update(active=False),
+                outputs=[timer],
+            ).then(
+                fn=functools.partial(handle_maybe_enable_vote_ui, debug=debug),
+                inputs=[
+                    s["session"],
+                    s["user"],
+                    s["vote"],
+                    s["frontend"]["voting_enabled"],
+                ],
+                outputs=[
+                    s["frontend"]["voting_enabled"],
+                    *vote_btns,
+                    u["battle"]["vote_status_markdown"],
+                ],
+            )
+
+        # Timer
+        timer.tick(
+            fn=functools.partial(record_audio_event, name=name, event=ListenEvent.TICK),
             inputs=[s["vote"]],
             outputs=[s["vote"]],
         ).then(
@@ -526,8 +563,12 @@ def bind_ui_events(ui, state, debug=False):
                 *vote_btns,
                 u["battle"]["vote_status_markdown"],
             ],
+        ).then(
+            # Stop timer when voting becomes enabled
+            fn=lambda voting_enabled: gr.update(active=not voting_enabled),
+            inputs=[s["frontend"]["voting_enabled"]],
+            outputs=[u["battle"]["a_vote_timer"]],
         )
-        # TODO: Bind more player events? Stop?
 
     # Vote buttons
     for btn, pref in zip(
@@ -820,6 +861,10 @@ def build_ui_battle(debug=False):
                 C.HIDDEN_TAG_LABEL, visible=False, elem_id="b-system-tag"
             )
 
+    # Timers for periodic vote UI updates (hidden components)
+    a_vote_timer = gr.Timer(1.0, active=False)
+    b_vote_timer = gr.Timer(1.0, active=False)
+
     # Voting status
     with gr.Row(visible=False) as row_vote_status:
         # Vote status text (hidden until after generate)
@@ -914,6 +959,9 @@ def build_ui_battle(debug=False):
         "b_lyrics": b_lyrics,
         "a_system_tag": a_system_tag,
         "b_system_tag": b_system_tag,
+        # Timers for periodic updates
+        "a_vote_timer": a_vote_timer,
+        "b_vote_timer": b_vote_timer,
         # Voting section
         "vote_status_markdown": vote_status_markdown,
         "vote_a_btn": vote_a_btn,
@@ -981,6 +1029,8 @@ def build_ui(debug=False):
             "download_file",
             "new_round_btn",
             "regenerate_btn",
+            "a_vote_timer",
+            "b_vote_timer",
         ]
     ]
 

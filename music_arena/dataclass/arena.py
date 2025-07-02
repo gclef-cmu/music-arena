@@ -23,6 +23,8 @@ class Preference(Enum):
 class ListenEvent(Enum):
     PLAY = "PLAY"
     PAUSE = "PAUSE"
+    STOP = "STOP"
+    TICK = "TICK"
 
 
 @dataclass
@@ -77,11 +79,15 @@ def sum_listen_time(listen_data: list[tuple[ListenEvent, float]]) -> float:
     for event, timestamp in listen_data:
         if event == ListenEvent.PLAY:
             last_play = timestamp
-        elif event == ListenEvent.PAUSE and last_play is not None:
+        elif event in [ListenEvent.PAUSE, ListenEvent.TICK] and last_play is not None:
             play_time = timestamp - last_play
             if play_time > 0:
                 total_time += play_time
-            last_play = None
+            # For PAUSE, stop tracking; for TICK, continue tracking from this point
+            if event == ListenEvent.PAUSE:
+                last_play = None
+            else:  # event == ListenEvent.TICK
+                last_play = timestamp
     return total_time
 
 
@@ -106,6 +112,10 @@ class Vote(MusicArenaDataClass):
     def pause(self, name: Literal["a", "b"]):
         attr = f"{name}_listen_data"
         getattr(self, attr).append((ListenEvent.PAUSE, time.time()))
+
+    def tick(self, name: Literal["a", "b"]):
+        attr = f"{name}_listen_data"
+        getattr(self, attr).append((ListenEvent.TICK, time.time()))
 
     def sum_listen_time(self, name: Literal["a", "b"]) -> float:
         return sum_listen_time(getattr(self, f"{name}_listen_data"))
