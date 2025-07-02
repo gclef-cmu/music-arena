@@ -170,9 +170,10 @@ TERMS_MD = """
 1.  **Research Preview:** This service is a research preview intended for evaluating and comparing AI music generation models. It is provided "as is" without warranties of any kind.
 2.  **Prohibited Uses:** The service must not be used for any illegal, harmful, defamatory, or infringing purposes. Do not use prompts intended to generate such content.
 3.  **Privacy:** Please do not submit any private or sensitive personal information in your text prompts.
-4.  **Data Collection and Use:** The service collects data including your text prompts, your preferences (votes) regarding generated audio, and anonymized user tracking data (salted IP addresses and browser fingerprints). This data is crucial for research to advance music generation technology and to improve this platform.
-5.  **Data Distribution:** By participating, you agree that we may release your anonymized interaction data including text prompts, listening, and voting data under a Creative Commons Attribution (CC-BY) license or a similar open license.
-6.  **Feedback:** Your feedback is valuable. Please [report any bugs, issues, or surprising outputs](https://forms.gle/DxUii6ys7Rj7jbR7A).
+4.  **Data Collection and Use:** The service collects data including your text prompts, your preferences (votes) regarding generated audio, and _fully anonymized_ user tracking data (salted and hashed IP addresses and browser fingerprints). This data is crucial for research to advance music generation technology and to improve this platform.
+5.  **Demographics:** By accepting our terms, you acknowledge that you are 18 years or older and living in the United States.
+6.  **Data Distribution:** By accepting our terms, you agree that we may release your anonymized interaction data including anonymized identifiers, text prompts, listening, and voting data under a Creative Commons Attribution (CC-BY) license or a similar open license.
+7.  **Feedback:** Your feedback is valuable. Please [report any bugs, issues, or surprising outputs](https://forms.gle/DxUii6ys7Rj7jbR7A).
 """.strip()
 TERMS_CHECKSUM = hashlib.md5(TERMS_MD.encode()).hexdigest()
 
@@ -198,6 +199,8 @@ The development of Music Arena has so far been led by the following contributors
 We invite community contributions to our [codebase](https://github.com/gclef-cmu/music-arena)
 
 ## Terms of Service
+
+Music Arena is approved by CMU's Institutional Review Board under Protocol `STUDY2024_00000489`. By using Music Arena, you agree to the following terms of service:
 
 {TERMS_MD}
 
