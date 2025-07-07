@@ -8,6 +8,13 @@ WORKDIR ${MUSIC_ARENA_REPO_DIR}
 ENV DEBIAN_FRONTEND=noninteractive
 SHELL ["/bin/bash", "-c"]
 
+# Fix GPG keys
+RUN apt-get update --allow-releaseinfo-change --allow-insecure-repositories || true \
+    && apt-get install -y --no-install-recommends --allow-unauthenticated \
+    ca-certificates \
+    gnupg \
+    && rm -rf /var/lib/apt/lists/*
+
 # Install core system dependencies
 RUN apt-get update && apt-get install -y --no-install-recommends \
     build-essential \
@@ -19,13 +26,13 @@ RUN apt-get update && apt-get install -y --no-install-recommends \
     && rm -rf /var/lib/apt/lists/*
 
 # Install ffmpeg
-RUN apt-get update && apt-get install -y --no-install-recommends \
+RUN apt-get update --fix-missing && apt-get install -y --no-install-recommends \
     ffmpeg \
     && rm -rf /var/lib/apt/lists/*
 
 # Install Python 3 (in case BASE_CONTAINER does not have it)
 ENV LANG C.UTF-8
-RUN apt-get update && apt-get install -y --no-install-recommends \
+RUN apt-get update --fix-missing && apt-get install -y --no-install-recommends \
     python3 \
     python3-dev \
     python3-pip \

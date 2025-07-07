@@ -119,7 +119,11 @@ def run_command(
 
 
 def kill_command(name: str) -> List[str]:
-    return ["bash", "-c", f"docker kill {name} 2>/dev/null || true"]
+    return [
+        "bash",
+        "-c",
+        f'"docker ps -q --filter name=\\"^{name}$\\" | grep -q . && docker kill {name}; true"',
+    ]
 
 
 def system_dockerfile(system_key: SystemKey) -> str:

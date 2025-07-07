@@ -56,8 +56,9 @@ class LocalBucket(BucketBase):
 
     def get_public_url(self, key: str) -> str:
         if self.public_url is None:
-            raise ValueError("Public URL is not set")
-        return f"{self.public_url}/{key}"
+            return str(self.path / key)
+        else:
+            return f"{self.public_url}/{key}"
 
     def delete(self, key: str) -> None:
         (self.path / key).unlink()
