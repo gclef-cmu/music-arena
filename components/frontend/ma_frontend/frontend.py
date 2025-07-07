@@ -172,7 +172,6 @@ def handle_prebake_btn_click(prebaked):
 
 # Shared callbacks for several input elements
 
-
 def handle_new_battle(session, user, debug=False):
     assert session is not None and user is not None
     logger = get_battle_logger("handle_new_battle", session=session, user=user)
@@ -186,8 +185,8 @@ def handle_new_battle(session, user, debug=False):
         False,  # voting_enabled
         # UI (same as default values when UI is created)
         gr.update(value="", visible=False),  # battle_uuid
-        gr.update(show_download_button=False),  # a_music_player
-        gr.update(show_download_button=False),  # b_music_player
+        gr.update(value=None, visible=False, show_download_button=False),  # a_music_player # Revised - Remove previous audio on new round
+        gr.update(value=None, visible=False, show_download_button=False),  # b_music_player # Revised - Remove previous audio on new round
         gr.update(value="", visible=False),  # a_lyrics
         gr.update(value="", visible=False),  # b_lyrics
         gr.update(value=C.HIDDEN_TAG_LABEL, visible=False),  # a_system_tag
@@ -281,6 +280,7 @@ def handle_generate(session, user, raw_prompt, detailed_prompt, debug=False):
         Vote(),
         battle.prompt_detailed,
         # UI
+        gr.update(value=battle.prompt_detailed.overall_prompt), # Added - Replace prompt text box with generation prompt 
         gr.update(
             value=f"{C.BATTLE_UUID_LABEL}{battle.uuid}", visible=True
         ),  # (UI) battle_uuid
@@ -460,6 +460,7 @@ def bind_ui_events(ui, state, debug=False):
         s["vote"],
         s["detailed_prompt"],
         # UI
+        u["battle"]["prompt_textbox"], # Added - Replace prompt text box with generation prompt
         u["battle"]["battle_uuid"],
         u["battle"]["a_music_player"],
         u["battle"]["b_music_player"],
