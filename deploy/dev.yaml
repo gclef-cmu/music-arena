@@ -1,12 +1,12 @@
 # Frontend dev deployment
 systems:
   "noise:quiet":
-    port: 10000
+    port: 20000
     args:
       max_batch_size: 1
       max_delay: 4.0
   "noise:loud":
-    port: 10001
+    port: 20001
     args:
       max_batch_size: 1
       max_delay: 4.0
@@ -17,16 +17,16 @@ weights:
 components:
   frontend:
     enabled: true
-    port: 11001
+    port: 21000
     vars:
-      GATEWAY_URL: "http://host.docker.internal:11000"
+      GATEWAY_URL: "http://host.docker.internal:21001"
       MINIMUM_LISTEN_TIME: 0.01
+      GRADIO_ALLOWED_PATHS: "/music-arena/io/gateway"
   gateway:
     enabled: true
-    port: 11000
+    port: 21001
     args:
-      public_base_url: "http://localhost"
       systems_base_url: "http://host.docker.internal"
-      flakiness: 0.1
+      flakiness: 0.0
   systems:
     enabled: true

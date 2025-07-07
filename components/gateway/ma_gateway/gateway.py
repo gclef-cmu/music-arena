@@ -287,7 +287,7 @@ def main():
     parser.add_argument("--weights", type=str)
     parser.add_argument("--host", type=str, default="0.0.0.0")
     parser.add_argument("--port", type=int, default=8080)
-    parser.add_argument("--public_base_url", type=str, default="http://localhost")
+    parser.add_argument("--public_base_url", type=str)
     parser.add_argument(
         "--systems_base_url", type=str, default="http://host.docker.internal"
     )
@@ -345,7 +345,12 @@ def main():
         metadata_dir = _STATIC_DIR / "metadata"
         metadata_dir.mkdir(parents=True, exist_ok=True)
         _BUCKET_METADATA = LocalBucket(
-            metadata_dir, f"{args.public_base_url}:{args.port}/static/metadata"
+            metadata_dir,
+            public_url=(
+                None
+                if args.public_base_url is None
+                else f"{args.public_base_url}/static/metadata"
+            ),
         )
     else:
         _BUCKET_METADATA = GCPBucket(
@@ -357,7 +362,12 @@ def main():
         audio_dir = _STATIC_DIR / "audio"
         audio_dir.mkdir(parents=True, exist_ok=True)
         _BUCKET_AUDIO = LocalBucket(
-            audio_dir, f"{args.public_base_url}:{args.port}/static/audio"
+            audio_dir,
+            public_url=(
+                None
+                if args.public_base_url is None
+                else f"{args.public_base_url}/static/audio"
+            ),
         )
     else:
         _BUCKET_AUDIO = GCPBucket(
