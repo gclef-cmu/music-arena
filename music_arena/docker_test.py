@@ -347,8 +347,8 @@ class DockerTest(unittest.TestCase):
         mock_system_build_command.assert_called_once()
         mock_system_run_command.assert_called_once()
 
-        # Verify subprocess.run was called twice (build + run)
-        self.assertEqual(mock_subprocess_run.call_count, 2)
+        # Verify subprocess.run was called three times (build + kill + run)
+        self.assertEqual(mock_subprocess_run.call_count, 3)
 
     @patch("music_arena.docker.system_run_command")
     @patch("music_arena.docker.subprocess.run")
@@ -363,7 +363,8 @@ class DockerTest(unittest.TestCase):
 
         # Only run command should be executed
         mock_system_run_command.assert_called_once()
-        mock_subprocess_run.assert_called_once()
+        # subprocess.run called twice (kill + run)
+        self.assertEqual(mock_subprocess_run.call_count, 2)
 
 
 if __name__ == "__main__":
