@@ -96,6 +96,7 @@ sao:
   links:
     paper: "https://arxiv.org/abs/2407.14358"
     code: "https://github.com/Stability-AI/stable-audio-tools"
+  release_audio_publicly: false
   variants:
     "initial":
       module_name: "sao"
@@ -122,6 +123,7 @@ sao-small:
     paper: "https://arxiv.org/abs/2505.08175"
     code: "https://github.com/Stability-AI/stable-audio-tools"
     home: "https://huggingface.co/stabilityai/stable-audio-open-small"
+  release_audio_publicly: false
   variants:
     "initial":
       module_name: "sao"
@@ -208,6 +210,32 @@ songgen:
         - "OPENAI_API_KEY"
       init_kwargs:
         lyrics_config: "4o-v00"
+
+
+# =============================================================================
+# Proprietary, instrumental-only
+# =============================================================================
+
+sa2:
+  display_name: "Stable Audio 2"
+  description: "Stable Audio 2.0 generates high-quality music and sound effects up to three minutes long at 44.1kHz stereo from text descriptions."
+  organization: "Stability AI"
+  access: "PROPRIETARY"
+  supports_lyrics: false
+  model_type: "Latent Diffusion"
+  training_data:
+    type: "Licensed Stock"
+    sources:
+      - "AudioSparx"
+  links:
+    home: "https://stableaudio.com/"
+  release_audio_publicly: false
+  variants:
+    "initial":
+      module_name: "satwo"
+      class_name: "StableAudio2"
+      secrets:
+        - "STABILITY_API_KEY"
 
 # =============================================================================
 # Proprietary, supports lyrics
