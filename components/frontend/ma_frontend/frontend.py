@@ -514,7 +514,8 @@ def bind_ui_events(ui, state, debug=False):
             inputs=[s["vote"]],
             outputs=[s["vote"]],
         ).then(
-            fn=lambda: gr.update(active=True),
+            fn=lambda voting_enabled: gr.update(active=not voting_enabled),
+            inputs=[s["frontend"]["voting_enabled"]],
             outputs=[timer],
         )
 
@@ -567,7 +568,7 @@ def bind_ui_events(ui, state, debug=False):
             # Stop timer when voting becomes enabled
             fn=lambda voting_enabled: gr.update(active=not voting_enabled),
             inputs=[s["frontend"]["voting_enabled"]],
-            outputs=[u["battle"]["a_vote_timer"]],
+            outputs=[timer],
         )
 
     # Vote buttons
