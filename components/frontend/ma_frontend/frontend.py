@@ -775,7 +775,10 @@ def build_ui_tos(debug=False):
 def build_ui_battle(debug=False):
     """Create and return all UI components for the arena interface"""
     # Info section
-    with gr.Row(visible=False) as row_info:
+    with gr.Row(visible=False) as row_info_main:
+        gr.Markdown(C.MAIN_MD, elem_id="main-markdown")
+
+    with gr.Row(visible=False) as row_info_additional:
         with gr.Accordion(
             C.EXPAND_INFO_ACCORDION_TEXT,
             open=False,
@@ -943,7 +946,8 @@ def build_ui_battle(debug=False):
             row_vote_buttons,
             row_vote_buttons_2,
             row_action_buttons,
-            row_info,
+            row_info_main,
+            row_info_additional,
         ],
         # Input
         "prompt_textbox": prompt_textbox,

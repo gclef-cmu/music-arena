@@ -35,7 +35,12 @@ TAB_LEADERBOARD = "📊 Leaderboard"
 TAB_ABOUT = "📜 About & Terms"
 
 # UI Elements
-EXPAND_INFO_ACCORDION_TEXT = "🔍 Expand for more information about Music Arena"
+MAIN_MD = """
+**Music Arena** is a free platform for evaluating and comparing AI music generation models. We are currently in **private beta**. Please email any feedback to chrisdonahue@cmu.edu.
+""".strip()
+EXPAND_INFO_ACCORDION_TEXT = (
+    "🔍 Expand for instructions and more information for Music Arena"
+)
 
 # Links
 FEEDBACK_FORM = "https://forms.gle/AevMiHGwBFRJ44Gz8"
@@ -138,10 +143,19 @@ Music Arena is primarily operated by the [Generative Creativity Lab (G-CLef)](ht
 **How to participate**:
 
 1. ✍️ Enter a prompt and click "{GENERATE_BUTTON_LABEL}" to generate two different songs.
-2. 🎧 Listen to both songs.
-3. 🗳️ Vote on which you prefer.
-3. 💾 After voting, you may download the generated music that you voted for.
-4. 📊 Your votes will be used to compile a _leaderboard_ of the best models.
+1. 🎧 Listen to both songs.
+1. 🗳️ Vote on which you prefer.
+1. 💾 After voting, you may download the generated music that you voted for.
+1. 📊 Your votes will be used to compile a _leaderboard_ of the best models.
+
+**Known issues**:
+
+1. Limited number of models available supporting vocal generation.
+1. Slow (~60s) generation times for open weights models.
+
+**Feedback**:
+
+Aside from the known issues above, please direct any feedback to chrisdonahue@cmu.edu. Alternatively, you can [submit a bug report](https://forms.gle/DxUii6ys7Rj7jbR7A).
 
 **Models**. Two of the following models are randomly selected for each round:
 """.strip()
