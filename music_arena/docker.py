@@ -120,9 +120,9 @@ def run_command(
 
 def kill_command(name: str) -> List[str]:
     return [
-        "bash",
+        "sh",
         "-c",
-        f'"docker ps -q --filter name=\\"^{name}$\\" | grep -q . && docker kill {name}; true"',
+        f"'docker ps -q --filter name=\"^{name}$\" | grep -q . && {{ docker kill {name}; sleep 5; }} || true'",
     ]
 
 

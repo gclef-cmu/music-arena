@@ -204,12 +204,12 @@ def get_deployment_commands(
     config = parse_deployment_config(config_path)
     config_name = f"-{config_path.stem}"
     commands = []
-    if component is None or component.startswith("s"):
-        commands.extend(get_systems_commands(config, config_name))
-    if component is None or component.startswith("g"):
-        commands.extend(get_gateway_commands(config, config_name))
     if component is None or component.startswith("f"):
         commands.extend(get_frontend_commands(config, config_name))
+    if component is None or component.startswith("g"):
+        commands.extend(get_gateway_commands(config, config_name))
+    if component is None or component.startswith("s"):
+        commands.extend(get_systems_commands(config, config_name))
     return commands
 
 
