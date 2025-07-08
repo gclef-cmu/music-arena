@@ -186,8 +186,8 @@ def handle_new_battle(session, user, debug=False):
         False,  # voting_enabled
         # UI (same as default values when UI is created)
         gr.update(value="", visible=False),  # battle_uuid
-        gr.update(show_download_button=False),  # a_music_player
-        gr.update(show_download_button=False),  # b_music_player
+        gr.update(value=None, show_download_button=False),  # a_music_player
+        gr.update(value=None, show_download_button=False),  # b_music_player
         gr.update(value="", visible=False),  # a_lyrics
         gr.update(value="", visible=False),  # b_lyrics
         gr.update(value=C.HIDDEN_TAG_LABEL, visible=False),  # a_system_tag
