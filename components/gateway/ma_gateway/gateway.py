@@ -250,7 +250,7 @@ def record_vote(data: dict):
             f"Vote session {session.uuid} does not match prompt session {battle.prompt_session.uuid}"
         )
     if battle.vote is not None:
-        logger.warning(f"Battle {vote.battle_uuid} already has a vote!")
+        logger.warning(f"Battle {battle.uuid} already has a vote!")
     battle.vote = vote
     battle.vote_user = user
     battle.vote_session = session
