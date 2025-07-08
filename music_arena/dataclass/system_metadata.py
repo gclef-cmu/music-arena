@@ -56,6 +56,7 @@ class TextToMusicSystemMetadata(MusicArenaDataClass):
     training_data: dict[str, Any] = field(default_factory=dict)
     citation: Optional[str] = None
     links: dict[str, str] = field(default_factory=dict)
+    release_audio_publicly: bool = True
     # Optional variant fields
     docker_base: Optional[str] = None
     secrets: list[str] = field(default_factory=list)
