@@ -36,7 +36,7 @@ TAB_ABOUT = "📜 About & Terms"
 
 # UI Elements
 MAIN_MD = """
-**Music Arena** is a free platform for evaluating and comparing AI music generation models. We are currently in **private beta**. Please email any feedback to chrisdonahue@cmu.edu.
+**Music Arena** is a free platform for evaluating and comparing AI music generation models. We are currently in **private beta**. Please email any feedback to musicarena@cmu.edu.
 """.strip()
 EXPAND_INFO_ACCORDION_TEXT = (
     "🔍 Expand for instructions and more information for Music Arena"
@@ -138,7 +138,7 @@ ARENA_MD = """
 ARENA_ABOUT_MD = f"""
 **Music Arena** is a free platform for evaluating and comparing AI music generation models. Type a text prompt for any music you can imagine and press "{GENERATE_BUTTON_LABEL}"! Music Arena will even generate lyrics for you if your prompt implies that you want them.
 
-Music Arena is primarily operated by the [Generative Creativity Lab (G-CLef)](https://chrisdonahue.com/#group) at Carnegie Mellon University, with support from [Sony AI](https://ai.sony) and assistance from [LMArena](https://lmarena.ai). See {TAB_ABOUT} for more details.
+Music Arena is an _academic research project_ operated by the [Generative Creativity Lab (G-CLef)](https://chrisdonahue.com/#group) at Carnegie Mellon University. Our primary goal is to advance the science of music evaluation through the collection and public release of music preference data.
 
 **How to participate**:
 
@@ -155,7 +155,7 @@ Music Arena is primarily operated by the [Generative Creativity Lab (G-CLef)](ht
 
 **Feedback**:
 
-Aside from the known issues above, please direct any feedback to chrisdonahue@cmu.edu. Alternatively, you can [submit a bug report](https://forms.gle/DxUii6ys7Rj7jbR7A).
+Aside from the known issues above, please direct any feedback to musicarena@cmu.edu. Alternatively, you can [submit a bug report](https://forms.gle/DxUii6ys7Rj7jbR7A).
 
 **Models**. Two of the following models are randomly selected for each round:
 """.strip()
@@ -199,7 +199,10 @@ By clicking {TOS_ACCEPT_BUTTON_LABEL} below, you agree to the following **terms 
 
 ABOUT_MD = f"""
 ## About Us
-Welcome to Music Arena! This platform ranks Text-to-Music AI models based on crowdsourced human preferences. Models are evaluated in head-to-head battles, and their Elo ratings are updated dynamically. Explore the top models, their performance metrics, and learn more about their capabilities. Powered by insights from CMU [Generative Creativity Lab (G-CLef)](https://chrisdonahue.com/#group), Georgia Tech [Music Informatics Group](https://musicinformatics.gatech.edu/), and [LM Arena](https://blog.lmarena.ai/about/).
+
+Welcome to Music Arena! This platform ranks Text-to-Music AI models based on crowdsourced human preferences. Models are evaluated in head-to-head battles, and their Elo ratings are updated dynamically. Explore the top models, their performance metrics, and learn more about their capabilities.
+
+Music Arena is an _academic research project_ operated by the [Generative Creativity Lab (G-CLef)](https://chrisdonahue.com/#group) at Carnegie Mellon University. Our primary goal is to advance the science of music evaluation through the collection and public release of music preference data.
 
 Links:
 
@@ -208,7 +211,7 @@ Links:
 
 ## Contributors
 
-The development of Music Arena has so far been led by the following contributors [Chris Donahue](https://chrisdonahue.com/), [Yonghyun Kim](https://yonghyunk1m.com), [Wayne Chi](https://www.waynechi.com/). Additional assistance provided by [Anastasios Angelopolus](https://people.eecs.berkeley.edu/~angelopoulos/) and [Wei-Lin Chiang](https://infwinston.github.io/).
+The development of Music Arena has so far been led by the following contributors: [Chris Donahue](https://chrisdonahue.com/), [Yonghyun Kim](https://yonghyunk1m.com) of the Georgia Tech [Music Informatics Group](https://musicinformatics.gatech.edu/), and [Wayne Chi](https://www.waynechi.com/). Additional assistance provided by [Anastasios Angelopolus](https://people.eecs.berkeley.edu/~angelopoulos/) and [Wei-Lin Chiang](https://infwinston.github.io/).
 
 We invite community contributions to our [codebase](https://github.com/gclef-cmu/music-arena)
 
@@ -220,5 +223,5 @@ Music Arena is approved by CMU's Institutional Review Board under Protocol `STUD
 
 ## Acknowledgments
 
-Music Arena is supported by [Sony AI](https://ai.sony) and was developed with assistance from the [LMArena](https://lmarena.ai) team.
+Music Arena is supported by funding from [Sony AI](https://ai.sony), with informal and pro-bono assistance provided by [LMArena](https://lmarena.ai).
 """.strip()
