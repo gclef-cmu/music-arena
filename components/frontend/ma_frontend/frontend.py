@@ -208,6 +208,17 @@ def handle_new_battle(session, user, debug=False):
         gr.update(visible=debug),  # regenerate_btn
         gr.update(active=False),  # a_vote_timer - stop timer when new battle starts
         gr.update(active=False),  # b_vote_timer - stop timer when new battle starts
+        gr.update(visible=False),  # feedback_header
+        gr.update(
+            value="", label="", interactive=True, visible=False
+        ),  # feedback_model_a
+        gr.update(
+            value="", label="", interactive=True, visible=False
+        ),  # feedback_model_b
+        gr.update(value="", interactive=True, visible=False),  # feedback_additional
+        gr.update(
+            value=C.FEEDBACK_SUBMIT_BUTTON_LABEL, interactive=True, visible=False
+        ),  # feedback_submit_btn
     ]
 
 
@@ -412,11 +423,30 @@ def handle_vote_success(session, user, battle, vote, systems):
         b_name=system_names[1],
     )
 
+    # Prepare download URL
     download_url = None
     if vote.preference == Preference.A:
         download_url = battle.a_audio_url
     elif vote.preference == Preference.B:
         download_url = battle.b_audio_url
+
+    # Prepare feedback UI based on vote preference
+    if vote.preference == Preference.A:
+        # User voted for A
+        feedback_model_a_template = C.FEEDBACK_WINNER_LABEL
+        feedback_model_b_template = C.FEEDBACK_LOSER_LABEL
+    elif vote.preference == Preference.B:
+        # User voted for B
+        feedback_model_a_template = C.FEEDBACK_LOSER_LABEL
+        feedback_model_b_template = C.FEEDBACK_WINNER_LABEL
+    elif vote.preference == Preference.BOTH_BAD:
+        # User voted both bad
+        feedback_model_a_template = C.FEEDBACK_BOTH_BAD_LABEL
+        feedback_model_b_template = C.FEEDBACK_BOTH_BAD_LABEL
+    else:  # Preference.TIE
+        # User voted tie
+        feedback_model_a_template = C.FEEDBACK_TIE_LABEL
+        feedback_model_b_template = C.FEEDBACK_TIE_LABEL
 
     return [
         # STATE
@@ -435,6 +465,75 @@ def handle_vote_success(session, user, battle, vote, systems):
             value=download_url, visible=download_url is not None
         ),  # download_file
         *[gr.update(visible=True)] * 2,  # new_round_btn, regenerate_btn
+        gr.update(visible=True),  # feedback_header
+        gr.update(
+            label=feedback_model_a_template.format(
+                a_or_b="A", model_name=system_names[0]
+            ),
+            visible=True,
+        ),  # feedback_model_a
+        gr.update(
+            label=feedback_model_b_template.format(
+                a_or_b="B", model_name=system_names[1]
+            ),
+            visible=True,
+        ),  # feedback_model_b
+        gr.update(visible=True),  # feedback_additional
+        gr.update(visible=True),  # feedback_submit_btn
+    ]
+
+
+def handle_feedback(
+    session, user, battle, vote, a_feedback, b_feedback, feedback, debug=False
+):
+    """Handle feedback submission"""
+    assert (
+        session is not None
+        and user is not None
+        and session.ack_tos == C.TERMS_CHECKSUM
+        and vote is not None
+    )
+    logger = get_battle_logger(
+        "handle_feedback", session=session, user=user, battle=battle
+    )
+
+    # Update vote with feedback
+    vote = vote.copy(
+        feedback=feedback,
+        a_feedback=a_feedback,
+        b_feedback=b_feedback,
+        feedback_time=time.time(),
+    )
+
+    logger.info(
+        f"a_feedback={vote.a_feedback}, "
+        f"b_feedback={vote.b_feedback}, "
+        f"feedback={vote.feedback}, "
+    )
+
+    # Record vote on backend
+    result = None
+    try:
+        result = G.post_record_vote(
+            session=session,
+            user=user,
+            battle_uuid=battle.uuid,
+            vote=vote,
+        )
+        logger.info(f"Recorded vote: {result}")
+    except SystemTimeoutException as e:
+        raise gr.Error(C.GATEWAY_TIMEOUT_MSG) from e
+    except Exception as e:
+        raise gr.Error(C.GATEWAY_UNAVAILABLE_MSG) from e
+
+    return [
+        vote,
+        gr.update(interactive=False),  # feedback_model_a
+        gr.update(interactive=False),  # feedback_model_b
+        gr.update(interactive=False),  # feedback_additional
+        gr.update(
+            value=C.FEEDBACK_SUBMITTED_BUTTON_LABEL, interactive=False
+        ),  # feedback_submit_btn
     ]
 
 
@@ -605,8 +704,34 @@ def bind_ui_events(ui, state, debug=False):
                 u["battle"]["download_file"],
                 u["battle"]["new_round_btn"],
                 u["battle"]["regenerate_btn"],
+                u["battle"]["feedback_header"],
+                u["battle"]["feedback_model_a"],
+                u["battle"]["feedback_model_b"],
+                u["battle"]["feedback_additional"],
+                u["battle"]["feedback_submit_btn"],
             ],
         )
+
+    # Feedback submit button
+    u["battle"]["feedback_submit_btn"].click(
+        fn=handle_feedback,
+        inputs=[
+            s["session"],
+            s["user"],
+            s["battle"],
+            s["vote"],
+            u["battle"]["feedback_model_a"],
+            u["battle"]["feedback_model_b"],
+            u["battle"]["feedback_additional"],
+        ],
+        outputs=[
+            s["vote"],
+            u["battle"]["feedback_model_a"],
+            u["battle"]["feedback_model_b"],
+            u["battle"]["feedback_additional"],
+            u["battle"]["feedback_submit_btn"],
+        ],
+    )
 
     # New round button
     u["battle"]["new_round_btn"].click(
@@ -938,6 +1063,51 @@ def build_ui_battle(debug=False):
             elem_id="regenerate-btn",
         )
 
+    # Feedback header
+    with gr.Row(visible=False) as row_feedback_header:
+        feedback_header = gr.Markdown(
+            C.FEEDBACK_HEADER_LABEL,
+            elem_id="feedback-header",
+            visible=debug,
+        )
+
+    # Model-specific feedback (visible based on vote type)
+    with gr.Row(visible=False) as row_feedback_model_specific:
+        with gr.Column():
+            feedback_model_a = gr.Textbox(
+                label="",
+                placeholder="",
+                lines=3,
+                visible=debug,
+                elem_id="feedback-model-a",
+            )
+        with gr.Column():
+            feedback_model_b = gr.Textbox(
+                label="",
+                placeholder="",
+                lines=3,
+                visible=debug,
+                elem_id="feedback-model-b",
+            )
+
+    # Additional feedback and submit button
+    with gr.Row(visible=False) as row_feedback_general:
+        with gr.Column(scale=4):
+            feedback_additional = gr.Textbox(
+                label=C.FEEDBACK_ADDITIONAL_LABEL,
+                placeholder="",
+                lines=2,
+                elem_id="feedback",
+                visible=debug,
+            )
+        with gr.Column(scale=1):
+            feedback_submit_btn = gr.Button(
+                value=C.FEEDBACK_SUBMIT_BUTTON_LABEL,
+                variant="primary",
+                elem_id="feedback-submit-btn",
+                visible=debug,
+            )
+
     return {
         # Core visibility rows
         "rows": [
@@ -947,6 +1117,9 @@ def build_ui_battle(debug=False):
             row_vote_buttons,
             row_vote_buttons_2,
             row_action_buttons,
+            row_feedback_header,
+            row_feedback_model_specific,
+            row_feedback_general,
             row_info_main,
             row_info_additional,
         ],
@@ -977,6 +1150,12 @@ def build_ui_battle(debug=False):
         "download_file": download_file,
         "new_round_btn": new_round_btn,
         "regenerate_btn": regenerate_btn,
+        # Feedback section
+        "feedback_header": feedback_header,
+        "feedback_model_a": feedback_model_a,
+        "feedback_model_b": feedback_model_b,
+        "feedback_additional": feedback_additional,
+        "feedback_submit_btn": feedback_submit_btn,
         # Info section
         "model_description_markdown": model_description_markdown,
     }
@@ -1036,6 +1215,11 @@ def build_ui(debug=False):
             "regenerate_btn",
             "a_vote_timer",
             "b_vote_timer",
+            "feedback_header",
+            "feedback_model_a",
+            "feedback_model_b",
+            "feedback_additional",
+            "feedback_submit_btn",
         ]
     ]
 
