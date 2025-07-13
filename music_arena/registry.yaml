@@ -241,9 +241,9 @@ sa2:
 # Proprietary, supports lyrics
 # =============================================================================
 
-riffusion:
-  display_name: "Riffusion"
-  description: "Riffusion is a generative AI instrument for instantly creating, remixing, and sharing studio-quality songs from simple prompts."
+riffusion-fuzz-1-0:
+  display_name: "Riffusion FUZZ 1.0"
+  description: "FUZZ is a state of the art diffusion transformer for creating and editing music, built by Riffusion."
   organization: "Riffusion"
   access: "PROPRIETARY"
   supports_lyrics: true
@@ -255,6 +255,25 @@ riffusion:
       class_name: "Riffusion"
       secrets:
         - "RIFFUSION_API_KEY"
+      init_kwargs:
+        api_tag: "FUZZ 1.0"
+
+riffusion-fuzz-1-1:
+  display_name: "Riffusion FUZZ 1.1"
+  description: "The latest version of FUZZ, a state of the art diffusion transformer for creating and editing music, built by Riffusion."
+  organization: "Riffusion"
+  access: "PROPRIETARY"
+  supports_lyrics: true
+  links:
+    home: "https://www.riffusion.com"
+  variants:
+    "initial":
+      module_name: "riffusion"
+      class_name: "Riffusion"
+      secrets:
+        - "RIFFUSION_API_KEY"
+      init_kwargs:
+        api_tag: "FUZZ 1.1"
 
 # =============================================================================
 # DSP systems for testing
