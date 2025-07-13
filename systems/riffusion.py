@@ -39,9 +39,10 @@ def _ffmpeg_decode(audio_path: str) -> Audio:
 
 
 class Riffusion(TextToMusicAPISystem):
-    def __init__(self, *args, **kwargs):
+    def __init__(self, *args, api_tag: str = "FUZZ 1.0", **kwargs):
         super().__init__(*args, **kwargs)
         self._client = None
+        self._api_tag = api_tag
 
     def _prepare(self):
         self._client = RiffAPIClient(api_key=get_secret("RIFFUSION_API_KEY"))
@@ -71,6 +72,7 @@ class Riffusion(TextToMusicAPISystem):
             kwargs = {
                 "prompt": prompt.overall_prompt,
                 "instrumental": prompt.instrumental,
+                "model": self._api_tag,
             }
         else:
             fn = "compose"
@@ -81,6 +83,7 @@ class Riffusion(TextToMusicAPISystem):
                 "lyrics": prompt.lyrics,
                 "lyrics_strength": 0.5,
                 "weirdness": 0.5,
+                "model": self._api_tag,
             }
 
         # Call Riffusion API
