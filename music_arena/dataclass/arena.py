@@ -97,13 +97,21 @@ class Vote(MusicArenaDataClass):
     b_listen_data: list[tuple[ListenEvent, float]] = field(default_factory=list)
     preference: Optional[Preference] = None
     preference_time: Optional[float] = None
+    feedback: Optional[str] = None
     a_feedback: Optional[str] = None
     b_feedback: Optional[str] = None
+    feedback_time: Optional[float] = None
 
     def __setattr__(self, name: str, value: Any) -> None:
         super().__setattr__(name, value)
         if name == "preference" and value is not None and self.preference_time is None:
             super().__setattr__("preference_time", time.time())
+        if (
+            name in ["feedback", "a_feedback", "b_feedback"]
+            and value is not None
+            and self.feedback_time is None
+        ):
+            super().__setattr__("feedback_time", time.time())
 
     def play(self, name: Literal["a", "b"]):
         attr = f"{name}_listen_data"
