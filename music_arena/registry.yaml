@@ -179,6 +179,7 @@ magenta-rt-large:
       init_kwargs:
         tag: "large"
         device: "gpu"
+        max_duration: 30.0
 
 # =============================================================================
 # Open, supports lyrics conditioning
@@ -280,6 +281,8 @@ lyria-rt:
       class_name: "LyriaRealTime"
       secrets:
         - "GEMINI_API_KEY"
+      init_kwargs:
+        max_duration: 30.0
 
 # =============================================================================
 # Proprietary, supports lyrics
