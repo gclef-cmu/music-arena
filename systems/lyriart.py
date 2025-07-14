@@ -2,6 +2,7 @@ import asyncio
 import base64
 import logging
 import time
+from io import BytesIO
 from typing import Any, Dict, Optional
 
 import nest_asyncio
@@ -29,7 +30,7 @@ class LyriaRealTime(TextToMusicAPISystem):
         self,
         *args,
         model_name: str = "models/lyria-realtime-exp",
-        default_duration: float = 30.0,
+        default_duration: float = 20.0,
         max_duration: float = 120.0,
         sample_rate: int = 48000,
         **kwargs,
@@ -78,7 +79,7 @@ class LyriaRealTime(TextToMusicAPISystem):
         music_prompt = prompt.overall_prompt
 
         _LOGGER.info(
-            f"Generating music with Lyria RealTime: {music_prompt}, duration: {duration}"
+            f"Generating music with Lyria RealTime: {music_prompt}, duration: {duration}, seed: {seed}"
         )
 
         # Start generation timing
@@ -89,60 +90,73 @@ class LyriaRealTime(TextToMusicAPISystem):
         audio_chunks = []
         collected_duration = 0.0
         chunk_duration = 2.0  # 2 second chunks
+        num_chunks = np.ceil(duration / chunk_duration)
 
         async def collect_audio(session):
             """Collect audio chunks until we reach the desired duration"""
             nonlocal collected_duration, audio_chunks
 
-            # First wait for setup complete
-            setup_complete = False
-
             async for message in session.receive():
-                # Handle setup complete message
-                if message.setup_complete and not setup_complete:
-                    setup_complete = True
-                    _LOGGER.info("Setup complete, starting audio collection")
-                    continue
-
-                # Only process audio after setup is complete
-                if (
-                    setup_complete
-                    and message.server_content
-                    and message.server_content.audio_chunks
-                ):
+                if message.server_content and message.server_content.audio_chunks:
                     # Extract audio data from the chunk
-                    audio_data = message.server_content.audio_chunks[0].data
-
-                    # Decode base64 audio data
-                    audio_bytes = base64.b64decode(audio_data)
-
-                    # Convert to numpy array (16-bit PCM stereo at 48kHz)
-                    audio_array = np.frombuffer(audio_bytes, dtype=np.int16)
-                    audio_float = audio_array.astype(np.float32) / 32768.0
-
-                    # Reshape to stereo
-                    if len(audio_float.shape) == 1:
-                        audio_float = audio_float.reshape(-1, 2)
-
-                    audio_chunks.append(audio_float)
-                    collected_duration += len(audio_float) / self._sample_rate
-
+                    chunk = message.server_content.audio_chunks[0]
                     _LOGGER.info(
-                        f"Collected {len(audio_chunks)} chunks, duration: {collected_duration:.2f}s"
+                        f"Received chunk: {chunk.mime_type}, {len(chunk.data)} bytes"
                     )
 
+                    # Handle L16 (Linear PCM 16-bit) format
+                    if chunk.mime_type.startswith("audio/l16"):
+                        # L16 is raw 16-bit PCM, try little-endian first
+                        audio_array = np.frombuffer(
+                            chunk.data, dtype="<i2"
+                        )  # little-endian 16-bit
+
+                        # Convert to float32 and normalize
+                        audio_float = audio_array.astype(np.float32) / 32768.0
+
+                        # Reshape to stereo (assuming 2 channels)
+                        if len(audio_float) % 2 == 0:
+                            audio_float = audio_float.reshape(-1, 2)
+                        else:
+                            # If odd number of samples, pad or truncate
+                            audio_float = audio_float[:-1].reshape(-1, 2)
+
+                        # Parse sample rate from mime type (default to 48000)
+                        sample_rate = self._sample_rate
+                        if "rate=" in chunk.mime_type:
+                            try:
+                                rate_part = chunk.mime_type.split("rate=")[1].split(
+                                    ";"
+                                )[0]
+                                sample_rate = int(rate_part)
+                            except (IndexError, ValueError):
+                                pass
+
+                        audio_chunks.append(audio_float)
+                        collected_duration += len(audio_float) / sample_rate
+
+                        _LOGGER.info(
+                            f"Collected {len(audio_chunks)} chunks, duration: {collected_duration:.2f}s, samples: {len(audio_float)}"
+                        )
+                    else:
+                        raise NotImplementedError(
+                            f"Unsupported audio format: {chunk.mime_type}"
+                        )
+
                     # Stop collecting when we have enough audio
-                    if collected_duration >= duration:
+                    if len(audio_chunks) >= num_chunks:
                         break
 
-                # Small delay to prevent busy waiting
                 await asyncio.sleep(0.001)
 
         # Connect to Lyria RealTime and generate music
         async with self._client.aio.live.music.connect(
             model=self._model_name
         ) as session:
-            # Configure the session
+            # Start the audio collection task (like in the official example)
+            audio_task = asyncio.create_task(collect_audio(session))
+
+            # Configure the session (setup is handled internally)
             await session.set_weighted_prompts(
                 prompts=[
                     types.WeightedPrompt(text=music_prompt, weight=1.0),
@@ -160,20 +174,8 @@ class LyriaRealTime(TextToMusicAPISystem):
             # Start streaming music
             await session.play()
 
-            # Start the audio collection task
-            audio_task = asyncio.create_task(collect_audio(session))
-
             # Wait for audio collection to complete
-            target_chunks = int(np.ceil(duration / chunk_duration))
-            while len(audio_chunks) < target_chunks and collected_duration < duration:
-                await asyncio.sleep(0.1)
-
-            # Cancel the audio collection task
-            audio_task.cancel()
-            try:
-                await audio_task
-            except asyncio.CancelledError:
-                pass
+            await asyncio.wait_for(audio_task, timeout=duration + 10.0)
 
         timings.append(("generation_complete", time.time()))
 
@@ -190,7 +192,7 @@ class LyriaRealTime(TextToMusicAPISystem):
 
         # Crop to exact requested duration
         if prompt.duration is not None:
-            audio = audio.crop(duration=prompt.duration)
+            audio = audio.crop(duration=duration)
 
         timings.append(("done", time.time()))
 

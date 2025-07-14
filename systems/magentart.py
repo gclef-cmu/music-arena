@@ -21,7 +21,7 @@ class MagentaRealTime(TextToMusicGPUSystem):
     def __init__(
         self,
         tag: str = "large",
-        default_duration: float = 30.0,
+        default_duration: float = 20.0,
         max_duration: float = 180.0,
         device: str = "gpu",
         **kwargs,
