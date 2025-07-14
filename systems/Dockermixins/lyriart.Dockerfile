@@ -1,0 +1,1 @@
+RUN python -m pip install --no-cache-dir google-genai

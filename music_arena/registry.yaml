@@ -263,6 +263,24 @@ sa2:
       secrets:
         - "STABILITY_API_KEY"
 
+lyria-rt:
+  display_name: "Lyria RealTime"
+  description: "Lyria RT is a state-of-the-art real-time, streaming music generation model."
+  organization: "Google DeepMind"
+  access: "PROPRIETARY"
+  supports_lyrics: false
+  model_type: "Codec Language Model"
+  training_data:
+    type: "Unspecified"
+  links:
+    home: "https://magenta.withgoogle.com/lyria-realtime"
+  variants:
+    "initial":
+      module_name: "lyriart"
+      class_name: "LyriaRealTime"
+      secrets:
+        - "GEMINI_API_KEY"
+
 # =============================================================================
 # Proprietary, supports lyrics
 # =============================================================================
