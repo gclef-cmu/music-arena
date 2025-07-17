@@ -94,7 +94,6 @@ DISPLAY_QUEUE_THRESHOLD = 10.0
 LYRICS_A_LABEL = "**Lyrics A**:\n\n"
 LYRICS_B_LABEL = "**Lyrics B**:\n\n"
 
-
 # Feedback Labels
 FEEDBACK_HEADER_LABEL = (
     "_(Optional)_ Please share more feedback on this battle and your vote!"
