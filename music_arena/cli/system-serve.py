@@ -73,6 +73,9 @@ async def process_batch(batch: List[QueueItem]):
         prompts = [item.prompt for item in batch]
         logging.info(f"Processing batch of {len(prompts)} prompts")
 
+        # Record start time for this batch
+        time_started = time.time()
+
         # Use generate_stream for efficient batch processing
         responses = []
         try:
@@ -82,6 +85,9 @@ async def process_batch(batch: List[QueueItem]):
         except Exception as stream_error:
             logging.error(f"Error during generate_stream: {stream_error}")
             raise
+
+        # Record completion time
+        time_completed = time.time()
 
         # Match responses back to futures
         if len(responses) != len(batch):
@@ -95,6 +101,10 @@ async def process_batch(batch: List[QueueItem]):
                 logging.error(f"Got None response for item {i}")
                 item.future.set_exception(RuntimeError("Generated response is None"))
             else:
+                # Fill in timing fields before setting the result
+                response.time_queued = item.timestamp
+                response.time_started = time_started
+                response.time_completed = time_completed
                 item.future.set_result(response)
 
     except Exception as e:

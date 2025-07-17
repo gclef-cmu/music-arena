@@ -268,11 +268,9 @@ def record_vote(data: dict):
         winner = None
 
     return {
-        "system_keys": [
-            battle.a_metadata.system_key.as_json_dict(),
-            battle.b_metadata.system_key.as_json_dict(),
-        ],
         "winner": winner,
+        "a_metadata": battle.a_metadata.as_json_dict(),
+        "b_metadata": battle.b_metadata.as_json_dict(),
     }
 
 
