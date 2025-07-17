@@ -151,9 +151,12 @@ class Vote(MusicArenaDataClass):
 class ResponseMetadata(MusicArenaDataClass):
     system_key: Optional[SystemKey] = None
     system_git_hash: Optional[str] = None
-    generate_start_time: Optional[float] = None
-    generate_end_time: Optional[float] = None
-    generate_duration: Optional[float] = None
+    system_time_queued: Optional[float] = None
+    system_time_started: Optional[float] = None
+    system_time_completed: Optional[float] = None
+    gateway_time_started: Optional[float] = None
+    gateway_time_completed: Optional[float] = None
+    gateway_num_retries: Optional[int] = None
     size_bytes: Optional[int] = None
     lyrics: Optional[str] = None
     sample_rate: Optional[int] = None

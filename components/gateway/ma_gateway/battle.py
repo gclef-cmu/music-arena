@@ -134,10 +134,10 @@ class BattleGenerator:
         # Try generation with retries
         timings.append((f"generate_{system.as_string()}_start", time.time()))
         last_exception = None
+        start_time = time.time()
         for attempt in range(1 + self.num_retries):
             try:
                 # Make HTTP request to the system container
-                start_time = time.time()
                 async with aiohttp.ClientSession() as session:
                     async with session.post(generate_url, json=prompt_data) as response:
                         if response.status != 200:
@@ -167,9 +167,12 @@ class BattleGenerator:
                 metadata = ResponseMetadata(
                     system_key=system,
                     system_git_hash=result.get("git_hash"),
-                    generate_start_time=start_time,
-                    generate_end_time=end_time,
-                    generate_duration=end_time - start_time,
+                    system_time_queued=result.get("time_queued"),
+                    system_time_started=result.get("time_started"),
+                    system_time_completed=result.get("time_completed"),
+                    gateway_time_started=start_time,
+                    gateway_time_completed=end_time,
+                    gateway_num_retries=attempt,
                     size_bytes=len(audio_bytes),
                     lyrics=result.get("lyrics"),
                     **audio_metadata,
