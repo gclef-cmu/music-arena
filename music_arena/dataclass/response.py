@@ -16,6 +16,9 @@ class BaseResponse(MusicArenaDataClass):
 class TextToMusicResponse(BaseResponse):
     audio: Audio
     lyrics: Optional[str] = None
+    time_queued: Optional[float] = None
+    time_started: Optional[float] = None
+    time_completed: Optional[float] = None
     custom_timings: list[tuple[str, float]] = field(default_factory=list)
 
     def as_json_dict_with_encoding(self, encoding: AudioEncoding) -> dict[str, Any]:

@@ -14,9 +14,9 @@ from music_arena.dataclass import (
     Battle,
     ListenEvent,
     Preference,
+    ResponseMetadata,
     Session,
     SimpleTextToMusicPrompt,
-    SystemKey,
     User,
     Vote,
 )
@@ -192,6 +192,8 @@ def handle_new_battle(session, user, debug=False):
         gr.update(value="", visible=False),  # b_lyrics
         gr.update(value=C.HIDDEN_TAG_LABEL, visible=False),  # a_system_tag
         gr.update(value=C.HIDDEN_TAG_LABEL, visible=False),  # b_system_tag
+        gr.update(value=C.HIDDEN_TAG_LABEL, visible=False),  # a_system_timing
+        gr.update(value=C.HIDDEN_TAG_LABEL, visible=False),  # b_system_timing
         gr.update(
             value=C.VOTE_ALLOWED_MSG if debug else C.VOTE_NOT_ALLOWED_MSG, visible=debug
         ),  # vote_status_markdown
@@ -388,12 +390,8 @@ def handle_vote(session, user, battle, vote, debug=False):
         raise gr.Error(C.GATEWAY_UNAVAILABLE_MSG) from e
 
     return battle.copy(
-        a_metadata=battle.a_metadata.copy(
-            system_key=SystemKey.from_json_dict(result["system_keys"][0]),
-        ),
-        b_metadata=battle.b_metadata.copy(
-            system_key=SystemKey.from_json_dict(result["system_keys"][1]),
-        ),
+        a_metadata=ResponseMetadata.from_json_dict(result["a_metadata"]),
+        b_metadata=ResponseMetadata.from_json_dict(result["b_metadata"]),
     )
 
 
@@ -415,6 +413,35 @@ def handle_vote_success(session, user, battle, vote, systems):
         system_names.append(name)
         system_labels_md.append(
             C.SYSTEM_LABEL_TEMPLATE.format(label=label, name=name, tag=key.system_tag)
+        )
+
+    # Prepare system timing stats
+    system_timings_md = []
+    for metadata in [battle.a_metadata, battle.b_metadata]:
+        generation_duration = (
+            metadata.system_time_completed - metadata.system_time_started
+        )
+        queued = metadata.system_time_started - metadata.system_time_queued
+        rtf = metadata.duration / generation_duration
+        if rtf > C.STATS_FAST_RTF_THRESHOLD:
+            rtf_emoji = C.STATS_FAST_EMOJI
+        elif rtf < C.STATS_SLOW_RTF_THRESHOLD:
+            rtf_emoji = C.STATS_SLOW_EMOJI
+        else:
+            rtf_emoji = ""
+        queued_str = (
+            C.STATS_QUEUED_LABEL.format(queued=queued)
+            if queued > C.DISPLAY_QUEUE_THRESHOLD
+            else ""
+        )
+        system_timings_md.append(
+            C.STATS_LABEL_TEMPLATE.format(
+                duration=metadata.duration,
+                generation_duration=generation_duration,
+                rtf=rtf,
+                rtf_emoji=rtf_emoji,
+                queued_str=queued_str,
+            )
         )
 
     # Prepare vote cast message
@@ -458,6 +485,9 @@ def handle_vote_success(session, user, battle, vote, systems):
         *[
             gr.update(value=md, visible=True) for md in system_labels_md
         ],  # a_system_tag, b_system_tag
+        *[
+            gr.update(value=md, visible=True) for md in system_timings_md
+        ],  # a_system_timing, b_system_timing
         gr.update(variant="primary"),  # *clicked* vote_*_btn
         *[gr.update(interactive=False)] * 4,  # *all* vote_*_btns
         gr.update(value=vote_status_md, visible=True),  # vote_status_markdown
@@ -698,6 +728,8 @@ def bind_ui_events(ui, state, debug=False):
                 winner_player,
                 u["battle"]["a_system_tag"],
                 u["battle"]["b_system_tag"],
+                u["battle"]["a_system_timing"],
+                u["battle"]["b_system_timing"],
                 btn,
                 *vote_btns,
                 u["battle"]["vote_status_markdown"],
@@ -990,6 +1022,15 @@ def build_ui_battle(debug=False):
                 C.HIDDEN_TAG_LABEL, visible=False, elem_id="b-system-tag"
             )
 
+        # System timing stats (hidden until after vote)
+        with gr.Row():
+            a_system_timing = gr.Markdown(
+                C.HIDDEN_TAG_LABEL, visible=False, elem_id="a-system-timing"
+            )
+            b_system_timing = gr.Markdown(
+                C.HIDDEN_TAG_LABEL, visible=False, elem_id="b-system-timing"
+            )
+
     # Timers for periodic vote UI updates (hidden components)
     a_vote_timer = gr.Timer(1.0, active=False)
     b_vote_timer = gr.Timer(1.0, active=False)
@@ -1137,6 +1178,8 @@ def build_ui_battle(debug=False):
         "b_lyrics": b_lyrics,
         "a_system_tag": a_system_tag,
         "b_system_tag": b_system_tag,
+        "a_system_timing": a_system_timing,
+        "b_system_timing": b_system_timing,
         # Timers for periodic updates
         "a_vote_timer": a_vote_timer,
         "b_vote_timer": b_vote_timer,
@@ -1205,6 +1248,8 @@ def build_ui(debug=False):
             "b_lyrics",
             "a_system_tag",
             "b_system_tag",
+            "a_system_timing",
+            "b_system_timing",
             "vote_status_markdown",
             "vote_a_btn",
             "vote_b_btn",

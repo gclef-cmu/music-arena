@@ -78,6 +78,9 @@ class LyriaRealTime(TextToMusicAPISystem):
         # Prepare the prompt for Lyria
         music_prompt = prompt.overall_prompt
 
+        # Prepare the seed
+        seed = seed % 2147483647  # Ensure seed fits in int32
+
         _LOGGER.info(
             f"Generating music with Lyria RealTime: {music_prompt}, duration: {duration}, seed: {seed}"
         )
