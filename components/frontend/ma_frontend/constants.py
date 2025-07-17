@@ -84,11 +84,13 @@ SYSTEM_B_LABEL = "**Model B**: "
 SYSTEM_UNKNOWN_NAME = "Unknown"
 SYSTEM_NAME_TEMPLATE = "{name} (`{tag}`)"
 SYSTEM_LABEL_TEMPLATE = "{label} {name} (`{tag}`)"
-STATS_LABEL_TEMPLATE = "**Stats**: Generated {duration:.1f}s of music in {generation_duration:.1f}s ({rtf:.1f}x real time {rtf_emoji}{queued_str})\n\n"
-STATS_FAST_EMOJI = "🏎️"
-STATS_FAST_RTF_THRESHOLD = 10.0
-STATS_SLOW_EMOJI = "🐌"
-STATS_SLOW_RTF_THRESHOLD = 1.0
+STATS_LABEL_TEMPLATE = "**Stats**: Generated {duration:.1f}s of music in {generation_duration:.1f}s ({rtf:.1f}x real time{rtf_emoji}{queued_str})\n\n"
+EMOJI_THRESHOLDS = [
+    (float("-inf"), " 🐌"),
+    (0.9, " "),
+    (2.0, " 🏎️"),
+    (10.0, " 🏎️💨"),
+]
 STATS_QUEUED_LABEL = ", queued for {queued:.1f}s"
 DISPLAY_QUEUE_THRESHOLD = 10.0
 LYRICS_A_LABEL = "**Lyrics A**:\n\n"

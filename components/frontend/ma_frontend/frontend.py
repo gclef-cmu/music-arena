@@ -423,12 +423,9 @@ def handle_vote_success(session, user, battle, vote, systems):
         )
         queued = metadata.system_time_started - metadata.system_time_queued
         rtf = metadata.duration / generation_duration
-        if rtf > C.STATS_FAST_RTF_THRESHOLD:
-            rtf_emoji = C.STATS_FAST_EMOJI
-        elif rtf < C.STATS_SLOW_RTF_THRESHOLD:
-            rtf_emoji = C.STATS_SLOW_EMOJI
-        else:
-            rtf_emoji = ""
+        rtf_emoji = next(
+            emoji for threshold, emoji in C.EMOJI_THRESHOLDS if rtf >= threshold
+        )
         queued_str = (
             C.STATS_QUEUED_LABEL.format(queued=queued)
             if queued > C.DISPLAY_QUEUE_THRESHOLD
