@@ -153,7 +153,7 @@ async def health_check():
     except Exception as e:
         raise HTTPException(status_code=500, detail=f"Error uploading battle: {e}")
 
-    return {"status": "ok"}
+    return {"status": "ok", "uuid": battle.uuid}
 
 
 @_APP.post("/generate_battle")
