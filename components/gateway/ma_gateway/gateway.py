@@ -100,7 +100,7 @@ def _parse_prebaked_prompts():
     except FileNotFoundError:
         _LOGGER.warning("prebaked.json not found, returning empty prebaked prompts")
         return {}
-    result = {p.checksum: p.as_json_dict() for p in prompts}
+    result = {p.checksum: p for p in prompts}
     assert len(result) == len(prompts)
     return result
 
@@ -109,7 +109,7 @@ def _parse_prebaked_prompts():
 def prebaked():
     """Returns dictionary mapping checksum to TextToMusicPrompt dict"""
     _maybe_raise_flaky_error(logging.getLogger("/prebaked"))
-    return _parse_prebaked_prompts()
+    return {k: v.as_json_dict() for k, v in _parse_prebaked_prompts().items()}
 
 
 @_APP.get("/health_check")
