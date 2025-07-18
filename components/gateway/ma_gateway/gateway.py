@@ -116,13 +116,8 @@ def prebaked():
 async def health_check():
     """Health check"""
     assert _BATTLE_GENERATOR is not None
-    await _BATTLE_GENERATOR.generate_battle(
-        prompt_detailed=DetailedTextToMusicPrompt(
-            overall_prompt="A tree falls in the forest",
-            instrumental=random.choice([True, False]),
-            duration=10.0,
-        )
-    )
+    prompt_detailed = random.choice(list(_parse_prebaked_prompts().values()))
+    await _BATTLE_GENERATOR.generate_battle(prompt_detailed=prompt_detailed)
     return {"status": "ok"}
 
 
