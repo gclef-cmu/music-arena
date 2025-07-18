@@ -130,7 +130,7 @@ async def health_check():
     timings = []
     timings.append(("generate", time.time()))
     battle, a_audio_bytes, b_audio_bytes = await _BATTLE_GENERATOR.generate_battle(
-        prompt_detailed=prompt_detailed, timings=timings
+        prompt_detailed=prompt_detailed, prompt_prebaked=True, timings=timings
     )
 
     # Store audio
