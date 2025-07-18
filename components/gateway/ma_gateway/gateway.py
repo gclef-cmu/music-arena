@@ -114,7 +114,7 @@ def prebaked():
 
 def _audio_key(prompt: DetailedTextToMusicPrompt, battle_uuid: str, suffix: str) -> str:
     prebaked = prompt.checksum in _parse_prebaked_prompts()
-    prefix = "prebaked" if prebaked else "custom"
+    prefix = "prebaked" if prebaked else "original"
     return f"{prefix}-{prompt.checksum}-{battle_uuid}-{suffix}.mp3"
 
 
