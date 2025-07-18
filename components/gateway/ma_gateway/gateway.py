@@ -112,9 +112,24 @@ def prebaked():
     return _parse_prebaked_prompts()
 
 
+@_APP.get("/health_check")
+async def health_check():
+    """Health check"""
+    assert _BATTLE_GENERATOR is not None
+    await _BATTLE_GENERATOR.generate_battle(
+        prompt_detailed=DetailedTextToMusicPrompt(
+            overall_prompt="A tree falls in the forest",
+            instrumental=random.choice([True, False]),
+            duration=10.0,
+        )
+    )
+    return {"status": "ok"}
+
+
 @_APP.post("/generate_battle")
 async def generate_battle(data: dict):
     """Generate a battle"""
+    assert _BATTLE_GENERATOR is not None
     assert _BUCKET_AUDIO is not None
 
     # Parse user and prompt
