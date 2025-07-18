@@ -1,42 +1,402 @@
 [
     {
-        "overall_prompt": "Orchestral symphony with sweeping strings and brass",
+        "overall_prompt": "Minimalist piano composition exploring silence and space",
         "instrumental": true
     },
     {
-        "overall_prompt": "Ambient electronic soundscape with ethereal pads",
+        "overall_prompt": "Baroque harpsichord fugue in D minor",
         "instrumental": true
     },
     {
-        "overall_prompt": "Fingerpicked acoustic guitar folk melody",
+        "overall_prompt": "Aggressive dubstep with heavy bass drops and wobbly synths",
         "instrumental": true
     },
     {
-        "overall_prompt": "Jazz fusion with electric bass and synthesizers",
+        "overall_prompt": "Traditional Japanese koto and shakuhachi duet",
         "instrumental": true
     },
     {
-        "overall_prompt": "Post-rock cinematic build with reverb-drenched guitars",
+        "overall_prompt": "Uplifting trance anthem at 138 BPM",
         "instrumental": true
     },
     {
-        "overall_prompt": "Emotional pop ballad with heartfelt vocals",
+        "overall_prompt": "Dark ambient drone music for horror films",
+        "instrumental": true
+    },
+    {
+        "overall_prompt": "Bluegrass banjo breakdown in rapid-fire style",
+        "instrumental": true
+    },
+    {
+        "overall_prompt": "Neoclassical violin concerto movement",
+        "instrumental": true
+    },
+    {
+        "overall_prompt": "Afrobeat percussion ensemble",
+        "instrumental": true
+    },
+    {
+        "overall_prompt": "Synthwave retro-futuristic driving music",
+        "instrumental": true
+    },
+    {
+        "overall_prompt": "Celtic harp meditation with gentle arpeggios",
+        "instrumental": true
+    },
+    {
+        "overall_prompt": "Bebop saxophone improvisation over complex changes",
+        "instrumental": true
+    },
+    {
+        "overall_prompt": "Industrial techno pounding at warehouse raves",
+        "instrumental": true
+    },
+    {
+        "overall_prompt": "Spanish flamenco guitar",
+        "instrumental": true
+    },
+    {
+        "overall_prompt": "Orchestral film score building to epic climax",
+        "instrumental": true
+    },
+    {
+        "overall_prompt": "Downtempo chillout lounge grooves",
+        "instrumental": true
+    },
+    {
+        "overall_prompt": "Progressive metal instrumental with complex time signatures",
+        "instrumental": true
+    },
+    {
+        "overall_prompt": "Bossa nova guitar and piano for sunset beaches",
+        "instrumental": true
+    },
+    {
+        "overall_prompt": "Experimental glitch music deconstructing digital sounds",
+        "instrumental": true
+    },
+    {
+        "overall_prompt": "Medieval lute serenade from castle courtyards",
+        "instrumental": true
+    },
+    {
+        "overall_prompt": "Drum and bass liquid funk",
+        "instrumental": true
+    },
+    {
+        "overall_prompt": "Indian sitar raga on a rainy evening",
+        "instrumental": true
+    },
+    {
+        "overall_prompt": "Surf rock reverb-soaked guitar instrumentals",
+        "instrumental": true
+    },
+    {
+        "overall_prompt": "Chamber music string quartet in romantic style",
+        "instrumental": true
+    },
+    {
+        "overall_prompt": "Trap beat production featuring 808s and hi-hats",
+        "instrumental": true
+    },
+    {
+        "overall_prompt": "Didgeridoo drone",
+        "instrumental": true
+    },
+    {
+        "overall_prompt": "Smooth jazz with trumpet melodies over brushed drums",
+        "instrumental": true
+    },
+    {
+        "overall_prompt": "Math rock complex time signatures and guitar tapping",
+        "instrumental": true
+    },
+    {
+        "overall_prompt": "Ethereal new age synthesizer meditation",
+        "instrumental": true
+    },
+    {
+        "overall_prompt": "Mariachi trumpet and violin celebration",
+        "instrumental": true
+    },
+    {
+        "overall_prompt": "Deep house grooves for late night dancing",
+        "instrumental": true
+    },
+    {
+        "overall_prompt": "Classical guitar etude with virtuosic technique",
+        "instrumental": true
+    },
+    {
+        "overall_prompt": "Pysch rock improvisation",
+        "instrumental": true
+    },
+    {
+        "overall_prompt": "A large Taiko drumming ensemble",
+        "instrumental": true
+    },
+    {
+        "overall_prompt": "Minimal techno",
+        "instrumental": true
+    },
+    {
+        "overall_prompt": "Blues harmonica over shuffle rhythm",
+        "instrumental": true
+    },
+    {
+        "overall_prompt": "Cinematic trailer music",
+        "instrumental": true
+    },
+    {
+        "overall_prompt": "Reggae dub echoes",
+        "instrumental": true
+    },
+    {
+        "overall_prompt": "Contemporary classical prepared piano experiments",
+        "instrumental": true
+    },
+    {
+        "overall_prompt": "Funk with guitar scratching and slap bass grooves",
+        "instrumental": true
+    },
+    {
+        "overall_prompt": "Nordic folk fiddle dancing melodies",
+        "instrumental": true
+    },
+    {
+        "overall_prompt": "Hardstyle kicks pumping at crazy fast tempo",
+        "instrumental": true
+    },
+    {
+        "overall_prompt": "Zen garden bamboo flute, contemplative",
+        "instrumental": true
+    },
+    {
+        "overall_prompt": "Disco strings and brass",
+        "instrumental": true
+    },
+    {
+        "overall_prompt": "Post-punk angular guitar riffs with driving bass",
+        "instrumental": true
+    },
+    {
+        "overall_prompt": "Gamelan orchestra metallic percussion",
+        "instrumental": true
+    },
+    {
+        "overall_prompt": "Lo-fi hip hop beats for studying",
+        "instrumental": true
+    },
+    {
+        "overall_prompt": "Shoegaze with walls of guitar reverb and delay",
+        "instrumental": true
+    },
+    {
+        "overall_prompt": "Balkan brass band wedding celebration energy",
+        "instrumental": true
+    },
+    {
+        "overall_prompt": "Chiptune 8-bit video game",
+        "instrumental": true
+    },
+    {
+        "overall_prompt": "Sultry blues with vocals lamenting lost love",
         "instrumental": false
     },
     {
-        "overall_prompt": "Aggressive heavy metal with powerful screaming vocals",
+        "overall_prompt": "Opera soprano aria showcasing vocal virtuosity",
         "instrumental": false
     },
     {
-        "overall_prompt": "Smooth R&B with soulful vocal runs",
+        "overall_prompt": "Rap battle aggressive wordplay and punchlines",
         "instrumental": false
     },
     {
-        "overall_prompt": "Country song with storytelling vocals and twang",
+        "overall_prompt": "Folk singer-songwriter making an intimate confession",
         "instrumental": false
     },
     {
-        "overall_prompt": "Indie rock with melodic alternative vocals",
+        "overall_prompt": "Gospel choir",
+        "instrumental": false
+    },
+    {
+        "overall_prompt": "Death metal growling vocals over blast beats",
+        "instrumental": false
+    },
+    {
+        "overall_prompt": "K-pop group with five singers and a catchy hook",
+        "instrumental": false
+    },
+    {
+        "overall_prompt": "Reggaeton Latin vocals and dembow rhythm",
+        "instrumental": false
+    },
+    {
+        "overall_prompt": "Barbershop quartet, rich harmonies",
+        "instrumental": false
+    },
+    {
+        "overall_prompt": "Emo punk confessional lyrics and raw emotion",
+        "instrumental": false
+    },
+    {
+        "overall_prompt": "Soul singer belting a powerful anthem",
+        "instrumental": false
+    },
+    {
+        "overall_prompt": "Yodeling alpine folk songs echoing in the mountains",
+        "instrumental": false
+    },
+    {
+        "overall_prompt": "Grime MC spitting bars over dark production",
+        "instrumental": false
+    },
+    {
+        "overall_prompt": "Dream pop with ethereal vocals floating above guitars",
+        "instrumental": false
+    },
+    {
+        "overall_prompt": "Chanson française poetic lyrics and accordion",
+        "instrumental": false
+    },
+    {
+        "overall_prompt": "Hardcore punk shouting political protest anthems",
+        "instrumental": false
+    },
+    {
+        "overall_prompt": "Neo-soul vocalist improvising over jazz chords",
+        "instrumental": false
+    },
+    {
+        "overall_prompt": "Bollywood-style dramatic love songs",
+        "instrumental": false
+    },
+    {
+        "overall_prompt": "Alternative rock angst-filled teenage rebellion",
+        "instrumental": false
+    },
+    {
+        "overall_prompt": "Fado singer, Portuguese lyrics, melancholy",
+        "instrumental": false
+    },
+    {
+        "overall_prompt": "Dancehall toasting over riddim beats",
+        "instrumental": false
+    },
+    {
+        "overall_prompt": "Americana storytelling dusty highway narratives",
+        "instrumental": false
+    },
+    {
+        "overall_prompt": "Trap rapper with auto-tuned melodic flows",
+        "instrumental": false
+    },
+    {
+        "overall_prompt": "Cabaret singer performing theatrical show tunes",
+        "instrumental": false
+    },
+    {
+        "overall_prompt": "Black metal with shrieking vocals and tremolo guitars",
+        "instrumental": false
+    },
+    {
+        "overall_prompt": "Afropop vocals with fast rhythms",
+        "instrumental": false
+    },
+    {
+        "overall_prompt": "Ska punk with upstroke guitars and shouted choruses",
+        "instrumental": false
+    },
+    {
+        "overall_prompt": "Jazz vocalist smoky late-night ballad",
+        "instrumental": false
+    },
+    {
+        "overall_prompt": "Mongolian throat singing overtone harmonics",
+        "instrumental": false
+    },
+    {
+        "overall_prompt": "Celtic punk song with prominent vocals and lyrics about a rowdy evening",
+        "instrumental": false
+    },
+    {
+        "overall_prompt": "Qawwali devotional singing",
+        "instrumental": false
+    },
+    {
+        "overall_prompt": "Indie folk harmonies around campfire stories",
+        "instrumental": false
+    },
+    {
+        "overall_prompt": "Drill rapper delivering dark street narratives",
+        "instrumental": false
+    },
+    {
+        "overall_prompt": "Bossa nova with whispered Portuguese vocals",
+        "instrumental": false
+    },
+    {
+        "overall_prompt": "Power metal soaring vocals about epic battles",
+        "instrumental": false
+    },
+    {
+        "overall_prompt": "Motown ballad",
+        "instrumental": false
+    },
+    {
+        "overall_prompt": "Grunge vocalist raw and unpolished delivery",
+        "instrumental": false
+    },
+    {
+        "overall_prompt": "Irish traditional sean-nós vocals, no backing track",
+        "instrumental": false
+    },
+    {
+        "overall_prompt": "Conscious hip hop confronting social issues",
+        "instrumental": false
+    },
+    {
+        "overall_prompt": "Synth-pop vocalist robotic processed effects",
+        "instrumental": false
+    },
+    {
+        "overall_prompt": "Ranchera mariachi singer passionate declaration",
+        "instrumental": false
+    },
+    {
+        "overall_prompt": "Progressive rock with concept album narrative vocals",
+        "instrumental": false
+    },
+    {
+        "overall_prompt": "Gregorian chant monks sacred Latin hymns",
+        "instrumental": false
+    },
+    {
+        "overall_prompt": "Bubblegum pop teenager singing about crushes",
+        "instrumental": false
+    },
+    {
+        "overall_prompt": "Delta blues gravelly voice and slide guitar",
+        "instrumental": false
+    },
+    {
+        "overall_prompt": "Europop dance vocals and synthesized beats",
+        "instrumental": false
+    },
+    {
+        "overall_prompt": "Spoken word slam poetry over jazz instrumentation",
+        "instrumental": false
+    },
+    {
+        "overall_prompt": "Calypso singer telling Caribbean folk tales",
+        "instrumental": false
+    },
+    {
+        "overall_prompt": "Nu-metal rap-rock hybrid aggressive vocals",
+        "instrumental": false
+    },
+    {
+        "overall_prompt": "Chamber pop orchestral arrangements supporting intimate vocals",
         "instrumental": false
     }
 ]
