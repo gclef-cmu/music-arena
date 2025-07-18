@@ -100,7 +100,7 @@ def _parse_prebaked_prompts():
     except FileNotFoundError:
         _LOGGER.warning("prebaked.json not found, returning empty prebaked prompts")
         return {}
-    result = {p.checksum: p.as_json_dict() for p in prompts}
+    result = {p.checksum: p for p in prompts}
     assert len(result) == len(prompts)
     return result
 
@@ -109,20 +109,15 @@ def _parse_prebaked_prompts():
 def prebaked():
     """Returns dictionary mapping checksum to TextToMusicPrompt dict"""
     _maybe_raise_flaky_error(logging.getLogger("/prebaked"))
-    return _parse_prebaked_prompts()
+    return {k: v.as_json_dict() for k, v in _parse_prebaked_prompts().items()}
 
 
 @_APP.get("/health_check")
 async def health_check():
     """Health check"""
     assert _BATTLE_GENERATOR is not None
-    await _BATTLE_GENERATOR.generate_battle(
-        prompt_detailed=DetailedTextToMusicPrompt(
-            overall_prompt="A tree falls in the forest",
-            instrumental=random.choice([True, False]),
-            duration=10.0,
-        )
-    )
+    prompt_detailed = random.choice(list(_parse_prebaked_prompts().values()))
+    await _BATTLE_GENERATOR.generate_battle(prompt_detailed=prompt_detailed)
     return {"status": "ok"}
 
 
