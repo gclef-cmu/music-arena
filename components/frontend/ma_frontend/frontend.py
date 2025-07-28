@@ -33,7 +33,6 @@ _LOGGER = logging.getLogger(__name__)
 _LOGGER.info(f"Using BACKEND_URL={G.URL}")
 
 STATIC_DIR = pathlib.Path(__file__).parent / "static"
-gr.set_static_paths([STATIC_DIR])
 
 
 # Helpers
