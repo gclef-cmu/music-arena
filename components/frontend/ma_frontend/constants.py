@@ -33,7 +33,7 @@ CONTACT_EMAIL = "musicarena@cmu.edu"
 
 # Page Titles and Headers
 GR_TITLE = "Music Arena"
-TITLE_MD = "# 🎵 Music Arena: Free Music Generation - Vote for the Best Model!"
+TITLE_MD = "# 🎵 Music Arena ⚔️: Free Music Generation - Vote for the Best Model!"
 
 # Tab Names
 TAB_ARENA = "⚔️ Arena"

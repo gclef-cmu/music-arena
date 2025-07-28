@@ -33,6 +33,7 @@ _LOGGER = logging.getLogger(__name__)
 _LOGGER.info(f"Using BACKEND_URL={G.URL}")
 
 STATIC_DIR = pathlib.Path(__file__).parent / "static"
+gr.set_static_paths([STATIC_DIR])
 
 
 # Helpers
@@ -1282,6 +1283,7 @@ def build_demo(debug=False):
     _LOGGER.info("Building demo")
     with gr.Blocks(
         title=C.GR_TITLE,
+        head=load_static_file("head.html"),
         css=load_static_file("style.css"),
         analytics_enabled=False,
     ) as demo:
@@ -1362,6 +1364,7 @@ if __name__ == "__main__":
         server_port=args.port,
         share=args.share,
         max_threads=args.max_threads,
+        favicon_path=STATIC_DIR / "favicon.png",
         debug=args.debug,
         prevent_thread_lock=True,
     )
