@@ -343,21 +343,25 @@ def component_run_command(
     port_mapping: List[tuple[int, int]] = [],
     requires_host_mapping: bool = False,
 ) -> None:
+    volume_mapping = [
+        (LIB_DIR, CONTAINER_LIB_DIR),
+        (CACHE_DIR, CONTAINER_CACHE_DIR),
+        (SYSTEMS_DIR, CONTAINER_SYSTEMS_DIR),
+        (
+            COMPONENTS_DIR / component_name,
+            CONTAINER_COMPONENTS_DIR / component_name,
+        ),
+        (IO_DIR, CONTAINER_IO_DIR),
+    ]
+    if SYSTEMS_PRIVATE_DIR.is_dir():
+        volume_mapping.append((SYSTEMS_PRIVATE_DIR, CONTAINER_SYSTEMS_PRIVATE_DIR))
     return run_command(
         tag=component_docker_tag(component_name),
         cmd=cmd,
         name=component_docker_tag(component_name) + name_suffix,
         entrypoint=entrypoint,
         port_mapping=port_mapping,
-        volume_mapping=[
-            (LIB_DIR, CONTAINER_LIB_DIR),
-            (CACHE_DIR, CONTAINER_CACHE_DIR),
-            (
-                COMPONENTS_DIR / component_name,
-                CONTAINER_COMPONENTS_DIR / component_name,
-            ),
-            (IO_DIR, CONTAINER_IO_DIR),
-        ],
+        volume_mapping=volume_mapping,
         env_vars={
             "MUSIC_ARENA_CONTAINER_HOST_GIT_HASH": get_git_summary(),
             "MUSIC_ARENA_CONTAINER_COMPONENT": component_name,
