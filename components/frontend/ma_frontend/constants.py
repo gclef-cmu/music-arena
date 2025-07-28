@@ -92,9 +92,9 @@ SYSTEM_LABEL_TEMPLATE = "{label} {name} (`{tag}`)"
 STATS_LABEL_TEMPLATE = "**Stats**: Generated {duration:.1f}s of music in {generation_duration:.1f}s ({rtf:.1f}x real time{rtf_emoji}{queued_str})\n\n"
 EMOJI_THRESHOLDS = [
     (float("-inf"), " 🐌"),
-    (0.9, " "),
+    (0.9, ""),
     (2.0, " 🏎️"),
-    (10.0, " 🏎️💨"),
+    (8.0, " 🏎️💨"),
 ]
 STATS_QUEUED_LABEL = ", queued for {queued:.1f}s"
 DISPLAY_QUEUE_THRESHOLD = 10.0
