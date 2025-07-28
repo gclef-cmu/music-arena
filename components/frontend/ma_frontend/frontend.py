@@ -907,8 +907,11 @@ def bind_onload_events(demo, state, ui, debug=False):
 
 def build_ui_tos(debug=False):
     """Create and return all UI components for the terms of service modal"""
-    with gr.Row() as row_terms_of_service:
-        gr.Markdown(C.TERMS_OF_SERVICE_MODAL_MD, elem_id="terms-of-service-markdown")
+    with gr.Row() as row_terms_of_service_instructions:
+        gr.Markdown(
+            C.TERMS_OF_SERVICE_MODAL_INSTRUCTIONS,
+            elem_id="terms-of-service-instructions",
+        )
     with gr.Row() as row_terms_of_service_buttons:
         accept_btn = gr.Button(
             value=C.TOS_ACCEPT_BUTTON_LABEL,
@@ -920,8 +923,14 @@ def build_ui_tos(debug=False):
             elem_id="terms-of-service-reject-btn",
             variant="secondary",
         )
+    with gr.Row() as row_terms_of_service:
+        gr.Markdown(C.TERMS_MD, elem_id="terms-of-service-markdown")
     return {
-        "rows": [row_terms_of_service, row_terms_of_service_buttons],
+        "rows": [
+            row_terms_of_service_instructions,
+            row_terms_of_service_buttons,
+            row_terms_of_service,
+        ],
         "accept_btn": accept_btn,
         "reject_btn": reject_btn,
     }

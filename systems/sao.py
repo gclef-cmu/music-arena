@@ -22,9 +22,9 @@ class StableAudioOpen(TextToMusicGPUBatchedSystem):
         self,
         model_name: str = "stabilityai/stable-audio-open-1.0",
         max_duration: float = 47.0,
+        generate_steps: int = 100,
+        generate_cfg_scale: float = 7.0,
         generate_kwargs: dict[str, Any] = {
-            "steps": 100,
-            "cfg_scale": 7.0,
             "sigma_min": 0.3,
             "sigma_max": 500,
             "sampler_type": "dpmpp-3m-sde",
@@ -35,6 +35,8 @@ class StableAudioOpen(TextToMusicGPUBatchedSystem):
         super().__init__(gpu_mem_gb_per_item=gpu_mem_gb_per_item)
         self.model_name = model_name
         self._max_duration = max_duration
+        self._generate_steps = generate_steps
+        self._generate_cfg_scale = generate_cfg_scale
         self._generate_kwargs = generate_kwargs
         self._normalize = normalize
         self._device = "cuda" if torch.cuda.is_available() else "cpu"
@@ -92,6 +94,8 @@ class StableAudioOpen(TextToMusicGPUBatchedSystem):
             sample_size=self._sample_size,
             device=self._device,
             seed=seed,
+            steps=self._generate_steps,
+            cfg_scale=self._generate_cfg_scale,
             **self._generate_kwargs,
         )
 
@@ -115,14 +119,20 @@ class StableAudioOpen(TextToMusicGPUBatchedSystem):
 
 
 class StableAudioOpenV1(StableAudioOpen):
-    def __init__(self, *args, **kwargs):
+    def __init__(
+        self,
+        *args,
+        generate_steps: int = 100,
+        generate_cfg_scale: float = 7.0,
+        **kwargs,
+    ):
         super().__init__(
             *args,
             model_name="stabilityai/stable-audio-open-1.0",
             max_duration=47.0,
+            generate_steps=generate_steps,
+            generate_cfg_scale=generate_cfg_scale,
             generate_kwargs={
-                "steps": 100,
-                "cfg_scale": 7.0,
                 "sigma_min": 0.3,
                 "sigma_max": 500,
                 "sampler_type": "dpmpp-3m-sde",
@@ -133,14 +143,20 @@ class StableAudioOpenV1(StableAudioOpen):
 
 
 class StableAudioOpenSmall(StableAudioOpen):
-    def __init__(self, *args, **kwargs):
+    def __init__(
+        self,
+        *args,
+        generate_steps: int = 8,
+        generate_cfg_scale: float = 1.0,
+        **kwargs,
+    ):
         super().__init__(
             *args,
             model_name="stabilityai/stable-audio-open-small",
             max_duration=11.0,
+            generate_steps=generate_steps,
+            generate_cfg_scale=generate_cfg_scale,
             generate_kwargs={
-                "steps": 8,
-                "cfg_scale": 1.0,
                 "sampler_type": "pingpong",
             },
             gpu_mem_gb_per_item=1.0,

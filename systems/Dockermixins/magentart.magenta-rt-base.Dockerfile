@@ -1,0 +1,1 @@
+RUN python -m magenta_rt.fetch_asset --asset=checkpoints/llm_base_x4286_c1860k.tar --source=hf --is_dir

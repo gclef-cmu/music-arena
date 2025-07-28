@@ -103,6 +103,13 @@ sao:
       class_name: "StableAudioOpenV1"
       secrets:
         - "HUGGINGFACE_READ_TOKEN"
+    "quick":
+      module_name: "sao"
+      class_name: "StableAudioOpenV1"
+      secrets:
+        - "HUGGINGFACE_READ_TOKEN"
+      init_kwargs:
+        generate_steps: 50
 
 sao-small:
   display_name: "Stable Audio Open Small"
@@ -154,6 +161,27 @@ audioldm2:
       module_name: "audioldm2"
       class_name: "AudioLDM2"
 
+magenta-rt-base:
+  display_name: "Magenta RealTime (Base)"
+  description: "Magenta RT is an open weights, real-time, streaming music generation model."
+  organization: "Google DeepMind"
+  access: "OPEN"
+  supports_lyrics: false
+  model_type: "Codec Language Model"
+  training_data:
+    type: "Unspecified"
+  links:
+    home: "https://magenta.withgoogle.com/magenta-realtime"
+  variants:
+    "gpu-initial":
+      #docker_base: "nvidia/cuda:12.6.0-cudnn-runtime-ubuntu24.04"
+      module_name: "magentart"
+      class_name: "MagentaRealTime"
+      init_kwargs:
+        tag: "base"
+        device: "gpu"
+        max_duration: 30.0
+
 magenta-rt-large:
   display_name: "Magenta RealTime (Large)"
   description: "Magenta RT is an open weights, real-time, streaming music generation model."
@@ -166,13 +194,6 @@ magenta-rt-large:
   links:
     home: "https://magenta.withgoogle.com/magenta-realtime"
   variants:
-    # NOTE: Qualitative differences between GPU and TPU, prefer TPU.
-    "tpu-initial":
-      module_name: "magentart"
-      class_name: "MagentaRealTime"
-      init_kwargs:
-        tag: "large"
-        device: "tpu:v2-8"
     "gpu-initial":
       module_name: "magentart"
       class_name: "MagentaRealTime"
