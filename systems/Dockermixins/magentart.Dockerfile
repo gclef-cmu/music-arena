@@ -27,3 +27,4 @@ RUN pushd /magenta-realtime && \
     sed -i 's|t5x[gpu] @ git+https://github.com/google-research/t5x.git@92c5b46|t5x[gpu]|g' pyproject.toml && \
     sed -i 's|t5x @ git+https://github.com/google-research/t5x.git@92c5b46|t5x|g' pyproject.toml && \
     popd
+RUN cd /magenta-realtime
