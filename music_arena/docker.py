@@ -15,10 +15,12 @@ from .path import (
     CONTAINER_IO_DIR,
     CONTAINER_LIB_DIR,
     CONTAINER_SYSTEMS_DIR,
+    CONTAINER_SYSTEMS_PRIVATE_DIR,
     IO_DIR,
     LIB_DIR,
     REPO_DIR,
     SYSTEMS_DIR,
+    SYSTEMS_PRIVATE_DIR,
 )
 from .registry import get_system_metadata
 from .secret import get_secret, get_secret_var_name
@@ -134,7 +136,7 @@ def system_dockerfile(system_key: SystemKey) -> str:
     module_name = metadata.module_name
 
     # Assemble Dockerfile from mixins
-    mixin_dir = SYSTEMS_DIR / "Dockermixins"
+    mixin_dir = metadata.registry_dir / "Dockermixins"
     paths = [
         REPO_DIR / "Dockerfile",
         mixin_dir / f"{module_name}.Dockerfile",
@@ -224,18 +226,21 @@ def system_run_command(
     metadata = get_system_metadata(system_key)
     if metadata.requires_gpu and gpu_id is None:
         raise ValueError("GPU ID is required for systems that require GPU")
+    volume_mapping = [
+        (LIB_DIR, CONTAINER_LIB_DIR),
+        (CACHE_DIR, CONTAINER_CACHE_DIR),
+        (SYSTEMS_DIR, CONTAINER_SYSTEMS_DIR),
+        (IO_DIR, CONTAINER_IO_DIR),
+    ]
+    if SYSTEMS_PRIVATE_DIR.is_dir():
+        volume_mapping.append((SYSTEMS_PRIVATE_DIR, CONTAINER_SYSTEMS_PRIVATE_DIR))
     return run_command(
         tag=system_docker_tag(system_key),
         cmd=cmd,
         name=system_docker_tag(system_key) + name_suffix,
         gpu_id=gpu_id,
         port_mapping=port_mapping,
-        volume_mapping=[
-            (LIB_DIR, CONTAINER_LIB_DIR),
-            (CACHE_DIR, CONTAINER_CACHE_DIR),
-            (SYSTEMS_DIR, CONTAINER_SYSTEMS_DIR),
-            (IO_DIR, CONTAINER_IO_DIR),
-        ],
+        volume_mapping=volume_mapping,
         env_vars={
             "MUSIC_ARENA_CONTAINER_HOST_GIT_HASH": get_git_summary(),
             "MUSIC_ARENA_CONTAINER_COMPONENT": "system",

@@ -7,15 +7,16 @@ from typing import Optional
 import yaml
 
 from .dataclass import SystemKey, TextToMusicSystemMetadata
-from .path import LIB_DIR, SYSTEMS_DIR
+from .path import SYSTEMS_DIR, SYSTEMS_PRIVATE_DIR
 from .system import TextToMusicSystem
 
 
 @functools.lru_cache
 def _parse_registry(
-    yaml_path: pathlib.Path,
+    registry_dir: pathlib.Path,
 ) -> dict[SystemKey, TextToMusicSystemMetadata]:
     result = {}
+    yaml_path = registry_dir / "registry.yaml"
     with open(yaml_path, "r") as f:
         for system_tag, system_kwargs in yaml.safe_load(f).items():
             variants = system_kwargs.pop("variants", {})
@@ -34,9 +35,14 @@ def _parse_registry(
                 ]
                 combined_kwargs.update(variant_kwargs)
                 combined_kwargs["description"] = " ".join(descriptions)
+                if registry_dir == SYSTEMS_PRIVATE_DIR and not combined_kwargs.get(
+                    "private", False
+                ):
+                    raise ValueError(f"Private system {system_key} marked as public.")
                 try:
                     system_metadata = TextToMusicSystemMetadata(
                         key=system_key,
+                        registry_dir=registry_dir,
                         **combined_kwargs,
                     )
                 except TypeError as e:
@@ -48,11 +54,18 @@ def _parse_registry(
 
 
 def get_registered_systems(
-    yaml_path: Optional[pathlib.Path] = None,
+    registry_dirs: Optional[list[pathlib.Path]] = None,
 ) -> dict[SystemKey, TextToMusicSystemMetadata]:
-    if yaml_path is None:
-        yaml_path = LIB_DIR / "registry.yaml"
-    return _parse_registry(yaml_path)
+    if registry_dirs is None:
+        registry_dirs = [SYSTEMS_DIR, SYSTEMS_PRIVATE_DIR]
+        registry_dirs = [d for d in registry_dirs if d.is_dir()]
+    result = {}
+    for registry_dir in registry_dirs:
+        entry = _parse_registry(registry_dir)
+        if any(k in result for k in entry):
+            raise ValueError(f"Duplicate system key in {registry_dir}")
+        result.update(entry)
+    return result
 
 
 @functools.lru_cache
@@ -65,8 +78,8 @@ def get_system_metadata(system_key: SystemKey) -> TextToMusicSystemMetadata:
 def init_system(system_key: SystemKey, lazy: bool = True) -> TextToMusicSystem:
     variant_metadata = get_system_metadata(system_key)
 
-    # Load module from SYSTEMS_DIR
-    module_path = SYSTEMS_DIR / f"{variant_metadata.module_name}.py"
+    # Load module
+    module_path = variant_metadata.registry_dir / f"{variant_metadata.module_name}.py"
     spec = importlib.util.spec_from_file_location(
         variant_metadata.module_name, module_path
     )

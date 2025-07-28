@@ -33,7 +33,7 @@ To add a new text-to-music model to the arena:
 
 ### 1. Update the Registry
 
-Add your model to `music_arena/registry.yaml`:
+Add your model to `systems/registry.yaml`:
 
 ```yaml
 your-model-name:
