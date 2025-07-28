@@ -1,4 +1,5 @@
 import enum
+import pathlib
 from dataclasses import dataclass, field
 from typing import Any, Optional
 
@@ -48,9 +49,11 @@ class TextToMusicSystemMetadata(MusicArenaDataClass):
     access: SystemAccess
     supports_lyrics: bool
     # Variant fields
+    registry_dir: pathlib.Path
     module_name: str
     class_name: str
     # Optional fields
+    private: bool = False
     requires_gpu: Optional[bool] = None
     model_type: Optional[str] = None
     training_data: dict[str, Any] = field(default_factory=dict)
