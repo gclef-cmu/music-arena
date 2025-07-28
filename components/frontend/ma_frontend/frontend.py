@@ -1237,9 +1237,6 @@ def build_ui(debug=False):
                 gr.Markdown(C.GATEWAY_UNAVAILABLE_MD)
             ui["no_gateway"] = {"rows": [row_no_gateway]}
 
-        with gr.TabItem(C.TAB_DIRECT, elem_id="tab-direct"):
-            gr.Markdown(C.DIRECT_MD)
-
         with gr.TabItem(C.TAB_LEADERBOARD, elem_id="tab-leaderboard"):
             gr.Markdown(C.LEADERBOARD_COMING_SOON_MD)
 

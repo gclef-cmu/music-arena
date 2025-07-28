@@ -37,7 +37,6 @@ TITLE_MD = "# 🎵 Music Arena: Free Music Generation - Vote for the Best Model!
 
 # Tab Names
 TAB_ARENA = "⚔️ Arena"
-TAB_DIRECT = "🗡️ Specific Model"
 TAB_LEADERBOARD = "📊 Leaderboard"
 TAB_ABOUT = "📜 About & Terms"
 
@@ -196,14 +195,6 @@ Music Arena is an _academic research project_ operated by the [Generative Creati
 Please submit any feedback using [this form]({FEEDBACK_FORM_URL}).
 
 **Models**. Two of the following models are randomly selected for each round:
-""".strip()
-
-DIRECT_MD = """
-## 🗡️ Specific Model
-
-### Coming soon!
-
-Stop by later to test out a specific model.
 """.strip()
 
 NEEDS_ACK_TOS_MD = """
