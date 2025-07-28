@@ -73,9 +73,9 @@ class BattleGenerator:
             qualifying_weights = []
             for pair, weight in self.weights.items():
                 system_a, system_b = pair
-                total_supporting_lyrics = int(system_a.supports_lyrics) + int(
-                    system_b.supports_lyrics
-                )
+                total_supporting_lyrics = int(
+                    self.systems[system_a].supports_lyrics
+                ) + int(self.systems[system_b].supports_lyrics)
                 if total_supporting_lyrics <= 1:
                     qualifying_pairs.append(pair)
                     qualifying_weights.append(weight)
