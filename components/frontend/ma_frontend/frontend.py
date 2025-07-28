@@ -900,6 +900,8 @@ def bind_onload_events(demo, state, ui, debug=False):
 
         # Manual reject button with cookie clearing
         u["tos"]["reject_btn"].click(
+            **set_ui_visible_kwargs("tos", u["tos"]["rows"], gr.State(False))
+        ).then(
             **set_ui_visible_kwargs("no_ack", u["no_ack"]["rows"], gr.State(True)),
             js=J.TOS_CLEAR_COOKIE(C.TERMS_CHECKSUM),
         )

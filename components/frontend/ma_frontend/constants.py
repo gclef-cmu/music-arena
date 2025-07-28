@@ -25,7 +25,8 @@ LOGDIR = "logs"
 # =============================================================================
 
 # URLS
-PAPER_URL = "https://arxiv.org/"
+ARXIV_IDENTIFIER = "TODO"
+PAPER_URL = f"https://arxiv.org/abs/{ARXIV_IDENTIFIER}"
 CODE_URL = "https://github.com/gclef-cmu/music-arena"
 FEEDBACK_FORM_URL = "https://forms.gle/DxUii6ys7Rj7jbR7A"
 CONTACT_EMAIL = "musicarena@cmu.edu"
@@ -42,7 +43,9 @@ TAB_ABOUT = "📜 About & Terms"
 
 # UI Elements
 MAIN_MD = f"""
-**Music Arena** is a free platform for evaluating and comparing AI music generation models. We are currently in **open beta** as of July 28, 2025. Please forgive issues or slow generation times as we work to improve and scale the platform, and [report any issues]({FEEDBACK_FORM_URL}) that you encounter!
+**Music Arena** is a free platform for evaluating and comparing AI music generation models. We are currently in **open beta** as of July 28, 2025.
+
+Please forgive issues or slow generation times as we work to improve and scale the platform, and [report any issues]({FEEDBACK_FORM_URL}) that you encounter!
 """.strip()
 EXPAND_INFO_ACCORDION_TEXT = (
     "🔍 Expand for instructions and more information for Music Arena"
@@ -144,7 +147,7 @@ PREFERENCE_TO_VOTE_CAST_MSG = {
 }
 
 # Error Messages
-GATEWAY_UNAVAILABLE_MSG = "Our backend is either offline or experiencing high traffic. Please try again later."
+GATEWAY_UNAVAILABLE_MSG = "Our backend is either offline for maintenance or experiencing high traffic. Please try again later."
 MODERATION_MSG = "Your message contains content that violates our content policy. Please revise your message and try again."
 RATE_LIMIT_MSG = "You have reached the rate limit. Please try again later."
 RATIONALE_TO_ERROR_MSG = {
@@ -172,7 +175,7 @@ ARENA_MD = """
 ARENA_ABOUT_MD = f"""
 **Music Arena** is a free platform for evaluating and comparing AI music generation models. Type a text prompt for any music you can imagine and press "{GENERATE_BUTTON_LABEL}"! Music Arena will even generate lyrics for you if your prompt implies that you want them.
 
-Music Arena is an _academic research project_ operated by the [Generative Creativity Lab (G-CLef)](https://chrisdonahue.com/#group) at Carnegie Mellon University. Our primary goal is to advance the science of music evaluation through the collection and public release of music preference data. See our [paper]({PAPER_URL}) for more details.
+Music Arena is an _academic research project_ operated by the [Generative Creativity Lab (G-CLef)](https://chrisdonahue.com/#group) at Carnegie Mellon University. Our primary goals are to provide rigorous evaluation for music generation models, and to provide an open and renewable source of music generation preference data for the research community. See our [paper]({PAPER_URL}) for more details.
 
 **How to participate**:
 
@@ -184,7 +187,8 @@ Music Arena is an _academic research project_ operated by the [Generative Creati
 
 **Known issues**:
 
-1. Limited number of models available supporting vocal generation.
+1. Limited number of models available supporting vocal and lyrics generation.
+1. Some models will generate vocals even for instrumental prompts.
 1. Slow (~60s) generation times for open weights models.
 
 **Feedback**:
@@ -203,7 +207,7 @@ Stop by later to test out a specific model.
 """.strip()
 
 NEEDS_ACK_TOS_MD = """
-You need to acknowledge our terms of service before using Music Arena.
+You need to accept our terms of service before using Music Arena. Please refresh this page if you wish to accept the terms.
 """.strip()
 
 LEADERBOARD_COMING_SOON_MD = """
@@ -320,7 +324,9 @@ ABOUT_MD = f"""
 
 Welcome to Music Arena! This platform ranks Text-to-Music AI models based on crowdsourced human preferences. Models are evaluated in head-to-head battles, and their Elo ratings are updated dynamically. Explore the top models, their performance metrics, and learn more about their capabilities.
 
-Music Arena is an _academic research project_ operated by the [Generative Creativity Lab (G-CLef)](https://chrisdonahue.com/#group) at Carnegie Mellon University. Our primary goal is to advance the science of music evaluation through the collection and public release of music preference data. Music Arena is approved by CMU's Institutional Review Board under Protocol `STUDY2024_00000489`.
+Music Arena is an _academic research project_ operated by the [Generative Creativity Lab (G-CLef)](https://chrisdonahue.com/#group) at Carnegie Mellon University. Our primary goals are to provide rigorous evaluation for music generation models, and to provide an open and renewable source of music generation preference data for the research community. See our [paper]({PAPER_URL}) for more details.
+
+Music Arena is approved by CMU's Institutional Review Board under Protocol `STUDY2024_00000489`.
 
 Links:
 
@@ -346,7 +352,7 @@ If you use Music Arena in your research, please cite our preprint:
 @article{{kim2025musicarena,
   title={{Music Arena: Live Evaluation for Text-to-Music}},
   author={{Kim, Yonghyun and Chi, Wayne and Angelopoulos, Anastasios and Chiang, Wei-Lin and Saito, Koichi and Watanabe, Shinji and Mitsufuji, Yuki and Donahue, Chris}},
-  journal={{arXiv preprint}},
+  journal={{arXiv:{ARXIV_IDENTIFIER}}},
   year={{2025}}
 }}
 ```
