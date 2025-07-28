@@ -93,9 +93,7 @@ class BattleGenerator:
                     qualifying_weights.append(weight)
 
         if not qualifying_pairs:
-            raise ValueError(
-                "No system pairs available that both support lyrics for non-instrumental prompt"
-            )
+            raise ValueError("No system pairs available")
 
         # Sample one pair from qualifying pairs
         pair = random.choices(qualifying_pairs, weights=qualifying_weights, k=1)[0]
