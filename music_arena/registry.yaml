@@ -174,7 +174,6 @@ magenta-rt-base:
     home: "https://magenta.withgoogle.com/magenta-realtime"
   variants:
     "gpu-initial":
-      #docker_base: "nvidia/cuda:12.6.0-cudnn-runtime-ubuntu24.04"
       module_name: "magentart"
       class_name: "MagentaRealTime"
       init_kwargs:
