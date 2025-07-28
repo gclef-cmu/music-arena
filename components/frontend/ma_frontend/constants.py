@@ -54,7 +54,7 @@ EXPAND_INFO_ACCORDION_TEXT = (
 
 # Button Labels
 GENERATE_BUTTON_LABEL = "🎵 Generate"
-PREBAKE_BUTTON_LABEL = "🔮 Surprise me"
+PREBAKE_BUTTON_LABEL = "🎲 Random Prompt"
 NEW_ROUND_BUTTON = "🧽 Start Over"
 REGENERATE_BUTTON = "🔄 Regenerate w/ Same Prompt"
 BUTTON_A_BETTER = "👈  A is better"
