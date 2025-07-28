@@ -900,6 +900,8 @@ def bind_onload_events(demo, state, ui, debug=False):
 
         # Manual reject button with cookie clearing
         u["tos"]["reject_btn"].click(
+            **set_ui_visible_kwargs("tos", u["tos"]["rows"], gr.State(False))
+        ).then(
             **set_ui_visible_kwargs("no_ack", u["no_ack"]["rows"], gr.State(True)),
             js=J.TOS_CLEAR_COOKIE(C.TERMS_CHECKSUM),
         )
@@ -907,8 +909,11 @@ def bind_onload_events(demo, state, ui, debug=False):
 
 def build_ui_tos(debug=False):
     """Create and return all UI components for the terms of service modal"""
-    with gr.Row() as row_terms_of_service:
-        gr.Markdown(C.TERMS_OF_SERVICE_MODAL_MD, elem_id="terms-of-service-markdown")
+    with gr.Row() as row_terms_of_service_instructions:
+        gr.Markdown(
+            C.TERMS_OF_SERVICE_MODAL_INSTRUCTIONS,
+            elem_id="terms-of-service-instructions",
+        )
     with gr.Row() as row_terms_of_service_buttons:
         accept_btn = gr.Button(
             value=C.TOS_ACCEPT_BUTTON_LABEL,
@@ -920,8 +925,14 @@ def build_ui_tos(debug=False):
             elem_id="terms-of-service-reject-btn",
             variant="secondary",
         )
+    with gr.Row() as row_terms_of_service:
+        gr.Markdown(C.TERMS_MD, elem_id="terms-of-service-markdown")
     return {
-        "rows": [row_terms_of_service, row_terms_of_service_buttons],
+        "rows": [
+            row_terms_of_service_instructions,
+            row_terms_of_service_buttons,
+            row_terms_of_service,
+        ],
         "accept_btn": accept_btn,
         "reject_btn": reject_btn,
     }
@@ -1226,9 +1237,6 @@ def build_ui(debug=False):
                 gr.Markdown(C.GATEWAY_UNAVAILABLE_MD)
             ui["no_gateway"] = {"rows": [row_no_gateway]}
 
-        with gr.TabItem(C.TAB_DIRECT, elem_id="tab-direct"):
-            gr.Markdown(C.DIRECT_MD)
-
         with gr.TabItem(C.TAB_LEADERBOARD, elem_id="tab-leaderboard"):
             gr.Markdown(C.LEADERBOARD_COMING_SOON_MD)
 
@@ -1274,6 +1282,7 @@ def build_demo(debug=False):
     _LOGGER.info("Building demo")
     with gr.Blocks(
         title=C.GR_TITLE,
+        head=load_static_file("head.html"),
         css=load_static_file("style.css"),
         analytics_enabled=False,
     ) as demo:
@@ -1354,6 +1363,7 @@ if __name__ == "__main__":
         server_port=args.port,
         share=args.share,
         max_threads=args.max_threads,
+        favicon_path=STATIC_DIR / "favicon.png",
         debug=args.debug,
         prevent_thread_lock=True,
     )

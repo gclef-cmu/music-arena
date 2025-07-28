@@ -66,7 +66,20 @@ class BattleGenerator:
     def sample_pair(
         self, prompt: DetailedTextToMusicPrompt
     ) -> tuple[SystemKey, SystemKey]:
-        if not prompt.instrumental:
+        # TODO: This logic is only meant for our initial launch. Need to refine down the road.
+        if prompt.instrumental:
+            # Filter pairs to those where at most one system supports lyrics
+            qualifying_pairs = []
+            qualifying_weights = []
+            for pair, weight in self.weights.items():
+                system_a, system_b = pair
+                total_supporting_lyrics = int(
+                    self.systems[system_a].supports_lyrics
+                ) + int(self.systems[system_b].supports_lyrics)
+                if total_supporting_lyrics <= 1:
+                    qualifying_pairs.append(pair)
+                    qualifying_weights.append(weight)
+        else:
             # Filter pairs to only those where both systems support lyrics
             qualifying_pairs = []
             qualifying_weights = []
@@ -79,14 +92,8 @@ class BattleGenerator:
                     qualifying_pairs.append(pair)
                     qualifying_weights.append(weight)
 
-            if not qualifying_pairs:
-                raise ValueError(
-                    "No system pairs available that both support lyrics for non-instrumental prompt"
-                )
-        else:
-            # For instrumental prompts, use all pairs
-            qualifying_pairs = list(self.weights.keys())
-            qualifying_weights = list(self.weights.values())
+        if not qualifying_pairs:
+            raise ValueError("No system pairs available")
 
         # Sample one pair from qualifying pairs
         pair = random.choices(qualifying_pairs, weights=qualifying_weights, k=1)[0]

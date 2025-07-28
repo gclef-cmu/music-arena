@@ -24,26 +24,31 @@ LOGDIR = "logs"
 # UI String Constants - Titles and Headers
 # =============================================================================
 
+# URLS
+ARXIV_IDENTIFIER = "TODO"
+PAPER_URL = f"https://arxiv.org/abs/{ARXIV_IDENTIFIER}"
+CODE_URL = "https://github.com/gclef-cmu/music-arena"
+FEEDBACK_FORM_URL = "https://forms.gle/DxUii6ys7Rj7jbR7A"
+CONTACT_EMAIL = "musicarena@cmu.edu"
+
 # Page Titles and Headers
 GR_TITLE = "Music Arena"
-TITLE_MD = "# 🎵 Music Arena: Free Music Generation - Vote for the Best Model!"
+TITLE_MD = "# 🎵 Music Arena ⚔️: Free Music Generation - Vote for the Best Model!"
 
 # Tab Names
 TAB_ARENA = "⚔️ Arena"
-TAB_DIRECT = "🗡️ Specific Model"
 TAB_LEADERBOARD = "📊 Leaderboard"
 TAB_ABOUT = "📜 About & Terms"
 
 # UI Elements
-MAIN_MD = """
-**Music Arena** is a free platform for evaluating and comparing AI music generation models. We are currently in **private beta**. Please email any feedback to musicarena@cmu.edu.
+MAIN_MD = f"""
+**Music Arena** is a free platform for evaluating and comparing AI music generation models. We are currently in **open beta** as of July 28, 2025.
+
+Please forgive issues or slow generation times as we work to improve and scale the platform, and [report any issues]({FEEDBACK_FORM_URL}) that you encounter!
 """.strip()
 EXPAND_INFO_ACCORDION_TEXT = (
     "🔍 Expand for instructions and more information for Music Arena"
 )
-
-# Links
-FEEDBACK_FORM = "https://forms.gle/AevMiHGwBFRJ44Gz8"
 
 # =============================================================================
 # UI String Constants - Buttons and Labels
@@ -51,7 +56,7 @@ FEEDBACK_FORM = "https://forms.gle/AevMiHGwBFRJ44Gz8"
 
 # Button Labels
 GENERATE_BUTTON_LABEL = "🎵 Generate"
-PREBAKE_BUTTON_LABEL = "🔮 Surprise me"
+PREBAKE_BUTTON_LABEL = "🎲 Random Prompt"
 NEW_ROUND_BUTTON = "🧽 Start Over"
 REGENERATE_BUTTON = "🔄 Regenerate w/ Same Prompt"
 BUTTON_A_BETTER = "👈  A is better"
@@ -87,9 +92,9 @@ SYSTEM_LABEL_TEMPLATE = "{label} {name} (`{tag}`)"
 STATS_LABEL_TEMPLATE = "**Stats**: Generated {duration:.1f}s of music in {generation_duration:.1f}s ({rtf:.1f}x real time{rtf_emoji}{queued_str})\n\n"
 EMOJI_THRESHOLDS = [
     (float("-inf"), " 🐌"),
-    (0.9, " "),
+    (0.9, ""),
     (2.0, " 🏎️"),
-    (10.0, " 🏎️💨"),
+    (8.0, " 🏎️💨"),
 ]
 STATS_QUEUED_LABEL = ", queued for {queued:.1f}s"
 DISPLAY_QUEUE_THRESHOLD = 10.0
@@ -141,7 +146,7 @@ PREFERENCE_TO_VOTE_CAST_MSG = {
 }
 
 # Error Messages
-GATEWAY_UNAVAILABLE_MSG = "Our backend is either offline or experiencing high traffic. Please try again later."
+GATEWAY_UNAVAILABLE_MSG = "Our backend is either offline for maintenance or experiencing high traffic. Please try again later."
 MODERATION_MSG = "Your message contains content that violates our content policy. Please revise your message and try again."
 RATE_LIMIT_MSG = "You have reached the rate limit. Please try again later."
 RATIONALE_TO_ERROR_MSG = {
@@ -169,7 +174,7 @@ ARENA_MD = """
 ARENA_ABOUT_MD = f"""
 **Music Arena** is a free platform for evaluating and comparing AI music generation models. Type a text prompt for any music you can imagine and press "{GENERATE_BUTTON_LABEL}"! Music Arena will even generate lyrics for you if your prompt implies that you want them.
 
-Music Arena is an _academic research project_ operated by the [Generative Creativity Lab (G-CLef)](https://chrisdonahue.com/#group) at Carnegie Mellon University. Our primary goal is to advance the science of music evaluation through the collection and public release of music preference data.
+Music Arena is an _academic research project_ operated by the [Generative Creativity Lab (G-CLef)](https://chrisdonahue.com/#group) at Carnegie Mellon University. Our primary goals are to provide rigorous evaluation for music generation models, and to provide an open and renewable source of music generation preference data for the research community. See our [paper]({PAPER_URL}) for more details.
 
 **How to participate**:
 
@@ -181,26 +186,19 @@ Music Arena is an _academic research project_ operated by the [Generative Creati
 
 **Known issues**:
 
-1. Limited number of models available supporting vocal generation.
+1. Limited number of models available supporting vocal and lyrics generation.
+1. Some models will generate vocals even for instrumental prompts.
 1. Slow (~60s) generation times for open weights models.
 
 **Feedback**:
 
-Aside from the known issues above, please direct any feedback to musicarena@cmu.edu. Alternatively, you can [submit a bug report](https://forms.gle/DxUii6ys7Rj7jbR7A).
+Please submit any feedback using [this form]({FEEDBACK_FORM_URL}).
 
 **Models**. Two of the following models are randomly selected for each round:
 """.strip()
 
-DIRECT_MD = """
-## 🗡️ Specific Model
-
-### Coming soon!
-
-Stop by later to test out a specific model.
-""".strip()
-
 NEEDS_ACK_TOS_MD = """
-You need to acknowledge our terms of service before using Music Arena.
+You need to accept our terms of service before using Music Arena. Please refresh this page if you wish to accept the terms.
 """.strip()
 
 LEADERBOARD_COMING_SOON_MD = """
@@ -211,48 +209,144 @@ LEADERBOARD_COMING_SOON_MD = """
 We're working hard to bring you comprehensive leaderboard data. Check back soon to see how different music AI models stack up against each other based on community votes!
 """.strip()
 
-TERMS_MD = """
-1.  **Research Preview:** This service is a research preview intended for evaluating and comparing AI music generation models. It is provided "as is" without warranties of any kind.
-2.  **Prohibited Uses:** The service must not be used for any illegal, harmful, defamatory, or infringing purposes. Do not use prompts intended to generate such content.
-3.  **Privacy:** Please do not submit any private or sensitive personal information in your text prompts.
-4.  **Data Collection and Use:** The service collects data including your text prompts, your preferences (votes) regarding generated audio, and _fully anonymized_ user tracking data (salted and hashed IP addresses and browser fingerprints). This data is crucial for research to advance music generation technology and to improve this platform.
-5.  **Demographics:** By accepting our terms, you acknowledge that you are 18 years or older and living in the United States.
-6.  **Data Distribution:** By accepting our terms, you agree that we may release your anonymized interaction data including anonymized identifiers, text prompts, listening, and voting data under a Creative Commons Attribution (CC-BY) license or a similar open license.
-7.  **Feedback:** Your feedback is valuable. Please [report any bugs, issues, or surprising outputs](https://forms.gle/DxUii6ys7Rj7jbR7A).
+TERMS_OF_SERVICE_MODAL_INSTRUCTIONS = f"""
+By clicking "{TOS_ACCEPT_BUTTON_LABEL}" below, you agree to the **terms of service** below.
+""".strip()
+
+TERMS_MD = f"""
+## Terms of Service - Music Arena
+
+**Effective Date:** July 28, 2025
+
+By accessing or using Music Arena ("Service"), you agree to be bound by these Terms of Service ("Terms"). If you do not agree to these Terms, do not use the Service.
+
+### 1. Service Description and Research Preview Status
+
+Music Arena is a research platform designed for evaluating and comparing AI music generation models. The Service is provided on an experimental, "research preview" basis. We make no representations or warranties regarding the Service's availability, reliability, accuracy, or fitness for any particular purpose. The Service is provided "AS IS" and "AS AVAILABLE" without warranties of any kind, either express or implied.
+
+### 2. Eligibility and Account Requirements
+
+By using this Service, you represent and warrant that:
+- You are at least 18 years of age
+- You are a legal resident of the United States
+- You have the legal capacity to enter into these Terms
+- Your use of the Service complies with all applicable laws and regulations
+
+### 3. Prohibited Uses and Conduct
+
+You agree not to use the Service to:
+- Violate any applicable local, state, national, or international law or regulation
+- Generate, distribute, or promote content that is illegal, harmful, threatening, abusive, defamatory, libelous, or otherwise objectionable
+- Infringe upon intellectual property rights, including but not limited to copyrights, trademarks, or patents
+- Submit prompts designed to generate copyrighted material, hate speech, sexually explicit content, or content promoting violence
+- Use automated means (bots, scrapers, etc.) to access or manipulate the Service without express written permission
+- Interfere with or disrupt the Service's operation or security
+
+### 4. Privacy and Data Protection
+
+**Information Collection:** We collect and process your interactions with the Service, including but not limited to:
+- Text prompts and queries you submit
+- Audio listening behavior and interaction patterns  
+- User preferences and voting data
+- Natural language feedback on generated audio
+- Anonymized user tracking identifiers, e.g. your IP address anonymized with cryptographic hashing with salt
+
+**Sensitive Information:** You must not submit personal identifying information, private data, confidential information, or any sensitive personal data through the Service, e.g., in your text prompts or natural language feedback.
+
+### 5. Data Use and Research Purposes
+
+By using the Service, you acknowledge and consent that your interaction data may be:
+- Used for research and development purposes to advance AI music generation technology
+- Analyzed to improve the Service's functionality and user experience
+- Aggregated with other user data for academic research and publication
+- Shared publicly with the research community under appropriate data use agreements
+
+### 6. Data Distribution and Licensing
+
+**Open Data Release:** You expressly agree and consent that we may release your anonymized interaction data, including but not limited to:
+- Anonymized user identifiers
+- Text prompts and queries
+- Listening behavior and engagement metrics
+- Preference and voting data
+
+**License Grant:** Such data may be distributed under Creative Commons Attribution 4.0 International (CC BY 4.0) license or similar open-source licenses. You hereby grant us a perpetual, irrevocable, worldwide, royalty-free license to use, reproduce, distribute, and create derivative works from your contributions to the Service for any purpose, including but not limited to research and educational purposes.
+
+### 7. Intellectual Property
+
+**Open Source Software:** The Music Arena platform software is made available under the MIT License and can be found at {CODE_URL}. Users may use, modify, and distribute the software in accordance with the terms of the MIT License.
+
+**Service Trademarks:** The "Music Arena" name, logo, and associated trademarks remain the property of Music Arena and are not covered by the open source license.
+
+**Third-Party Components:** The Service may incorporate third-party software, AI models, and other components that are subject to their respective licenses and terms of use.
+
+**Generated Content:** AI-generated musical content created through the Service may not be subject to copyright protection under current U.S. law. Users should not assume exclusive rights to generated content, and such content may be freely used by others.
+
+### 8. Termination
+
+We reserve the right to terminate or suspend your access to the Service immediately, without prior notice, for any reason, including but not limited to breach of these Terms.
+
+### 9. Limitation of Liability
+
+TO THE MAXIMUM EXTENT PERMITTED BY LAW, IN NO EVENT SHALL MUSIC ARENA, ITS AFFILIATES, OR THEIR RESPECTIVE OFFICERS, DIRECTORS, EMPLOYEES, OR AGENTS BE LIABLE FOR ANY INDIRECT, INCIDENTAL, SPECIAL, CONSEQUENTIAL, OR PUNITIVE DAMAGES, INCLUDING BUT NOT LIMITED TO LOSS OF DATA, LOSS OF PROFITS, OR BUSINESS INTERRUPTION, ARISING OUT OF OR IN CONNECTION WITH YOUR USE OF THE SERVICE.
+
+### 10. Indemnification
+
+You agree to indemnify, defend, and hold harmless Music Arena and its affiliates from and against any claims, liabilities, damages, losses, costs, or expenses arising out of or in connection with your use of the Service or violation of these Terms.
+
+### 11. Modification of Terms
+
+We reserve the right to modify these Terms at any time. Changes will be effective immediately upon posting to the Service. Your continued use constitutes acceptance of the modified Terms.
+
+### 12. Severability
+
+If any provision of these Terms is found to be unenforceable or invalid, that provision will be limited or eliminated to the minimum extent necessary so that these Terms will otherwise remain in full force and effect.
+
+### 13. Contact Information
+
+For questions about these Terms, please contact us at: {CONTACT_EMAIL}
+
+**Last Updated:** July 28, 2025
 """.strip()
 TERMS_CHECKSUM = hashlib.md5(TERMS_MD.encode()).hexdigest()
 
-TERMS_OF_SERVICE_MODAL_MD = f"""
-By clicking {TOS_ACCEPT_BUTTON_LABEL} below, you agree to the following **terms of service**:
-
-{TERMS_MD}
-""".strip()
 
 ABOUT_MD = f"""
 ## About Us
 
 Welcome to Music Arena! This platform ranks Text-to-Music AI models based on crowdsourced human preferences. Models are evaluated in head-to-head battles, and their Elo ratings are updated dynamically. Explore the top models, their performance metrics, and learn more about their capabilities.
 
-Music Arena is an _academic research project_ operated by the [Generative Creativity Lab (G-CLef)](https://chrisdonahue.com/#group) at Carnegie Mellon University. Our primary goal is to advance the science of music evaluation through the collection and public release of music preference data.
+Music Arena is an _academic research project_ operated by the [Generative Creativity Lab (G-CLef)](https://chrisdonahue.com/#group) at Carnegie Mellon University. Our primary goals are to provide rigorous evaluation for music generation models, and to provide an open and renewable source of music generation preference data for the research community. See our [paper]({PAPER_URL}) for more details.
+
+Music Arena is approved by CMU's Institutional Review Board under Protocol `STUDY2024_00000489`.
 
 Links:
 
-- [Codebase](https://github.com/gclef-cmu/music-arena)
-- [Feedback Form](https://forms.gle/DxUii6ys7Rj7jbR7A)
+- [Paper]({PAPER_URL})
+- [Codebase]({CODE_URL})
+- [Feedback Form]({FEEDBACK_FORM_URL})
 
 ## Contributors
 
 The development of Music Arena has so far been led by the following contributors: [Chris Donahue](https://chrisdonahue.com/), [Yonghyun Kim](https://yonghyunk1m.com) of the Georgia Tech [Music Informatics Group](https://musicinformatics.gatech.edu/), and [Wayne Chi](https://www.waynechi.com/). Additional assistance provided by [Anastasios Angelopolus](https://people.eecs.berkeley.edu/~angelopoulos/) and [Wei-Lin Chiang](https://infwinston.github.io/).
 
-We invite community contributions to our [codebase](https://github.com/gclef-cmu/music-arena)
-
-## Terms of Service
-
-Music Arena is approved by CMU's Institutional Review Board under Protocol `STUDY2024_00000489`. By using Music Arena, you agree to the following terms of service:
-
-{TERMS_MD}
+We invite community contributions to our [codebase]({CODE_URL}).
 
 ## Acknowledgments
 
 Music Arena is supported by funding from [Sony AI](https://ai.sony), with informal and pro-bono assistance provided by [LMArena](https://lmarena.ai).
+
+## Citation
+
+If you use Music Arena in your research, please cite our preprint:
+
+```bibtex
+@article{{kim2025musicarena,
+  title={{Music Arena: Live Evaluation for Text-to-Music}},
+  author={{Kim, Yonghyun and Chi, Wayne and Angelopoulos, Anastasios and Chiang, Wei-Lin and Saito, Koichi and Watanabe, Shinji and Mitsufuji, Yuki and Donahue, Chris}},
+  journal={{arXiv:{ARXIV_IDENTIFIER}}},
+  year={{2025}}
+}}
+```
+
+{TERMS_MD}
 """.strip()

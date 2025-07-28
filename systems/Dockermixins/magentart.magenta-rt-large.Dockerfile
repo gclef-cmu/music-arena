@@ -1,1 +1,1 @@
-RUN python -m magenta_rt.fetch_asset --asset=checkpoints/llm_large_x3047_c1860k --is_dir
+RUN python -m magenta_rt.fetch_asset --asset=checkpoints/llm_large_x3047_c1860k.tar --source=hf --is_dir

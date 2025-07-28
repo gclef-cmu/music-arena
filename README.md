@@ -1,25 +1,31 @@
 # Music Arena
 
-Music Arena is a platform for comparing text-to-music generation systems in a battle format. Users can generate music from text prompts and vote on their preferences to create leaderboards.
+Music Arena is a platform for comparing text-to-music generation systems in a battle format. Users can generate music from text prompts and vote on their preferences to create leaderboards. See our [paper](https://arxiv.org) for more details.
 
 ## Quick Start
 
 1. **Install the package**:
-   ```bash
-   python3 -m venv .venv
-   source .venv/bin/activate
-   pip install -e .
-   ```
 
-2. **Generate music from a system**:
-   ```bash
-   ma-sys musicgen:small generate --prompt "upbeat electronic music"
-   ```
+```bash
+git clone https://github.com/gclef-cmu/music-arena
+cd music-arena
+python3 -m venv .venv
+source .venv/bin/activate
+pip install -e .
+```
 
-3. **Start the full arena**:
-   ```bash
-   ma-deploy dev
-   ```
+2. **Generate music from a system** (requires [Docker](https://docs.docker.com/get-started)):
+
+```bash
+ma-sys musicgen-small:initial generate --prompt "upbeat electronic music" --gpu 0
+```
+
+3. **Start a local version of the Arena**:
+
+```bash
+ma-deploy dev --tmux | bash
+tmux attach-session -t MUSIC-ARENA-DEV
+```
 
 ## Adding a New Model
 
@@ -34,8 +40,9 @@ your-model-name:
   display_name: "Your Model Name"
   description: "Brief description of your model"
   organization: "Your Organization"
-  access: "OPEN"  # or "CLOSED", "GATED"
+  access: "OPEN"  # or "PROPRIETARY"
   supports_lyrics: false  # or true if it supports lyrics
+  # Fields below are optional but strongly encouraged
   model_type: "Codec Language Model"  # or "Latent Diffusion", etc.
   training_data:
     type: "Creative Commons"  # or "Licensed Stock", "Commercial", etc.
@@ -43,16 +50,19 @@ your-model-name:
       - "Your training data sources"
     num_tracks: 100000
     num_hours: 5000
-  citation: "Your Citation"
+  citation: "Doe+ 25"
   links:
+    home: "https://www.your-model.com"
     paper: "https://arxiv.org/abs/your-paper"
     code: "https://github.com/your-repo"
   variants:
-    "initial":
+    "low_temperature": # Name of a "variant" of your mode
       module_name: "your_model"  # Python module name in systems/
       class_name: "YourModelClass"  # Class name to instantiate
       secrets:  # Optional: if your model needs API keys
         - "HUGGINGFACE_READ_TOKEN"
+      init_kwargs:  # Optional: if your model needs additional initialization parameters
+        temperature: 0.5
 ```
 
 ### 2. Implement the System Class
@@ -112,7 +122,7 @@ Build and test your system:
 ma-sys your-model:initial build
 
 # Test generation
-ma-sys your-model:initial generate --prompt "test prompt"
+ma-sys your-model:initial generate --prompt "test prompt" --gpu 0
 ```
 
 ## System Commands
@@ -122,14 +132,11 @@ ma-sys your-model:initial generate --prompt "test prompt"
 Generate music from any registered system:
 
 ```bash
-# Basic generation
-ma-sys system_tag:variant_tag generate --prompt "your text prompt here"
+# Generate from a detailed prompt file (no API key required)
+ma-sys sao:quick generate -f example.json -g 0
 
-# With additional options
-ma-sys musicgen:small generate --prompt "upbeat jazz" --duration 15 --seed 42
-
-# Generate from a detailed prompt file
-ma-sys sao:initial generate --prompt_path prompt.json
+# Basic generation (requires OpenAI API key to convert text prompt to structured prompt)
+ma-sys sao:quick generate -p "heavy metal" -g 0
 ```
 
 ### Serving a System
@@ -138,13 +145,13 @@ Start a system as a web service:
 
 ```bash
 # Serve on default port (calculated from system key)
-ma-sys musicgen:small serve
+ma-sys musicgen:small serve --gpu 0
 
 # Serve on custom port
-ma-sys musicgen:small serve --port 8080
+ma-sys musicgen:small serve --port 8080 --gpu 0
 
 # Serve with custom batch settings
-ma-sys musicgen:medium serve --max_batch_size 4 --max_delay 2.0
+ma-sys musicgen:medium serve --max_batch_size 4 --max_delay 2.0 --gpu 0
 ```
 
 The system will be available at `http://localhost:<port>` with endpoints:
@@ -157,47 +164,13 @@ Test a running system using the curl client:
 
 ```bash
 # Test system running on default port
-./curl_clients/system.sh musicgen:small prompt.json
+./curl_clients/system.sh musicgen:small io/example.json
 
 # Test system on custom port
-./curl_clients/system.sh -p 8080 prompt.json
+./curl_clients/system.sh -p 8080 io/example.json
 
 # Test system on remote host
-./curl_clients/system.sh -h myserver.com -p 8080 prompt.json
-```
-
-Create a test prompt file (`prompt.json`):
-
-```json
-{
-  "overall_prompt": "upbeat electronic dance music",
-  "duration": 10,
-  "seed": 42
-}
-```
-
-## Component Management
-
-Run individual components of the arena:
-
-### Frontend
-
-```bash
-# Run frontend component
-ma-comp frontend --port 8080
-
-# Frontend with custom gateway URL
-ma-comp frontend --port 8080 -e "GATEWAY_URL=http://localhost:9000"
-```
-
-### Gateway
-
-```bash
-# Run gateway with systems
-ma-comp gateway --systems "musicgen:small,sao:initial" --port 9000
-
-# Gateway with weights for A/B testing
-ma-comp gateway --systems "musicgen:small,musicgen:medium" --weights "musicgen:small/musicgen:medium/0.7"
+./curl_clients/system.sh -h myserver.com -p 8080 io/example.json
 ```
 
 ### Testing the Gateway
@@ -220,23 +193,13 @@ Deploy the complete arena system:
 ### Development Deployment
 
 ```bash
-# Deploy development environment
+# Print commands to deploy the development environment
 ma-deploy dev
 
-# Deploy specific components only
+# Print commands to deploy specific components only
 ma-deploy dev -c frontend
 ma-deploy dev -c gateway
 ma-deploy dev -c systems
-```
-
-### Production Deployment
-
-```bash
-# Deploy production environment
-ma-deploy prod
-
-# Generate deployment script without running
-ma-deploy prod > deploy_script.sh
 ```
 
 ### Custom Deployment
@@ -255,7 +218,7 @@ systems:
     gpu: 0
 
 weights:
-  "musicgen:small/sao:initial": 0.5
+  "musicgen:small/sao:initial": 1.0
 
 components:
   frontend:
@@ -266,8 +229,6 @@ components:
   gateway:
     enabled: true
     port: 9000
-    args:
-      flakiness: 0.1
   systems:
     enabled: true
 ```
@@ -309,60 +270,10 @@ Generate lyrics for detailed prompts:
 
 ```bash
 # Generate lyrics from a detailed prompt file
-ma-chat lyrics --prompt_path detailed_prompt.json
+ma-chat lyrics --prompt_path io/example.json
 
 # Generate with different model configuration
-ma-chat lyrics --config 4o-v00 --prompt_path detailed_prompt.json
-```
-
-Example detailed prompt file (`detailed_prompt.json`):
-
-```json
-{
-  "overall_prompt": "upbeat pop song about summer",
-  "duration": 30,
-  "instrumental": false,
-  "generate_lyrics": true,
-  "lyrics_theme": "summer vacation, friendship, good times",
-  "lyrics_style": "catchy pop verses and chorus"
-}
-```
-
-## Development
-
-### Building Containers
-
-```bash
-# Build base container
-docker build -t music-arena-base .
-
-# Build system container
-ma-sys musicgen:small build
-
-# Build component containers
-ma-comp frontend --skip_build
-ma-comp gateway --skip_build
-```
-
-### Environment Variables
-
-Key environment variables:
-- `HUGGINGFACE_READ_TOKEN` - For models requiring HuggingFace access
-- `OPENAI_API_KEY` - For lyrics generation and routing
-- `GATEWAY_URL` - Frontend gateway connection
-- `MINIMUM_LISTEN_TIME` - Required listening time before voting
-
-### Logs and Debugging
-
-```bash
-# View system logs
-docker logs music-arena-system-musicgen-small
-
-# View component logs  
-docker logs music-arena-component-gateway
-
-# Debug mode
-ma-sys musicgen:small generate --prompt "test" --debug
+ma-chat lyrics --config 4o-v00 --prompt_path io/example.json
 ```
 
 ## TODO
@@ -371,3 +282,4 @@ ma-sys musicgen:small generate --prompt "test" --debug
 - Move `ResponseMetadata` to `music_arena/dataclass/response.py` and create in serving container than gateway
 - Clean up inconsistency between some classes having `TextToMusic*` prefix and some not
 - Make the gateway call System.prompt_supported() instead of System.supports_lyrics
+- Change supports_lyrics to instrumental_only?
