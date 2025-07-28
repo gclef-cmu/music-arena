@@ -1,3 +1,5 @@
+![Music Arena banner](components/frontend/ma_frontend/static/banner.png)
+
 # Music Arena
 
 Music Arena is a platform for comparing text-to-music generation systems in a battle format. Users can generate music from text prompts and vote on their preferences to create leaderboards. See our [paper](https://arxiv.org) for more details.
