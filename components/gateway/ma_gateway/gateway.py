@@ -112,13 +112,48 @@ def prebaked():
     return {k: v.as_json_dict() for k, v in _parse_prebaked_prompts().items()}
 
 
+def _audio_key(prompt: DetailedTextToMusicPrompt, battle_uuid: str, suffix: str) -> str:
+    prebaked = prompt.checksum in _parse_prebaked_prompts()
+    prefix = "prebaked" if prebaked else "original"
+    return f"{prefix}-{prompt.checksum}-{battle_uuid}-{suffix}.mp3"
+
+
 @_APP.get("/health_check")
 async def health_check():
     """Health check"""
     assert _BATTLE_GENERATOR is not None
-    prompt_detailed = random.choice(list(_parse_prebaked_prompts().values()))
-    await _BATTLE_GENERATOR.generate_battle(prompt_detailed=prompt_detailed)
-    return {"status": "ok"}
+    assert _BUCKET_AUDIO is not None
+    prebaked_prompts = _parse_prebaked_prompts()
+    prompt_detailed = random.choice(list(prebaked_prompts.values()))
+
+    # Generate battle
+    timings = []
+    timings.append(("generate", time.time()))
+    battle, a_audio_bytes, b_audio_bytes = await _BATTLE_GENERATOR.generate_battle(
+        prompt_detailed=prompt_detailed, prompt_prebaked=True, timings=timings
+    )
+
+    # Store audio
+    timings.append(("upload_audio", time.time()))
+    a_audio_key = _audio_key(prompt_detailed, battle.uuid, "a")
+    b_audio_key = _audio_key(prompt_detailed, battle.uuid, "b")
+    try:
+        _BUCKET_AUDIO.put(a_audio_key, io.BytesIO(a_audio_bytes))
+        _BUCKET_AUDIO.put(b_audio_key, io.BytesIO(b_audio_bytes))
+        battle.a_audio_url = _BUCKET_AUDIO.get_public_url(a_audio_key)
+        battle.b_audio_url = _BUCKET_AUDIO.get_public_url(b_audio_key)
+    except Exception as e:
+        raise HTTPException(status_code=500, detail=f"Error uploading audio: {e}")
+
+    # Store battle
+    timings.append(("upload_metadata", time.time()))
+    battle.timings = sorted(timings, key=lambda x: x[1])
+    try:
+        _update_battle(battle)
+    except Exception as e:
+        raise HTTPException(status_code=500, detail=f"Error uploading battle: {e}")
+
+    return {"status": "ok", "uuid": battle.uuid}
 
 
 @_APP.post("/generate_battle")
@@ -190,8 +225,8 @@ async def generate_battle(data: dict):
 
     # Store audio
     timings.append(("upload_audio", time.time()))
-    a_audio_key = f"{battle_uuid}-a.mp3"
-    b_audio_key = f"{battle_uuid}-b.mp3"
+    a_audio_key = _audio_key(battle.prompt_detailed, battle.uuid, "a")
+    b_audio_key = _audio_key(battle.prompt_detailed, battle.uuid, "b")
     try:
         _BUCKET_AUDIO.put(a_audio_key, io.BytesIO(a_audio_bytes))
         _BUCKET_AUDIO.put(b_audio_key, io.BytesIO(b_audio_bytes))
