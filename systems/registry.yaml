@@ -8,7 +8,7 @@
 
 musicgen-small:
   display_name: "MusicGen Small"
-  description: "300M model for fast and efficient text-to-music generation by Meta"
+  description: "Small (300M) codec language model"
   organization: "Meta"
   access: "OPEN"
   supports_lyrics: false
@@ -32,7 +32,7 @@ musicgen-small:
 
 musicgen-medium:
   display_name: "MusicGen Medium"
-  description: "1.5B model for expressive and high-fidelity music generation by Meta"
+  description: "Medium (1.5B) codec language model from Meta"
   organization: "Meta"
   access: "OPEN"
   supports_lyrics: false
@@ -56,7 +56,7 @@ musicgen-medium:
 
 musicgen-large:
   display_name: "MusicGen Large"
-  description: "3.3B model for expressive and high-fidelity music generation by Meta"
+  description: "Large (3.3B) codec language model from Meta"
   organization: "Meta"
   access: "OPEN"
   supports_lyrics: false
@@ -80,7 +80,7 @@ musicgen-large:
 
 sao:
   display_name: "Stable Audio Open"
-  description: "Latent diffusion model for high-quality text-to-audio generation by Stability AI"
+  description: "Latent diffusion model (1.3B)"
   organization: "Stability AI"
   access: "OPEN"
   supports_lyrics: false
@@ -113,7 +113,7 @@ sao:
 
 sao-small:
   display_name: "Stable Audio Open Small"
-  description: "Latent diffusion model for high-quality text-to-audio generation by Stability AI"
+  description: "Speedy, small (341M) latent diffusion model"
   organization: "Stability AI"
   access: "OPEN"
   supports_lyrics: false
@@ -163,7 +163,7 @@ audioldm2:
 
 magenta-rt-base:
   display_name: "Magenta RealTime (Base)"
-  description: "Magenta RT is an open weights, real-time, streaming music generation model."
+  description: "Smaller streaming codec language model (400M)"
   organization: "Google DeepMind"
   access: "OPEN"
   supports_lyrics: false
@@ -183,7 +183,7 @@ magenta-rt-base:
 
 magenta-rt-large:
   display_name: "Magenta RealTime (Large)"
-  description: "Magenta RT is an open weights, real-time, streaming music generation model."
+  description: "Streaming codec language model (800M)"
   organization: "Google DeepMind"
   access: "OPEN"
   supports_lyrics: false
@@ -208,7 +208,7 @@ magenta-rt-large:
 # https://arxiv.org/abs/2506.00045
 acestep:
   display_name: "ACE-Step"
-  description: "Open-source music generation model with lyrics conditioning."
+  description: "Large (3.5B) latent diffusion model."
   organization: "ACE Studio"
   access: "OPEN"
   supports_lyrics: true
@@ -310,7 +310,7 @@ lyria-rt:
 
 riffusion-fuzz-1-0:
   display_name: "Riffusion FUZZ 1.0"
-  description: "FUZZ is a state of the art diffusion transformer for creating and editing music, built by Riffusion."
+  description: "FUZZ is a diffusion transformer for creating and editing music."
   organization: "Riffusion"
   access: "PROPRIETARY"
   supports_lyrics: true
@@ -327,7 +327,7 @@ riffusion-fuzz-1-0:
 
 riffusion-fuzz-1-1:
   display_name: "Riffusion FUZZ 1.1"
-  description: "The latest version of FUZZ, a state of the art diffusion transformer for creating and editing music, built by Riffusion."
+  description: "The latest version of FUZZ."
   organization: "Riffusion"
   access: "PROPRIETARY"
   supports_lyrics: true
