@@ -24,7 +24,17 @@ RUN git clone https://github.com/google-research/t5x.git /t5x && \
 
 # Also patch MagentaRT's pyproject.toml
 RUN pushd /magenta-realtime && \
-    sed -i 's|t5x[gpu] @ git+https://github.com/google-research/t5x.git@92c5b46|t5x[gpu]|g' pyproject.toml && \
-    sed -i 's|t5x @ git+https://github.com/google-research/t5x.git@92c5b46|t5x|g' pyproject.toml && \
+    sed -i 's|t5x\[gpu\] @ git+https://github.com/google-research/t5x.\git@92c5b46|t5x[gpu]|g' pyproject.toml && \
+    sed -i 's|t5x @ git+https://github.com/google-research/t5x\.git@92c5b46|t5x|g' pyproject.toml && \
+    sed -i 's|tf-nightly|tf-nightly==2.20.0.dev20250619|g' pyproject.toml && \
+    sed -i 's|tensorflow-text-nightly|tensorflow-text-nightly==2.20.0.dev20250316|g' pyproject.toml && \
     popd
-RUN cd /magenta-realtime
+
+# Install large packages separately with retry options to handle network issues
+RUN python -m pip install --retries 5 --timeout 300 --no-cache-dir \
+    tf-nightly==2.20.0.dev20250619 \
+    tensorflow-text-nightly==2.20.0.dev20250316 \
+    tf-hub-nightly
+
+# Install magenta-realtime with GPU support
+RUN python -m pip install -e /magenta-realtime[gpu]
