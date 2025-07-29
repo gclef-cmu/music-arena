@@ -476,9 +476,7 @@ def handle_vote_success(session, user, battle, vote, systems):
         # STATE
         battle.copy(vote=vote),
         # UI
-        gr.update(
-            show_download_button=True
-        ),  # a_music_player OR b_music_player OR dummy
+        *[gr.update(show_download_button=True)] * 2,  # a_music_player, b_music_player
         *[
             gr.update(value=md, visible=True) for md in system_labels_md
         ],  # a_system_tag, b_system_tag
@@ -701,12 +699,6 @@ def bind_ui_events(ui, state, debug=False):
     for btn, pref in zip(
         vote_btns, [Preference.A, Preference.B, Preference.TIE, Preference.BOTH_BAD]
     ):
-        if pref == Preference.A:
-            winner_player = u["battle"]["a_music_player"]
-        elif pref == Preference.B:
-            winner_player = u["battle"]["b_music_player"]
-        else:
-            winner_player = gr.Audio(visible=False)  # dummy
         btn.click(
             fn=lambda vote_state, p: vote_state.copy(
                 preference=p, preference_time=time.time()
@@ -722,7 +714,8 @@ def bind_ui_events(ui, state, debug=False):
             inputs=[s["session"], s["user"], s["battle"], s["vote"], s["systems"]],
             outputs=[
                 s["battle"],
-                winner_player,
+                u["battle"]["a_music_player"],
+                u["battle"]["b_music_player"],
                 u["battle"]["a_system_tag"],
                 u["battle"]["b_system_tag"],
                 u["battle"]["a_system_timing"],
