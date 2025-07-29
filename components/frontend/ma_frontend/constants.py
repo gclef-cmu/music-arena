@@ -25,7 +25,7 @@ LOGDIR = "logs"
 # =============================================================================
 
 # URLS
-ARXIV_IDENTIFIER = "TODO"
+ARXIV_IDENTIFIER = "2507.20900"
 PAPER_URL = f"https://arxiv.org/abs/{ARXIV_IDENTIFIER}"
 CODE_URL = "https://github.com/gclef-cmu/music-arena"
 FEEDBACK_FORM_URL = "https://forms.gle/DxUii6ys7Rj7jbR7A"
