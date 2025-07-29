@@ -235,12 +235,12 @@ By using this Service, you represent and warrant that:
 ### 3. Prohibited Uses and Conduct
 
 You agree not to use the Service to:
-- Violate any applicable local, state, national, or international law or regulation
+- Submit prompts designed to imitate specific recording artists or copyrighted material or infringe in any other manner on intellectual property rights
+- Submit prompts designed to generate hate speech, sexually explicit content, or content promoting violence
 - Generate, distribute, or promote content that is illegal, harmful, threatening, abusive, defamatory, libelous, or otherwise objectionable
-- Infringe upon intellectual property rights, including but not limited to copyrights, trademarks, or patents
-- Submit prompts designed to generate copyrighted material, hate speech, sexually explicit content, or content promoting violence
 - Use automated means (bots, scrapers, etc.) to access or manipulate the Service without express written permission
 - Interfere with or disrupt the Service's operation or security
+- Violate any applicable local, state, national, or international law or regulation
 
 ### 4. Privacy and Data Protection
 
