@@ -352,6 +352,7 @@ def component_run_command(
             CONTAINER_COMPONENTS_DIR / component_name,
         ),
         (IO_DIR, CONTAINER_IO_DIR),
+        (REPO_DIR / "leaderboard/outputs", pathlib.Path("/music-arena/leaderboard/outputs")),
     ]
     if SYSTEMS_PRIVATE_DIR.is_dir():
         volume_mapping.append((SYSTEMS_PRIVATE_DIR, CONTAINER_SYSTEMS_PRIVATE_DIR))

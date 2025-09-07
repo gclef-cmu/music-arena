@@ -7,8 +7,10 @@ import pathlib
 import random
 import time
 from typing import Optional
+import os
 
 import gradio as gr
+import pandas as pd
 
 from music_arena.dataclass import (
     Battle,
@@ -33,10 +35,51 @@ _LOGGER = logging.getLogger(__name__)
 _LOGGER.info(f"Using BACKEND_URL={G.URL}")
 
 STATIC_DIR = pathlib.Path(__file__).parent / "static"
-
+LEADERBOARD_OUTPUT_DIR = pathlib.Path("/music-arena/leaderboard/outputs")
 
 # Helpers
 
+def find_latest_leaderboard_files():
+    """Finds the most recent leaderboard TSV and plot files."""
+    plots_dir = LEADERBOARD_OUTPUT_DIR / "plots"
+    tables_dir = LEADERBOARD_OUTPUT_DIR / "leaderboards"
+    
+    paths = {
+        "instrumental_table": None, "vocal_table": None,
+        "instrumental_plot": None, "vocal_plot": None
+    }
+
+    try:
+        # Find latest instrumental files
+        inst_tables = sorted([f for f in os.listdir(tables_dir) if "instrumental" in f and f.endswith(".tsv")])
+        if inst_tables: paths["instrumental_table"] = tables_dir / inst_tables[-1]
+        
+        inst_plots = sorted([f for f in os.listdir(plots_dir) if "instrumental" in f and f.endswith(".png")])
+        if inst_plots: paths["instrumental_plot"] = plots_dir / inst_plots[-1]
+
+        # Find latest vocal files
+        vocal_tables = sorted([f for f in os.listdir(tables_dir) if "vocal" in f and f.endswith(".tsv")])
+        if vocal_tables: paths["vocal_table"] = tables_dir / vocal_tables[-1]
+        
+        vocal_plots = sorted([f for f in os.listdir(plots_dir) if "vocal" in f and f.endswith(".png")])
+        if vocal_plots: paths["vocal_plot"] = plots_dir / vocal_plots[-1]
+        
+    except FileNotFoundError:
+        _LOGGER.warning(f"Leaderboard output directory not found at: {LEADERBOARD_OUTPUT_DIR}")
+    
+    return paths
+
+def load_leaderboard_table(filepath):
+    """Loads a TSV file into a pandas DataFrame for display."""
+    if filepath and os.path.exists(filepath):
+        return pd.read_csv(filepath, sep='\t')
+    return pd.DataFrame()
+
+def get_leaderboard_image_path(filepath):
+    """Returns the path to the image file if it exists."""
+    if filepath and os.path.exists(filepath):
+        return str(filepath)
+    return None
 
 def load_static_file(name: str) -> str:
     with open(STATIC_DIR / name, "r") as f:
@@ -74,6 +117,27 @@ def render_model_description(systems) -> str:
         md += f"| {display_name} | {organization} | {access} | {lyrics} | {link} | {description} |\n"
 
     return md
+
+def render_leaderboard(leaderboard_data: dict, board_type: str) -> str:
+    """Renders the leaderboard data into a Markdown table."""
+    if not leaderboard_data or not leaderboard_data.get(board_type):
+        return "Leaderboard data is not available yet. Please check back later."
+
+    df = pd.DataFrame(leaderboard_data[board_type])
+    
+    # Define columns based on your paper's plan
+    columns = ["Rank", "Model", "Arena Score", "95% CI", "# Votes", "Generation Speed (RTF)", "Training Data", "Organization", "Weights license"]
+    
+    # Ensure all required columns exist, fill with '-' if not
+    for col in columns:
+        if col not in df.columns:
+            df[col] = "-"
+    
+    # Set Rank as index
+    if "Rank" in df.columns:
+        df = df.set_index("Rank")
+    
+    return df[columns[1:]].to_markdown()
 
 
 def set_visible(session, criteria, name, negate, num_elements):
@@ -145,7 +209,6 @@ def onack_fetch_from_gateway(session):
     prebaked = G.get_prebaked_prompts()
     logger.info(f"len_prebaked={len(prebaked)}")
     return systems, prebaked
-
 
 def ongateway_update_ui(session, systems, prebaked):
     """Update UI based on gateway status"""
@@ -898,6 +961,23 @@ def bind_onload_events(demo, state, ui, debug=False):
             **set_ui_visible_kwargs("no_ack", u["no_ack"]["rows"], gr.State(True)),
             js=J.TOS_CLEAR_COOKIE(C.TERMS_CHECKSUM),
         )
+        # --- (NEW) Leaderboard Tab Event Bindings ---
+    leaderboard_outputs = [
+        ui["leaderboard"]["instrumental_board"],
+        ui["leaderboard"]["vocal_board"],
+        ui["leaderboard"]["instrumental_plot"],
+        ui["leaderboard"]["vocal_plot"],
+    ]
+    # Load data when the leaderboard tab is selected
+    ui["leaderboard"]["tab"].select(
+        fn=load_and_display_leaderboards,
+        outputs=leaderboard_outputs
+    )
+    # Also load data when the refresh button is clicked
+    ui["leaderboard"]["refresh_button"].click(
+        fn=load_and_display_leaderboards,
+        outputs=leaderboard_outputs
+    )
 
 
 def build_ui_tos(debug=False):
@@ -1204,7 +1284,6 @@ def build_ui_battle(debug=False):
         "model_description_markdown": model_description_markdown,
     }
 
-
 def build_ui(debug=False):
     """Build the complete demo interface"""
     _LOGGER.info("Building demo UI")
@@ -1212,26 +1291,45 @@ def build_ui(debug=False):
     gr.Markdown(C.TITLE_MD, elem_id="title")
     with gr.Tabs():
         with gr.TabItem(C.TAB_ARENA, elem_id="tab-arena"):
-            # Build TOS UI
             _LOGGER.info("Building TOS UI")
             ui["tos"] = build_ui_tos(debug=debug)
-
-            # Build no ack UI
             with gr.Row(elem_id="no-ack-row", visible=False) as row_no_ack:
                 gr.Markdown(C.NEEDS_ACK_TOS_MD)
             ui["no_ack"] = {"rows": [row_no_ack]}
-
-            # Build battle UI
             _LOGGER.info("Building battle UI")
             ui["battle"] = build_ui_battle(debug=debug)
-
-            # Build no gateway UI
             with gr.Row(elem_id="no-gateway-row", visible=False) as row_no_gateway:
                 gr.Markdown(C.GATEWAY_UNAVAILABLE_MD)
             ui["no_gateway"] = {"rows": [row_no_gateway]}
 
-        with gr.TabItem(C.TAB_LEADERBOARD, elem_id="tab-leaderboard"):
-            gr.Markdown(C.LEADERBOARD_COMING_SOON_MD)
+        # Capture the TabItem object here using 'as leaderboard_tab'
+        with gr.TabItem(C.TAB_LEADERBOARD, elem_id="tab-leaderboard") as leaderboard_tab:
+            _LOGGER.info("Building file-based Leaderboard UI")
+            gr.Markdown("## Leaderboard")
+            gr.Markdown("The leaderboard is generated periodically from user votes. The data shown here is based on the latest analysis run.")
+            
+            date_range_display = gr.Markdown("Current data range: 2025-07-28 ~ 2025-08-31")
+
+            refresh_button = gr.Button("Refresh Leaderboard Data")
+            
+            with gr.Tabs():
+                with gr.TabItem("🎹 Instrumental"):
+                    instrumental_board = gr.DataFrame(headers=["Rank", "Model", "Arena Score", "# Votes", "Generation Speed (RTF)"])
+                    instrumental_plot = gr.Image(label="Quality vs. Speed Tradeoff")
+                with gr.TabItem("🎤 Vocal"):
+                    vocal_board = gr.DataFrame(headers=["Rank", "Model", "Arena Score", "# Votes", "Generation Speed (RTF)"])
+                    vocal_plot = gr.Image(label="Quality vs. Speed Tradeoff")
+            
+            ui["leaderboard"] = {
+                "date_range_display": date_range_display,
+                "instrumental_board": instrumental_board,
+                "vocal_board": vocal_board,
+                "instrumental_plot": instrumental_plot,
+                "vocal_plot": vocal_plot,
+                "refresh_button": refresh_button,
+                "tab": leaderboard_tab,
+            }
+
 
         with gr.TabItem(C.TAB_ABOUT, elem_id="tab-about"):
             gr.Markdown(C.ABOUT_MD, elem_id="about-markdown")
@@ -1268,6 +1366,16 @@ def build_ui(debug=False):
 
     return ui
 
+def load_and_display_leaderboards():
+    """Finds, loads, and returns all leaderboard files for display."""
+    paths = find_latest_leaderboard_files()
+    
+    inst_table = load_leaderboard_table(paths["instrumental_table"])
+    vocal_table = load_leaderboard_table(paths["vocal_table"])
+    inst_plot_path = get_leaderboard_image_path(paths["instrumental_plot"])
+    vocal_plot_path = get_leaderboard_image_path(paths["vocal_plot"])
+    
+    return inst_table, vocal_table, inst_plot_path, vocal_plot_path
 
 def build_demo(debug=False):
     """Build the complete demo interface"""
@@ -1359,6 +1467,7 @@ if __name__ == "__main__":
         favicon_path=STATIC_DIR / "favicon.png",
         debug=args.debug,
         prevent_thread_lock=True,
+        allowed_paths=[str(LEADERBOARD_OUTPUT_DIR)]
     )
 
     _LOGGER.info(f"Local URL: {local_url}")
