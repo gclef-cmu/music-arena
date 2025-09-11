@@ -1,0 +1,35 @@
+Warning: config.py not found. Cannot filter by known models.
+Analyzing listening times from local directory: battle_data...
+
+--- Listening Time Statistics (Raw Data from Valid Battles) ---
+       Track A  Track B
+count  1051.00  1051.00
+mean     58.14    26.82
+std     281.94    84.33
+min       4.03     4.02
+25%      15.34     5.36
+50%      24.41     9.31
+75%      45.75    22.00
+max    8453.62  2262.41
+
+--- IQR-based Outlier Thresholds ---
+Track A    91.37
+Track B    46.97
+dtype: float64
+--------------------------------------
+
+--- Statistics after removing outliers ---
+Removed 196 rows containing outliers.
+       Track A  Track B
+count   855.00   855.00
+mean     25.98    11.57
+std      17.11     9.27
+min       4.03     4.02
+25%      14.29     5.05
+50%      20.66     7.08
+75%      33.40    15.19
+max      88.15    46.76
+
+--- 📊 Plotting Listening Time Distribution ---
+
+[INFO] Distribution plot (IQR filtered) saved to outputs/analysis/listening_time_distribution_iqr.png

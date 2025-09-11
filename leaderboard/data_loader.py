@@ -7,6 +7,26 @@ from tqdm import tqdm
 from datetime import datetime, timezone
 from config import MODELS_METADATA
 
+def load_all_raw_logs(log_dir: str) -> list:
+    """
+    Load all the original JSON logts into list from the designated directory.
+    """
+    if not os.path.exists(log_dir):
+        print(f"Error: Directory '{log_dir}' not found.")
+        return []
+    
+    raw_logs = []
+    log_files = [f for f in os.listdir(log_dir) if f.endswith(".json")]
+    for filename in tqdm(log_files, desc="Loading all raw log files"):
+        filepath = os.path.join(log_dir, filename)
+        with open(filepath, 'r') as f:
+            try:
+                raw_logs.append(json.load(f))
+            except json.JSONDecodeError:
+                print(f"Warning: Could not parse JSON for file {filename}")
+                continue
+    return raw_logs
+
 def download_logs_from_gcs(project_id, bucket_name, download_dir, start_date=None, end_date=None):
     """
     Downloads new .json files from a GCS bucket, skipping existing ones.

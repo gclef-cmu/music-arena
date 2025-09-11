@@ -1,0 +1,25 @@
+Successfully imported model metadata for filtering.
+Analyzing prompt keywords from directory: battle_logs...
+
+Successfully analyzed 804 user-written prompts from valid, voted battles.
+
+--- 📝 Top 15 Prompt Keywords (from Voted Battles) ---
+Keyword  Frequency
+   bass        101
+    pop         98
+ vocals         81
+  piano         70
+   rock         69
+   dark         66
+melodic         66
+ chorus         65
+ techno         62
+   deep         62
+ female         55
+  drums         55
+    bpm         53
+  phonk         51
+ guitar         51
+-----------------------------------------------------
+
+[INFO] Prompt keywords word cloud (voted battles) saved to outputs/analysis/prompt_keywords_wordcloud_voted.png

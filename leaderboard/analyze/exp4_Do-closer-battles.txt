@@ -1,0 +1,20 @@
+--- 🚀 Starting Full Correlation Analysis ---
+
+Parsing logs from: battle_logs
+
+Successfully computed Arena Scores for all models.
+
+--- 🧐 Calculating data for: Arena Score Difference vs. Listening Time ---
+Removed 118 outliers from listening time (Threshold > 146.00s).
+
+--- 🔄 Calculating data for: Arena Score Difference vs. Number of Swaps ---
+
+--- 📊 Plotting Listening Time Correlation ---
+Spearman Correlation (Listen Time): -0.082 (p-value: 0.012)
+[INFO] Plot saved to listening_time_vs_closeness_correlation.png
+
+--- 📊 Plotting Swaps Correlation ---
+Spearman Correlation (Swaps): -0.097 (p-value: 0.002)
+[INFO] Plot saved to swaps_vs_closeness_correlation.png
+
+--- ✅ Analysis Complete ---

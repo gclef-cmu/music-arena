@@ -1,0 +1,33 @@
+Running full analysis from: battle_data...
+
+
+--- Detailed Listening Time Statistics ---
+
+==================== Statistics for Instrumental Prompts ====================
+                     count   mean    std   min   25%    50%    75%      max
+riffusion-fuzz-1-1   254.0  38.12  57.13  4.10  5.82  15.98  42.21   423.41
+riffusion-fuzz-1-0     5.0  12.40   6.29  4.79  6.63  15.62  15.87    19.07
+sao                  286.0  23.20  71.63  4.03  6.06  12.63  27.13  1195.49
+musicgen-small       278.0  15.49  12.17  4.12  5.96  11.60  21.46    98.36
+Total               1394.0  19.91  42.56  4.03  5.84  11.06  20.20  1195.49
+magenta-rt-large     276.0  14.06  11.78  4.10  5.78  10.76  19.98    81.98
+sao-small            292.0  10.85   9.99  4.04  5.81   9.57  11.26    94.15
+acestep                3.0   7.78   3.77  4.81  5.65   6.50   9.26    12.03
+
+==================== Statistics for Vocal Prompts ====================
+                    count   mean     std   min   25%    50%    75%      max
+preview-ocelot       90.0  51.49   57.12  4.24  9.62  30.34  73.78   258.57
+preview-jerboa       88.0  45.40   50.50  4.20  7.55  27.26  55.05   223.66
+riffusion-fuzz-1-1  216.0  54.16   66.35  4.20  7.33  24.75  74.27   455.34
+riffusion-fuzz-1-0  139.0  59.63  131.06  4.02  6.21  22.42  68.05  1226.20
+Total               708.0  45.58   85.22  4.02  6.27  20.94  51.06  1226.20
+acestep             175.0  20.90   81.38  4.18  5.57  10.22  23.54  1081.41
+
+
+==================== Correlation Analysis: Listening Time vs. Win Rate ====================
+Analysis is based on model performances with at least 10 games in each category.
+
+Pearson Correlation (Instrumental): r=0.7068, p-value=0.1819
+Pearson Correlation (Vocal): r=0.5832, p-value=0.3020
+
+[INFO] Final correlation plot saved to outputs/analysis/win_rate_vs_listen_time_final.png

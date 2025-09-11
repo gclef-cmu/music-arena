@@ -1,0 +1,32 @@
+Warning: config.py not found. Cannot filter by known models.
+Analyzing prompt lengths from local directory: battle_logs...
+
+--- Prompt Length Statistics (from valid, voted battles) ---
+       Prompt Length (words)
+count                 806.00
+mean                   18.67
+std                    54.75
+min                     1.00
+25%                     3.00
+50%                     7.00
+75%                    15.00
+max                  1000.00
+
+--- IQR-based Outlier Threshold ---
+Calculated outlier threshold: 33.00 words
+
+--- Statistics for prompts within IQR range ---
+Filtered to 724 prompts (out of 806).
+       Prompt Length (words)
+count                 724.00
+mean                    8.29
+std                     6.87
+min                     1.00
+25%                     3.00
+50%                     6.00
+75%                    11.00
+max                    33.00
+
+--- 📊 Plotting Prompt Length Distribution ---
+
+[INFO] Distribution plot (voted, IQR filtered) saved to outputs/analysis/prompt_length_distribution_voted_iqr.png

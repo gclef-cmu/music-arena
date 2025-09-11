@@ -1,0 +1,82 @@
+Running comprehensive analysis...
+
+--- 🎲 Prompt Usage & Vote Ratio (Known Models Only) ---
+             Prompt Type  Total Battles  Voted Battles Vote Ratio (%)
+            User-Written           1040            804         77.31%
+'Surprise Me' (Prebaked)            380            247         65.00%
+                   Total           1420           1051         74.01%
+-----------------------------------------------------------
+
+Total voted battles between known models analyzed for listening behavior: 1051
+
+--- 🎧 Listening Time Statistics (Known Models Only) ---
+   Metric  Track A (sec)  Track B (sec)
+  Average          58.14          26.82
+Std. Dev.         281.81          84.29
+      Min           4.03           4.02
+      Max        8453.62        2262.41
+-----------------------------------------------------------
+
+
+--- 🔄 Swap Behavior PMF (Known Models Only) ---
+ Swaps  Probability
+     1     0.629876
+     2     0.235966
+     3     0.079924
+     4     0.026641
+     5     0.017127
+     6     0.004757
+     7     0.003806
+     9     0.000951
+    13     0.000951
+--------------------------------------------------
+
+
+--- 📈 Daily User Activity (Known Models Only) ---
+      Date  Unique Users
+2025-07-28             9
+2025-07-29           214
+2025-07-30            69
+2025-07-31            49
+2025-08-01            30
+2025-08-02             9
+2025-08-03            10
+2025-08-04            17
+2025-08-05            22
+2025-08-06            14
+2025-08-07             1
+2025-08-08             4
+2025-08-09             5
+2025-08-10             3
+2025-08-11             1
+2025-08-12             3
+2025-08-13             5
+2025-08-14             9
+2025-08-15             1
+2025-08-16             3
+2025-08-17             1
+2025-08-18             4
+2025-08-19             7
+2025-08-20             9
+2025-08-21             1
+2025-08-23             1
+2025-08-24             2
+2025-08-25             1
+2025-08-26             5
+2025-08-27             4
+2025-08-28             2
+2025-08-29             4
+2025-08-30             2
+2025-08-31             4
+---------------------------------------------------
+
+
+Parsing logs from: battle_logs
+
+--- 🧐 Listening Behavior vs. Leaderboard Closeness (Known Models Only) ---
+  closeness_group  avg_total_listen_time  avg_swaps  battle_count
+ Very Close (<50)                 105.30       1.93           155
+Moderate (50-150)                 110.24       1.67           302
+   Distant (>150)                  66.80       1.50           594
+-----------------------------------------------------------------------------
+

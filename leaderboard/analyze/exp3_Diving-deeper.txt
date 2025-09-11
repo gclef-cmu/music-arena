@@ -1,0 +1,18 @@
+Warning: config.py not found. Cannot filter by known models.
+Running combined analysis from directory: battle_data...
+
+--- Statistics for 848 Battles (After IQR Outlier Removal) ---
+Removed 203 rows as outliers.
+       First-Played Track  Second-Played Track
+count              848.00               848.00
+mean                26.39                10.80
+std                 16.88                 8.35
+min                  4.03                 4.02
+25%                 14.75                 4.97
+50%                 21.01                 6.62
+75%                 33.76                13.39
+max                 88.15                42.60
+
+--- 📊 Plotting Listening Time Distribution ---
+
+[INFO] Final distribution plot saved to outputs/analysis/listening_time_by_play_order.png
