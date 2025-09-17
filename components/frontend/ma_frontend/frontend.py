@@ -961,7 +961,7 @@ def bind_onload_events(demo, state, ui, debug=False):
             **set_ui_visible_kwargs("no_ack", u["no_ack"]["rows"], gr.State(True)),
             js=J.TOS_CLEAR_COOKIE(C.TERMS_CHECKSUM),
         )
-        # --- (NEW) Leaderboard Tab Event Bindings ---
+        # --- Leaderboard Tab Event Bindings ---
     leaderboard_outputs = [
         ui["leaderboard"]["instrumental_board"],
         ui["leaderboard"]["vocal_board"],
@@ -973,11 +973,11 @@ def bind_onload_events(demo, state, ui, debug=False):
         fn=load_and_display_leaderboards,
         outputs=leaderboard_outputs
     )
-    # Also load data when the refresh button is clicked
-    ui["leaderboard"]["refresh_button"].click(
-        fn=load_and_display_leaderboards,
-        outputs=leaderboard_outputs
-    )
+    # # Also load data when the refresh button is clicked
+    # ui["leaderboard"]["refresh_button"].click(
+    #     fn=load_and_display_leaderboards,
+    #     outputs=leaderboard_outputs
+    # )
 
 
 def build_ui_tos(debug=False):
@@ -1310,7 +1310,7 @@ def build_ui(debug=False):
             
             date_range_display = gr.Markdown("Current data range: 2025-07-28 ~ 2025-08-31")
 
-            refresh_button = gr.Button("Refresh Leaderboard Data")
+            # refresh_button = gr.Button("Refresh Leaderboard Data")
             
             with gr.Tabs():
                 with gr.TabItem("🎹 Instrumental"):
@@ -1326,7 +1326,6 @@ def build_ui(debug=False):
                 "vocal_board": vocal_board,
                 "instrumental_plot": instrumental_plot,
                 "vocal_plot": vocal_plot,
-                "refresh_button": refresh_button,
                 "tab": leaderboard_tab,
             }
 
