@@ -1,4 +1,3 @@
-# analysis.py
 import pandas as pd
 import numpy as np
 from datetime import datetime, timezone
@@ -83,3 +82,6 @@ def analyze_battle_stats(raw_logs, start_date=None, end_date=None):
         print("\n--- Listening Time Statistics (for voted battles with known models) ---")
         print(stats_df.to_string(index=False))
     print("--------------------------")
+    
+if __name__ == "__main__":
+    analyze_battle_stats()

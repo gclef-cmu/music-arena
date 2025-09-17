@@ -1,5 +1,3 @@
-# config.py
-
 GCP_PROJECT_ID = "Hidden"
 METADATA_BUCKET_NAME = "Hidden"
 AUDIO_BUCKET_NAME = "Hidden"

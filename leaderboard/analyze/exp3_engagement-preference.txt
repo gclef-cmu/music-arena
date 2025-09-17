@@ -30,4 +30,4 @@ Analysis is based on model performances with at least 10 games in each category.
 Pearson Correlation (Instrumental): r=0.7068, p-value=0.1819
 Pearson Correlation (Vocal): r=0.5832, p-value=0.3020
 
-[INFO] Final correlation plot saved to outputs/analysis/win_rate_vs_listen_time_final.png
+[INFO] Final correlation plot saved to outputs/analysis/exp3_engagement-preference.png

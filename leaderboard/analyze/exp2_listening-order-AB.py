@@ -1,12 +1,12 @@
-import os
+import sys, os
 import json
 import pandas as pd
 import numpy as np
 from tqdm import tqdm
 import matplotlib.pyplot as plt
 import seaborn as sns
+sys.path.append(os.path.dirname(os.path.dirname(os.path.abspath(__file__))))
 
-# --- Configuration ---
 BATTLE_LOGS_DIR = "battle_data"
 OUTPUT_DIR = "outputs/analysis"
 
@@ -19,9 +19,6 @@ except ImportError:
     KNOWN_MODELS = None
 
 def sum_listen_time(listen_data: list) -> float:
-    """
-    주어진 listen_data 로그로부터 총 청취 시간을 정확하게 계산합니다.
-    """
     last_play_time = None
     total_time = 0
     if not listen_data:
@@ -57,21 +54,16 @@ def analyze_and_visualize_listening_time(log_dir: str):
             with open(filepath, 'r') as f:
                 data = json.load(f)
 
-            # --- 수정된 필터링 로직 ---
-            # 1. 투표가 완료된 기록인지 확인
             has_vote = "vote" in data and data["vote"] is not None
             if not has_vote:
                 continue
 
-            # 2. 알려진 모델 간의 전투인지 확인
             if KNOWN_MODELS:
                 model_a = data.get("a_metadata", {}).get("system_key", {}).get("system_tag")
                 model_b = data.get("b_metadata", {}).get("system_key", {}).get("system_tag")
                 if not model_a or not model_b or model_a not in KNOWN_MODELS or model_b not in KNOWN_MODELS:
                     continue
-            # --------------------------
-
-            # 모든 조건을 통과한 경우에만 청취 시간 기록
+                
             vote_data = data["vote"]
             if "a_listen_data" in vote_data and vote_data["a_listen_data"]:
                 listen_times_a.append(sum_listen_time(vote_data["a_listen_data"]))
@@ -84,7 +76,6 @@ def analyze_and_visualize_listening_time(log_dir: str):
         print("No valid listening data found to analyze.")
         return
 
-    # --- DataFrame 생성 및 통계 계산 ---
     df = pd.DataFrame({'Track A': listen_times_a, 'Track B': listen_times_b})
 
     print("\n--- Listening Time Statistics (Raw Data from Valid Battles) ---")
@@ -108,7 +99,6 @@ def analyze_and_visualize_listening_time(log_dir: str):
     print(f"Removed {len(df) - len(filtered_df)} rows containing outliers.")
     print(filtered_df.describe().round(2))
 
-    # --- 분포도 시각화 ---
     print("\n--- 📊 Plotting Listening Time Distribution ---")
     plt.style.use('seaborn-v0_8-whitegrid')
     fig, (ax1, ax2) = plt.subplots(1, 2, figsize=(18, 7), sharey=True)
@@ -140,7 +130,7 @@ def analyze_and_visualize_listening_time(log_dir: str):
     fig.suptitle('Listening Time Distribution (IQR Outliers Removed)', fontsize=20, weight='bold')
     plt.tight_layout(rect=[0, 0, 1, 0.96])
     
-    filename = "listening_time_distribution_iqr.png"
+    filename = "exp2_listening-order-AB.png"
     os.makedirs(OUTPUT_DIR, exist_ok=True)
     plt.savefig(os.path.join(OUTPUT_DIR, filename), dpi=300, bbox_inches='tight')
     print(f"\n[INFO] Distribution plot (IQR filtered) saved to {os.path.join(OUTPUT_DIR, filename)}")
@@ -148,3 +138,7 @@ def analyze_and_visualize_listening_time(log_dir: str):
 
 if __name__ == "__main__":
     analyze_and_visualize_listening_time(BATTLE_LOGS_DIR)
+    
+"""
+python analyze/exp2_listening-order-AB.py > analyze/exp2_listening-order-AB.txt
+"""

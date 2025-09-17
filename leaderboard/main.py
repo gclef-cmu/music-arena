@@ -1,9 +1,6 @@
-# main.py
 import argparse
 from datetime import datetime, timezone
 import os
-
-# Import functions from other modules
 from config import GCP_PROJECT_ID, METADATA_BUCKET_NAME, BATTLE_LOGS_DIR, OUTPUT_DIR, MODELS_METADATA
 from data_loader import download_logs_from_gcs, parse_logs
 from analysis import analyze_battle_stats
@@ -31,10 +28,10 @@ def main():
         analyze_battle_stats(raw_logs, start_date, end_date)
         
     elif args.action == 'leaderboard':
-        battles_df, raw_logs_for_time = parse_logs(BATTLE_LOGS_DIR) # Load all first
+        battles_df, raw_logs_for_time = parse_logs(BATTLE_LOGS_DIR)
         
         if start_date and end_date:
-            battles_df, _ = parse_logs(BATTLE_LOGS_DIR, start_date, end_date) # Re-parse with filter
+            battles_df, _ = parse_logs(BATTLE_LOGS_DIR, start_date, end_date)
             date_str = f"{start_date.strftime('%Y%m%d')}_to_{end_date.strftime('%Y%m%d')}"
         else:
             all_times = []
@@ -60,7 +57,6 @@ def main():
                 date_str = "all_time"
 
         if not battles_df.empty:
-            # Instrumental Leaderboard
             inst_df = generate_leaderboard(battles_df, MODELS_METADATA, "instrumental")
             if not inst_df.empty:
                 print("\n--- 🎹 Instrumental Leaderboard ---")
@@ -68,7 +64,6 @@ def main():
                 inst_df.to_csv(f"{OUTPUT_DIR}/leaderboards/instrumental_leaderboard_{date_str}.tsv", sep='\t')
                 plot_leaderboard(inst_df, "Instrumental Leaderboard", f"{OUTPUT_DIR}/plots/instrumental_plot_{date_str}.png")
 
-            # Vocal Leaderboard
             vocal_df = generate_leaderboard(battles_df, MODELS_METADATA, "vocal")
             if not vocal_df.empty:
                 print("\n--- 🎤 Vocal Leaderboard ---")

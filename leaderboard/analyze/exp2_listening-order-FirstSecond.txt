@@ -1,4 +1,4 @@
-Warning: config.py not found. Cannot filter by known models.
+Successfully imported model metadata for filtering.
 Running combined analysis from directory: battle_data...
 
 --- Statistics for 848 Battles (After IQR Outlier Removal) ---
@@ -15,4 +15,4 @@ max                 88.15                42.60
 
 --- 📊 Plotting Listening Time Distribution ---
 
-[INFO] Final distribution plot saved to outputs/analysis/listening_time_by_play_order.png
+[INFO] Final distribution plot saved to outputs/analysis/exp2_listening-order-FirstSecond.png

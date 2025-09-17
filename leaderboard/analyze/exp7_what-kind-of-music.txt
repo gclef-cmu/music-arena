@@ -1,11 +1,11 @@
-Successfully imported model metadata for filtering.
+Warning: config.py not found. Cannot filter by known models.
 Analyzing prompt keywords from directory: battle_logs...
 
-Successfully analyzed 804 user-written prompts from valid, voted battles.
+Successfully analyzed 806 user-written prompts from valid, voted battles.
 
 --- 📝 Top 15 Prompt Keywords (from Voted Battles) ---
 Keyword  Frequency
-   bass        101
+   bass        102
     pop         98
  vocals         81
   piano         70
@@ -22,4 +22,4 @@ melodic         66
  guitar         51
 -----------------------------------------------------
 
-[INFO] Prompt keywords word cloud (voted battles) saved to outputs/analysis/prompt_keywords_wordcloud_voted.png
+[INFO] Prompt keywords word cloud (voted battles) saved to outputs/analysis/exp7_what-kind-of-music.png

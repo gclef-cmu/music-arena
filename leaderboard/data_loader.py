@@ -1,4 +1,3 @@
-# data_loader.py
 import os
 import json
 import pandas as pd
@@ -40,10 +39,8 @@ def download_logs_from_gcs(project_id, bucket_name, download_dir, start_date=Non
         bucket = storage_client.bucket(bucket_name)
         blobs = list(bucket.list_blobs())
         
-        # Get set of already downloaded filenames for quick lookup
         local_files = set(os.listdir(download_dir))
         
-        # Filter blobs by date range if specified
         if start_date and end_date:
             print(f"Filtering files created between {start_date.date()} and {end_date.date()} UTC...")
             blobs = [
@@ -51,7 +48,6 @@ def download_logs_from_gcs(project_id, bucket_name, download_dir, start_date=Non
                 if blob.time_created and start_date <= blob.time_created <= end_date
             ]
 
-        # Filter out files that already exist locally
         new_blobs_to_download = [
             blob for blob in blobs
             if blob.name.endswith(".json") and os.path.basename(blob.name) not in local_files
@@ -105,7 +101,7 @@ def parse_logs(log_dir, start_date=None, end_date=None):
                 if not (start_date <= session_time_dt <= end_date):
                     continue
             else:
-                continue # Skip file if it has no usable timestamp
+                continue
 
         raw_logs.append(data)
 

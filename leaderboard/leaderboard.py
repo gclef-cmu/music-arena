@@ -1,4 +1,3 @@
-# leaderboard.py
 import pandas as pd
 import numpy as np
 from tqdm import tqdm
@@ -11,16 +10,13 @@ def compute_bootstrap_ci(battles_df, n_resamples=100):
     all_scores = {model: [] for model in pd.unique(battles_df[['model_a', 'model_b']].values.ravel('K'))}
 
     for i in tqdm(range(n_resamples), desc="Bootstrap Resampling"):
-        # Create a bootstrap sample by resampling with replacement
         sample_df = battles_df.sample(n=len(battles_df), replace=True)
         
-        # Calculate scores for the sample
         scores = compute_arena_score(sample_df)
         
         for model, score in scores.items():
             all_scores[model].append(score)
             
-    # Calculate the 2.5th and 97.5th percentiles for the 95% CI
     cis = {}
     for model, score_distribution in all_scores.items():
         if score_distribution:
@@ -33,16 +29,13 @@ def generate_leaderboard(battles_df, models_metadata, leaderboard_type="instrume
     """
     Generates the leaderboard DataFrame with corrected filtering logic and includes confidence intervals.
     """
-    # Identify the set of models that support lyrics
     vocal_models = {m for m, meta in models_metadata.items() if meta.get("supports_lyrics")}
 
     if leaderboard_type == "vocal":
-        # Vocal leaderboard: only battles where BOTH models are vocal-supporting
         filtered_df = battles_df[
             battles_df['model_a'].isin(vocal_models) & battles_df['model_b'].isin(vocal_models)
         ].copy()
-    else:  # instrumental
-        # Instrumental leaderboard: ALL battles EXCEPT those between two vocal-supporting models
+    else:
         filtered_df = battles_df[
             ~(battles_df['model_a'].isin(vocal_models) & battles_df['model_b'].isin(vocal_models))
         ].copy()
@@ -53,7 +46,6 @@ def generate_leaderboard(battles_df, models_metadata, leaderboard_type="instrume
     
     models = pd.unique(filtered_df[['model_a', 'model_b']].values.ravel('K'))
     
-    # Calculate main scores, CIs, RTF, and votes on the filtered data
     scores = compute_arena_score(filtered_df)
     confidence_intervals = compute_bootstrap_ci(filtered_df[filtered_df['winner'] != 'tie'])
     rtfs = calculate_rtf(filtered_df, models)
@@ -65,7 +57,6 @@ def generate_leaderboard(battles_df, models_metadata, leaderboard_type="instrume
         ci = confidence_intervals.get(model)
         ci_str = f"+{(ci[1] - main_score):.1f} / -{(main_score - ci[0]):.1f}" if ci and main_score is not None else "N/A"
 
-        # Combine all data points
         model_data = {
             "Model": model, 
             "Arena Score": main_score, 
@@ -80,7 +71,6 @@ def generate_leaderboard(battles_df, models_metadata, leaderboard_type="instrume
     df.index += 1
     df = df.rename_axis("Rank")
     
-    # Formatting
     df['Arena Score'] = df['Arena Score'].round(1)
     if 'Generation Speed (RTF)' in df.columns:
       df['Generation Speed (RTF)'] = df['Generation Speed (RTF)'].round(2)

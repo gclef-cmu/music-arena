@@ -1,4 +1,3 @@
-# visualizer.py
 import matplotlib.pyplot as plt
 import seaborn as sns
 from adjustText import adjust_text
@@ -25,7 +24,6 @@ def plot_leaderboard(leaderboard_df: pd.DataFrame, title: str, filename: str):
     
     markers = {"Open weights": "o", "Proprietary": "^"}
 
-    # Draw the main scatter plot but disable the automatic legend
     sns.scatterplot(
         data=leaderboard_df,
         x="Generation Speed (RTF)",
@@ -38,10 +36,9 @@ def plot_leaderboard(leaderboard_df: pd.DataFrame, title: str, filename: str):
         palette=color_palette,
         edgecolor="black",
         linewidth=0.5,
-        legend=False  # Disable the default legend to create a custom one
+        legend=False
     )
 
-    # --- Axes and Title Formatting ---
     ax.set_xscale('log')
     ax.set_xlabel("Generation Speed (Median RTF, log scale)", fontsize=14, weight='bold')
     ax.set_ylabel("Arena Score", fontsize=14, weight='bold')
@@ -50,7 +47,6 @@ def plot_leaderboard(leaderboard_df: pd.DataFrame, title: str, filename: str):
     ax.grid(True, which='both', linestyle='--', linewidth=0.5, color='gray', alpha=0.5)
     sns.despine(ax=ax)
 
-    # --- Text Annotation (with increased spacing) ---
     texts = []
     for _, row in leaderboard_df.iterrows():
         texts.append(ax.text(
@@ -60,7 +56,6 @@ def plot_leaderboard(leaderboard_df: pd.DataFrame, title: str, filename: str):
             fontsize=11
         ))
     
-    # Adjust text to prevent overlap with more space
     adjust_text(
         texts,
         arrowprops=dict(
@@ -70,28 +65,22 @@ def plot_leaderboard(leaderboard_df: pd.DataFrame, title: str, filename: str):
         )
     )
     
-    # --- Custom Legend Creation ---
-    # Create rectangular patch handles for 'training_data'
     data_handles = [mpatches.Patch(color=color_palette[label], label=label) 
                     for label in color_palette if label in leaderboard_df['training_data'].unique()]
     
-    # Create marker handles for 'Model Type'
     type_handles = [plt.Line2D([0], [0], marker=marker, color='w', label=label,
                       markerfacecolor='gray', markeredgecolor='black', markersize=10)
                     for label, marker in markers.items() if label in leaderboard_df['access'].unique()]
 
-    # Add the two legends separately with custom spacing and titles
     legend1 = ax.legend(handles=data_handles, title='training_data', 
                         bbox_to_anchor=(1.02, 1), loc='upper left', 
                         labelspacing=1.2, title_fontsize=13, fontsize=11)
-    ax.add_artist(legend1) # Add the first legend
+    ax.add_artist(legend1)
     
     ax.legend(handles=type_handles, title='Model Type', 
               bbox_to_anchor=(1.02, 0.65), loc='upper left', 
               labelspacing=1.5, title_fontsize=13, fontsize=11)
 
-
-    # --- Save and Close ---
     plt.savefig(filename, dpi=300, bbox_inches='tight')
     print(f"\n[INFO] Leaderboard plot saved to {filename}")
     plt.close(fig)

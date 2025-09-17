@@ -6,12 +6,10 @@ import matplotlib.pyplot as plt
 import seaborn as sns
 from scipy.stats import pearsonr
 
-# --- 설정 ---
 BATTLE_LOGS_DIR = "battle_data"
 OUTPUT_DIR = "outputs/analysis"
 MIN_GAMES_FOR_ANALYSIS = 10 
 
-# --- 헬퍼 함수 ---
 def sum_listen_time_official(listen_data: list) -> float:
     last_play_timestamp = None
     total_time = 0.0
@@ -30,7 +28,6 @@ def run_full_analysis_with_tables(log_dir: str):
     if not os.path.exists(log_dir):
         print(f"Error: Directory '{log_dir}' not found."); return
 
-    # --- 1. 통합 데이터 수집 ---
     battle_records = []
     log_files = [f for f in os.listdir(log_dir) if f.endswith(".json")]
     for filename in tqdm(log_files, desc="Processing logs"):
@@ -59,7 +56,6 @@ def run_full_analysis_with_tables(log_dir: str):
             continue
     df_battles = pd.DataFrame(battle_records)
 
-    # (통계표 출력 부분은 이전과 동일하게 유지됩니다)
     listen_records = []
     for _, row in df_battles.iterrows():
         listen_records.append({'model': row['model_a'], 'duration': row['duration_a'], 'prompt_type': row['prompt_type']})
@@ -79,7 +75,6 @@ def run_full_analysis_with_tables(log_dir: str):
         final_stats_table = pd.concat([per_model_stats, total_stats])
         print(final_stats_table.round(2).sort_values(by='50%', ascending=False).to_string())
 
-    # --- 3. 모델별 승률 분석 ---
     outcome_records = []
     for _, row in df_battles.iterrows():
         if row['preference'] in ['A', 'B']:
@@ -92,7 +87,6 @@ def run_full_analysis_with_tables(log_dir: str):
     win_rate_stats['win_rate'] = win_rate_stats['wins'] / win_rate_stats['total_games']
     df_win_rate = win_rate_stats[['model', 'prompt_type', 'win_rate', 'total_games']]
 
-    # --- 4. 상관관계 분석 ---
     df_median_listen = df_listen.groupby(['model', 'prompt_type'])['duration'].median().reset_index()
     df_median_listen.rename(columns={'duration': 'median_duration'}, inplace=True)
     df_final = pd.merge(df_median_listen, df_win_rate, on=['model', 'prompt_type'])
@@ -103,9 +97,6 @@ def run_full_analysis_with_tables(log_dir: str):
     
     plt.figure(figsize=(14, 10))
     
-    # --- 수정된 부분 시작 ---
-    
-    # 1. 마커 모양을 직접 지정하는 딕셔너리 생성
     markers = {"Instrumental": "o", "Vocal": "^"}
     
     ax = sns.scatterplot(
@@ -115,11 +106,10 @@ def run_full_analysis_with_tables(log_dir: str):
         hue='prompt_type', 
         alpha=0.8, 
         style='prompt_type',
-        markers=markers, # 마커 지정
+        markers=markers,
         size='total_games', 
         sizes=(50, 500)
     )
-    # --- 수정 끝 ---
 
     for i, row in df_final.iterrows():
         plt.text(row['median_duration'] + 0.5, row['win_rate'], row['model'], fontsize=14)
@@ -131,15 +121,12 @@ def run_full_analysis_with_tables(log_dir: str):
     plt.yticks(fontsize=12)
     plt.grid(True)
 
-    # --- 수정된 부분 시작 ---
-    # 2. 범례(legend)를 재구성하여 'total_games'에 대한 범례를 제거
     handles, labels = ax.get_legend_handles_labels()
-    # 'prompt_type'에 대한 핸들과 라벨만 필터링 (보통 리스트의 앞부분에 위치)
+
     type_legend_indices = [i for i, label in enumerate(labels) if label in ["Prompt Type", "Instrumental", "Vocal"]]
     type_legend_handles = [handles[i] for i in type_legend_indices]
     type_legend_labels = [labels[i] for i in type_legend_indices]
     ax.legend(type_legend_handles, type_legend_labels, title='Prompt Type', title_fontsize=16, fontsize=14)
-    # --- 수정 끝 ---
     
     instrumental_subset = df_final[df_final['prompt_type'] == 'Instrumental']
     vocal_subset = df_final[df_final['prompt_type'] == 'Vocal']
@@ -151,11 +138,14 @@ def run_full_analysis_with_tables(log_dir: str):
         print(f"Pearson Correlation (Vocal): r={corr_vocal:.4f}, p-value={p_vocal:.4f}")
 
     os.makedirs(OUTPUT_DIR, exist_ok=True)
-    filename = os.path.join(OUTPUT_DIR, "win_rate_vs_listen_time_final.png")
+    filename = os.path.join(OUTPUT_DIR, "exp3_engagement-preference.png")
     plt.savefig(filename, dpi=300)
     print(f"\n[INFO] Final correlation plot saved to {filename}")
     plt.close()
 
-# --- 스크립트 실행 ---
 if __name__ == "__main__":
     run_full_analysis_with_tables(BATTLE_LOGS_DIR)
+    
+"""
+python analyze/exp3_engagement-preference.py > analyze/exp3_engagement-preference.txt
+"""

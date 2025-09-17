@@ -1,4 +1,4 @@
-Warning: config.py not found. Cannot filter by known models.
+Successfully imported model metadata for filtering.
 Analyzing listening times from local directory: battle_data...
 
 --- Listening Time Statistics (Raw Data from Valid Battles) ---
@@ -32,4 +32,4 @@ max      88.15    46.76
 
 --- 📊 Plotting Listening Time Distribution ---
 
-[INFO] Distribution plot (IQR filtered) saved to outputs/analysis/listening_time_distribution_iqr.png
+[INFO] Distribution plot (IQR filtered) saved to outputs/analysis/exp2_listening-order-AB.png
