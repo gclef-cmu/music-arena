@@ -5,7 +5,7 @@ from config import GCP_PROJECT_ID, METADATA_BUCKET_NAME, BATTLE_LOGS_DIR, OUTPUT
 from data_loader import download_logs_from_gcs, parse_logs
 from analysis import analyze_battle_stats
 from leaderboard import generate_leaderboard
-from visualizer import plot_leaderboard
+from visualizer import plot_leaderboard, plot_combined_leaderboard
 
 def main():
     parser = argparse.ArgumentParser(description="A modular script to download, analyze, and generate leaderboards for Music Arena.")
@@ -71,6 +71,11 @@ def main():
                 vocal_df.to_csv(f"{OUTPUT_DIR}/leaderboards/vocal_leaderboard_{date_str}.tsv", sep='\t')
                 plot_leaderboard(vocal_df, "Vocal Leaderboard", f"{OUTPUT_DIR}/plots/vocal_plot_{date_str}.png")
 
-
+            if not inst_df.empty and not vocal_df.empty:
+                plot_combined_leaderboard(
+                    inst_df, 
+                    vocal_df, 
+                    f"{OUTPUT_DIR}/plots/combined_plot_{date_str}.png"
+                )
 if __name__ == "__main__":
     main()

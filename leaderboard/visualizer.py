@@ -4,16 +4,14 @@ from adjustText import adjust_text
 import pandas as pd
 import matplotlib.patches as mpatches
 
-def plot_leaderboard(leaderboard_df: pd.DataFrame, title: str, filename: str):
+def _plot_on_ax(ax, leaderboard_df: pd.DataFrame, title: str):
     """
-    Creates a publication-quality plot with legends and label spacing.
+    A helper function that draws a single, publication-quality leaderboard plot onto a given Matplotlib axis.
     """
     if leaderboard_df.empty:
-        print(f"Cannot plot empty leaderboard for '{title}'.")
+        ax.text(0.5, 0.5, f"No data for '{title}'", ha='center', va='center')
+        ax.set_title(title, fontsize=18, weight='bold', pad=20)
         return
-
-    plt.style.use('seaborn-v0_8-ticks')
-    fig, ax = plt.subplots(figsize=(12, 8))
 
     color_palette = {
         "Unspecified": "#BBBBBB", # Grey
@@ -21,7 +19,6 @@ def plot_leaderboard(leaderboard_df: pd.DataFrame, title: str, filename: str):
         "Open": "#77AADD",        # Blue
         "Commercial": "#EE3377"   # Magenta
     }
-    
     markers = {"Open weights": "o", "Proprietary": "^"}
 
     sns.scatterplot(
@@ -58,6 +55,7 @@ def plot_leaderboard(leaderboard_df: pd.DataFrame, title: str, filename: str):
     
     adjust_text(
         texts,
+        ax=ax, # Specify the axis for adjust_text
         arrowprops=dict(
             arrowstyle='-', 
             color='gray', 
@@ -81,6 +79,35 @@ def plot_leaderboard(leaderboard_df: pd.DataFrame, title: str, filename: str):
               bbox_to_anchor=(1.02, 0.65), loc='upper left', 
               labelspacing=1.5, title_fontsize=13, fontsize=11)
 
+def plot_leaderboard(leaderboard_df: pd.DataFrame, title: str, filename: str):
+    """
+    Creates a single publication-quality plot by calling the helper function.
+    """
+    plt.style.use('seaborn-v0_8-ticks')
+    fig, ax = plt.subplots(figsize=(12, 8))
+    
+    _plot_on_ax(ax, leaderboard_df, title)
+    
     plt.savefig(filename, dpi=300, bbox_inches='tight')
     print(f"\n[INFO] Leaderboard plot saved to {filename}")
+    plt.close(fig)
+    
+def plot_combined_leaderboard(inst_df: pd.DataFrame, vocal_df: pd.DataFrame, filename: str):
+    """
+    Generates and saves a combined plot with instrumental and vocal leaderboards side-by-side.
+    """
+    plt.style.use('seaborn-v0_8-ticks')
+    # Use a wider figure size to accommodate two plots and their legends
+    fig, axes = plt.subplots(1, 2, figsize=(24, 9))
+    
+    # Call the helper function for each subplot
+    _plot_on_ax(axes[0], inst_df, "Instrumental Leaderboard")
+    _plot_on_ax(axes[1], vocal_df, "Vocal Leaderboard")
+
+    fig.suptitle("Music Arena Leaderboards", fontsize=22, weight='bold')
+    # Use tight_layout to adjust spacing between subplots
+    plt.tight_layout(rect=[0, 0.03, 1, 0.95])
+    
+    plt.savefig(filename, dpi=300, bbox_inches='tight')
+    print(f"\n[INFO] Combined plot saved to {filename}")
     plt.close(fig)

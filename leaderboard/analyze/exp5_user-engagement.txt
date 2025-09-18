@@ -1,0 +1,20 @@
+--- 🚀 Starting User Engagement Analysis ---
+
+Found 1051 valid votes from 373 unique users.
+
+--- 📊 User Vote Distribution Table ---
+🏆 Power User identified: User ending in ...83b3ef submitted 49 votes.
+Number of Votes  Number of Users
+              1              193
+              2               72
+              3               44
+              4               24
+              5                8
+           6-10               18
+          11-20               10
+          21-50                4
+
+--- 📈 Generating Engagement vs. Length of Stay Plot ---
+[INFO] Plot saved to outputs/analysis/exp5_user-engagement.png
+
+--- ✅ Analysis Complete ---

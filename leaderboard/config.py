@@ -28,11 +28,11 @@ MODELS_METADATA = {
         "supports_lyrics": True, "access": "Open weights"
     },
     "riffusion-fuzz-1-0": {
-        "organization": "Riffusion", "license": "Closed", "training_data": "Commercial",
+        "organization": "Riffusion", "license": "Closed", "training_data": "Unspecified",
         "supports_lyrics": True, "access": "Proprietary"
     },
     "riffusion-fuzz-1-1": {
-        "organization": "Riffusion", "license": "Closed", "training_data": "Commercial",
+        "organization": "Riffusion", "license": "Closed", "training_data": "Unspecified",
         "supports_lyrics": True, "access": "Proprietary"
     },
     "preview-ocelot": {
