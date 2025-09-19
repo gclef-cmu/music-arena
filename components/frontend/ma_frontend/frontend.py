@@ -1,6 +1,7 @@
 """Simplified gradio demo server for Music Arena."""
 
 import argparse
+import datetime
 import functools
 import logging
 import pathlib
@@ -9,6 +10,7 @@ import time
 from typing import Optional
 
 import gradio as gr
+import pandas as pd
 
 from music_arena.dataclass import (
     Battle,
@@ -33,7 +35,7 @@ _LOGGER = logging.getLogger(__name__)
 _LOGGER.info(f"Using BACKEND_URL={G.URL}")
 
 STATIC_DIR = pathlib.Path(__file__).parent / "static"
-
+LEADERBOARD_DIR = pathlib.Path(__file__).parent / "leaderboard"
 
 # Helpers
 
@@ -1205,6 +1207,69 @@ def build_ui_battle(debug=False):
     }
 
 
+def build_ui_leaderboard(debug=False):
+    """Build the complete leaderboard interface"""
+    _LOGGER.info("Building leaderboard UI")
+    ui = {}
+
+    # Load latest data
+    latest_dir = None
+    if len(list(LEADERBOARD_DIR.iterdir())) == 0:
+        gr.Markdown(C.LEADERBOARD_UNAVAILABLE_MD)
+        return ui
+    latest_dir = sorted(LEADERBOARD_DIR.iterdir(), key=lambda x: x.name)[-1]
+    latest_date = datetime.datetime.strptime(latest_dir.name, "%Y%m%d")
+
+    def _prefix_to_file(prefix: str) -> pathlib.Path:
+        relevant_files = list(latest_dir.glob(f"{prefix}*"))
+        if len(relevant_files) == 0:
+            raise Exception(f"No files found for prefix {prefix}")
+        return relevant_files[0]
+
+    def _df_from_tsv(path: pathlib.Path) -> pd.DataFrame:
+        tsv_header_to_ui_header = {
+            "Rank": "Rank",
+            "Model": "Model",
+            "Arena Score": "Arena Score",
+            "95% CI": "95% CI",
+            "# Votes": "# Votes",
+            "Generation Speed (RTF)": "Speed (RTF)",
+            "organization": "Organization",
+            "training_data": "Training Data",
+            "access": "Access",
+        }
+        df = pd.read_csv(path, sep="\t")
+        df = df.rename(columns=tsv_header_to_ui_header)
+        return df[list(tsv_header_to_ui_header.values())]
+
+    gr.Markdown(
+        C.LEADERBOARD_MD.format(latest_date_str=latest_date.strftime("%Y-%m-%d"))
+    )
+
+    with gr.Tabs():
+        with gr.TabItem("🎹 Instrumental"):
+            instrumental_board = gr.DataFrame(
+                _df_from_tsv(_prefix_to_file("instrumental_leaderboard")),
+            )
+            instrumental_plot = gr.Image(
+                _prefix_to_file("instrumental_plot"), label="Quality vs. Speed Tradeoff"
+            )
+        with gr.TabItem("🎤 Vocal"):
+            vocal_board = gr.DataFrame(
+                _df_from_tsv(_prefix_to_file("vocal_leaderboard")),
+            )
+            vocal_plot = gr.Image(
+                _prefix_to_file("vocal_plot"), label="Quality vs. Speed Tradeoff"
+            )
+
+    return {
+        "instrumental_board": instrumental_board,
+        "vocal_board": vocal_board,
+        "instrumental_plot": instrumental_plot,
+        "vocal_plot": vocal_plot,
+    }
+
+
 def build_ui(debug=False):
     """Build the complete demo interface"""
     _LOGGER.info("Building demo UI")
@@ -1230,9 +1295,12 @@ def build_ui(debug=False):
                 gr.Markdown(C.GATEWAY_UNAVAILABLE_MD)
             ui["no_gateway"] = {"rows": [row_no_gateway]}
 
+        # Build leaderboard UI
         with gr.TabItem(C.TAB_LEADERBOARD, elem_id="tab-leaderboard"):
-            gr.Markdown(C.LEADERBOARD_COMING_SOON_MD)
+            _LOGGER.info("Building Leaderboard UI")
+            ui["leaderboard"] = build_ui_leaderboard(debug=debug)
 
+        # Build about UI
         with gr.TabItem(C.TAB_ABOUT, elem_id="tab-about"):
             gr.Markdown(C.ABOUT_MD, elem_id="about-markdown")
 

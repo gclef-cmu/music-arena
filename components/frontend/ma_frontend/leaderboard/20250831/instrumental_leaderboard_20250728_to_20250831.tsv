@@ -1,0 +1,6 @@
+Rank	Model	Arena Score	95% CI	# Votes	Generation Speed (RTF)	organization	license	training_data	supports_lyrics	access
+1	riffusion-fuzz-1-1	1250.8	+72.9 / -62.9	252	6.01	Riffusion	Closed	Unspecified	True	Proprietary
+2	magenta-rt-large	1113.6	+48.2 / -29.7	276	1.01	Google DeepMind	Apache 2.0	Stock	False	Open weights
+3	musicgen-small	928.5	+36.2 / -36.7	278	0.86	Meta	CC-BY-NC 4.0	Stock	False	Open weights
+4	sao	924.7	+35.2 / -60.8	286	2.63	Stability AI	STAI Community	Open	False	Open weights
+5	sao-small	782.4	+57.7 / -51.8	292	12.79	Stability AI	STAI Community	Open	False	Open weights

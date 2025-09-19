@@ -201,12 +201,16 @@ NEEDS_ACK_TOS_MD = """
 You need to accept our terms of service before using Music Arena. Please refresh this page if you wish to accept the terms.
 """.strip()
 
-LEADERBOARD_COMING_SOON_MD = """
+LEADERBOARD_UNAVAILABLE_MD = """
 ## 📊 Model Leaderboard
 
-### Coming soon!
+The leaderboard is not available yet. Please check back later.
+""".strip()
 
-We're working hard to bring you comprehensive leaderboard data. Check back soon to see how different music AI models stack up against each other based on community votes!
+LEADERBOARD_MD = """
+## 📊 Model Leaderboard
+
+The leaderboard is generated periodically from user votes. The data shown here includes votes through {latest_date_str}.
 """.strip()
 
 TERMS_OF_SERVICE_MODAL_INSTRUCTIONS = f"""
