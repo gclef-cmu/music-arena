@@ -10,7 +10,7 @@ def main():
     parser.add_argument("system_key", type=str)
     parser.add_argument("-s", "--skip_build", action="store_true")
     parser.add_argument("-g", "--gpu_id", type=str)
-    parser.add_argument("--port", type=int)
+    parser.add_argument("-p", "--port", type=int)
     parser.add_argument("cmd", type=str)
     args, unknown_args = parser.parse_known_args()
 
