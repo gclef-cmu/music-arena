@@ -1,0 +1,6 @@
+Rank	Model	Arena Score	95% CI	# Votes	Generation Speed (RTF)	organization	license	training_data	supports_lyrics	access
+1	riffusion-fuzz-1-0	1153.2	+73.1 / -81.2	215	5.82	Producer.ai	Closed	Unspecified	True	Proprietary
+2	riffusion-fuzz-1-1	1112.1	+53.1 / -36.5	346	5.39	Producer.ai	Closed	Unspecified	True	Proprietary
+3	preview-jerboa	1053.7	+80.4 / -88.0	127	5.87	Hidden	Closed	Unspecified	True	Proprietary
+4	preview-ocelot	1051.4	+72.8 / -73.0	134	5.36	Hidden	Closed	Unspecified	True	Proprietary
+5	acestep	629.5	+82.4 / -120.5	282	3.0	ACE Studio	Apache 2.0	Unspecified	True	Open weights
