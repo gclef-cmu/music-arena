@@ -311,7 +311,7 @@ lyria-rt:
 # =============================================================================
 
 riffusion-fuzz-1-0:
-  display_name: "Riffusion FUZZ 1.0"
+  display_name: "Riffusion FUZZ v1.0"
   description: "FUZZ is a diffusion transformer for creating and editing music."
   organization: "Producer.ai"
   access: "PROPRIETARY"
@@ -328,7 +328,7 @@ riffusion-fuzz-1-0:
         api_tag: "FUZZ 1.0"
 
 riffusion-fuzz-1-1:
-  display_name: "Riffusion FUZZ 1.1"
+  display_name: "Riffusion FUZZ v1.1"
   description: "The latest version of FUZZ."
   organization: "Producer.ai"
   access: "PROPRIETARY"
@@ -344,8 +344,8 @@ riffusion-fuzz-1-1:
       init_kwargs:
         api_tag: "FUZZ 1.1"
 
-sonauto-v2:
-  display_name: "Sonauto V2"
+sonauto-v2-2:
+  display_name: "Sonauto v2.2"
   description: "An unlimited free AI music generator with lyrics."
   organization: "Sonauto"
   access: "PROPRIETARY"
@@ -360,7 +360,7 @@ sonauto-v2:
         - "SONAUTO_API_KEY"
 
 elevenlabs-music-v1:
-  display_name: "ElevenLabs Music V1"
+  display_name: "ElevenLabs Music v1"
   description: "Generate studio-quality tracks instantly, any genre, any style, vocals or instrumental, in minutes using simple text prompts."
   organization: "ElevenLabs"
   access: "PROPRIETARY"
