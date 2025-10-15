@@ -344,6 +344,21 @@ riffusion-fuzz-1-1:
       init_kwargs:
         api_tag: "FUZZ 1.1"
 
+sonauto-v2:
+  display_name: "Sonauto V2"
+  description: "An unlimited free AI music generator with lyrics."
+  organization: "Sonauto"
+  access: "PROPRIETARY"
+  supports_lyrics: true
+  links:
+    home: "https://sonauto.ai"
+  variants:
+    "initial":
+      module_name: "sonauto"
+      class_name: "Sonauto"
+      secrets:
+        - "SONAUTO_API_KEY"
+
 # =============================================================================
 # DSP systems for testing
 # =============================================================================

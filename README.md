@@ -285,3 +285,4 @@ ma-chat lyrics --config 4o-v00 --prompt_path io/example.json
 - Clean up inconsistency between some classes having `TextToMusic*` prefix and some not
 - Make the gateway call System.prompt_supported() instead of System.supports_lyrics
 - Change supports_lyrics to instrumental_only?
+- Add BPM control to chat routing (Sonauto supports)

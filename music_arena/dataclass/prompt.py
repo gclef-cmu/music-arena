@@ -32,6 +32,7 @@ class DetailedTextToMusicPrompt(BasePrompt):
     instrumental: bool
     lyrics: Optional[str] = None
     duration: Optional[float] = None
+    bpm: Optional[float] = None
 
     def __post_init__(self):
         if self.instrumental and self.lyrics is not None:

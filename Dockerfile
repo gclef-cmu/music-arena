@@ -38,7 +38,8 @@ RUN apt-get update --fix-missing && apt-get install -y --no-install-recommends \
     python3-pip \
     && rm -rf /var/lib/apt/lists/*
 RUN [ ! -f /usr/local/bin/python ] && ln -s $(which python3) /usr/local/bin/python || true
-RUN python -m pip install --no-cache-dir --upgrade pip
+ENV PIP_NO_CACHE_DIR=1
+RUN python -m pip install --upgrade pip
 #RUN python -c "import sys; assert sys.version_info.major == 3 and sys.version_info.minor == 10"
 
 # Create placeholder for music_arena
@@ -47,7 +48,7 @@ ENV MUSIC_ARENA_LIB_DIR=${MUSIC_ARENA_REPO_DIR}/music_arena
 RUN mkdir -p ${MUSIC_ARENA_LIB_DIR}
 RUN touch ${MUSIC_ARENA_LIB_DIR}/__init__.py
 COPY setup.py ${MUSIC_ARENA_REPO_DIR}/setup.py
-RUN python -m pip install --no-cache-dir -e ${MUSIC_ARENA_REPO_DIR}
+RUN python -m pip install -e ${MUSIC_ARENA_REPO_DIR}
 ENV MUSIC_ARENA_IO_DIR=${MUSIC_ARENA_REPO_DIR}/io
 RUN mkdir -p ${MUSIC_ARENA_IO_DIR}
 ENV MUSIC_ARENA_SYSTEMS_DIR=${MUSIC_ARENA_REPO_DIR}/systems
