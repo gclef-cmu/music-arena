@@ -359,6 +359,26 @@ sonauto-v2:
       secrets:
         - "SONAUTO_API_KEY"
 
+elevenlabs-music-v1:
+  display_name: "ElevenLabs Music V1"
+  description: "Generate studio-quality tracks instantly, any genre, any style, vocals or instrumental, in minutes using simple text prompts."
+  organization: "ElevenLabs"
+  access: "PROPRIETARY"
+  supports_lyrics: true
+  training_data:
+    type: "Licensed"
+  links:
+    home: "https://elevenlabs.io"
+  variants:
+    "initial":
+      module_name: "elevenlabs"
+      class_name: "ElevenLabsMusic"
+      init_kwargs:
+        model_id: "music_v1"
+        output_format: "pcm_44100"
+      secrets:
+        - "ELEVENLABS_API_KEY"
+
 # =============================================================================
 # DSP systems for testing
 # =============================================================================
