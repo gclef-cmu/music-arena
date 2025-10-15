@@ -14,7 +14,7 @@ musicgen-small:
   supports_lyrics: false
   model_type: "Codec Language Model"
   training_data:
-    type: "Licensed Stock"
+    type: "Stock"
     sources:
       - "Internal"
       - "ShutterStock"
@@ -38,7 +38,7 @@ musicgen-medium:
   supports_lyrics: false
   model_type: "Codec Language Model"
   training_data:
-    type: "Licensed Stock"
+    type: "Stock"
     sources:
       - "Internal"
       - "ShutterStock"
@@ -62,7 +62,7 @@ musicgen-large:
   supports_lyrics: false
   model_type: "Codec Language Model"
   training_data:
-    type: "Licensed Stock"
+    type: "Stock"
     sources:
       - "Internal"
       - "ShutterStock"
@@ -169,7 +169,7 @@ magenta-rt-base:
   supports_lyrics: false
   model_type: "Codec Language Model"
   training_data:
-    type: "Unspecified"
+    type: "Stock"
   links:
     home: "https://magenta.withgoogle.com/magenta-realtime"
   variants:
@@ -190,7 +190,7 @@ magenta-rt-large:
   supports_lyrics: false
   model_type: "Codec Language Model"
   training_data:
-    type: "Unspecified"
+    type: "Stock"
   links:
     home: "https://magenta.withgoogle.com/magenta-realtime"
   variants:
@@ -273,7 +273,7 @@ sa2:
   supports_lyrics: false
   model_type: "Latent Diffusion"
   training_data:
-    type: "Licensed Stock"
+    type: "Stock"
     sources:
       - "AudioSparx"
   links:
@@ -313,7 +313,7 @@ lyria-rt:
 riffusion-fuzz-1-0:
   display_name: "Riffusion FUZZ 1.0"
   description: "FUZZ is a diffusion transformer for creating and editing music."
-  organization: "Riffusion"
+  organization: "Producer.ai"
   access: "PROPRIETARY"
   supports_lyrics: true
   links:
@@ -330,7 +330,7 @@ riffusion-fuzz-1-0:
 riffusion-fuzz-1-1:
   display_name: "Riffusion FUZZ 1.1"
   description: "The latest version of FUZZ."
-  organization: "Riffusion"
+  organization: "Producer.ai"
   access: "PROPRIETARY"
   supports_lyrics: true
   links:
