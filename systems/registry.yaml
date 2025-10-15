@@ -350,6 +350,7 @@ sonauto-v2-2:
   organization: "Sonauto"
   access: "PROPRIETARY"
   supports_lyrics: true
+  model_type: "Latent Diffusion"
   links:
     home: "https://sonauto.ai"
   variants:
@@ -369,6 +370,7 @@ elevenlabs-music-v1:
     type: "Licensed"
   links:
     home: "https://elevenlabs.io"
+  release_audio_publicly: false
   variants:
     "initial":
       module_name: "elevenlabs"
