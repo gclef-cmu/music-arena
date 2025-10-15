@@ -317,7 +317,7 @@ riffusion-fuzz-1-0:
   access: "PROPRIETARY"
   supports_lyrics: true
   links:
-    home: "https://www.riffusion.com"
+    home: "https://www.producer.ai"
   variants:
     "initial":
       module_name: "riffusion"
@@ -334,7 +334,7 @@ riffusion-fuzz-1-1:
   access: "PROPRIETARY"
   supports_lyrics: true
   links:
-    home: "https://www.riffusion.com"
+    home: "https://www.producer.ai"
   variants:
     "initial":
       module_name: "riffusion"
