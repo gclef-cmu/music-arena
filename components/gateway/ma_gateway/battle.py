@@ -69,16 +69,8 @@ class BattleGenerator:
         # TODO: This logic is only meant for our initial launch. Need to refine down the road.
         if prompt.instrumental:
             # Filter pairs to those where at most one system supports lyrics
-            qualifying_pairs = []
-            qualifying_weights = []
-            for pair, weight in self.weights.items():
-                system_a, system_b = pair
-                total_supporting_lyrics = int(
-                    self.systems[system_a].supports_lyrics
-                ) + int(self.systems[system_b].supports_lyrics)
-                if total_supporting_lyrics <= 1:
-                    qualifying_pairs.append(pair)
-                    qualifying_weights.append(weight)
+            qualifying_pairs = [pair for pair in self.weights.keys()]
+            qualifying_weights = [weight for weight in self.weights.values()]
         else:
             # Filter pairs to only those where both systems support lyrics
             qualifying_pairs = []

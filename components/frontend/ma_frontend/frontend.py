@@ -283,9 +283,15 @@ def handle_generate(session, user, raw_prompt, detailed_prompt, debug=False):
 
     # Parse result
     if battle.prompt_detailed.generate_lyrics:
+        a_lyrics = battle.a_metadata.lyrics
+        if a_lyrics is None:
+            a_lyrics = ""
+        b_lyrics = battle.b_metadata.lyrics
+        if b_lyrics is None:
+            b_lyrics = ""
         generated_lyrics = [
-            C.LYRICS_A_LABEL + battle.a_metadata.lyrics,
-            C.LYRICS_B_LABEL + battle.b_metadata.lyrics,
+            C.LYRICS_A_LABEL + a_lyrics,
+            C.LYRICS_B_LABEL + b_lyrics,
         ]
     else:
         generated_lyrics = ["", ""]
