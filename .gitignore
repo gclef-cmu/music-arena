@@ -8,3 +8,4 @@ deploy/*.yaml
 old/
 io/
 systems_private/
+cache/
