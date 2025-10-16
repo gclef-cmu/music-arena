@@ -56,12 +56,17 @@ def _parse_musicarena_type(data: dict, key: str, type: type, required: list[str]
     except KeyError:
         raise HTTPException(status_code=400, detail=f"{key} is required")
     except TypeError:
-        raise HTTPException(status_code=400, detail=f"{key} data must be a dictionary")
+        raise HTTPException(
+            status_code=400,
+            detail=f"{key} type error, possibly due to version mismatch",
+        )
     except ValueError as e:
         raise HTTPException(status_code=400, detail=f"Invalid {key} data: {str(e)}")
-    if any(getattr(result, attr) is None for attr in required):
+    missing_fields = [attr for attr in required if getattr(result, attr) is None]
+    if len(missing_fields) > 0:
         raise HTTPException(
-            status_code=400, detail=f"{key} is missing required fields: {required}"
+            status_code=400,
+            detail=f"{key} is missing required fields: {missing_fields}",
         )
     return result
 
@@ -169,7 +174,7 @@ async def generate_battle(data: dict):
         data,
         "session",
         Session,
-        required=["uuid", "create_time", "frontend_git_hash", "ack_tos"],
+        required=["deployment", "uuid", "create_time", "frontend_git_hash", "ack_tos"],
     )
     user = _parse_musicarena_type(data, "user", User)
     if data.get("prompt_detailed") is not None:
@@ -255,7 +260,7 @@ def record_vote(data: dict):
         data,
         "session",
         Session,
-        required=["uuid", "create_time", "frontend_git_hash", "ack_tos"],
+        required=["deployment", "uuid", "create_time", "frontend_git_hash", "ack_tos"],
     )
     user = _parse_musicarena_type(data, "user", User)
     battle_uuid = data.get("battle_uuid")

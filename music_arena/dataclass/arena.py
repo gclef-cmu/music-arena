@@ -29,6 +29,7 @@ class ListenEvent(Enum):
 
 @dataclass
 class Session(MusicArenaDataClass):
+    deployment: Optional[str] = None
     uuid: Optional[str] = None
     create_time: Optional[float] = None
     frontend_git_hash: Optional[str] = None

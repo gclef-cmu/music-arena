@@ -92,8 +92,8 @@ def set_visible(session, criteria, name, negate, num_elements):
 # Setup callbacks
 
 
-def onload_init_session():
-    session = Session()
+def onload_init_session(deployment: str):
+    session = Session(deployment=deployment)
     logger = get_battle_logger("onload_init_session", session=session)
     logger.info(f"Initialized session={session}")
     return session
@@ -794,7 +794,7 @@ def bind_ui_events(ui, state, debug=False):
     )
 
 
-def bind_onload_events(demo, state, ui, debug=False):
+def bind_onload_events(deployment: str, demo, state, ui, debug=False):
     _LOGGER.info("Setting up onload handlers")
 
     # Shorthands
@@ -803,7 +803,7 @@ def bind_onload_events(demo, state, ui, debug=False):
 
     # Create new session
     onsession = demo.load(
-        onload_init_session,
+        functools.partial(onload_init_session, deployment=deployment),
         outputs=s["session"],
     )
 
@@ -1343,7 +1343,7 @@ def build_ui(debug=False):
     return ui
 
 
-def build_demo(debug=False):
+def build_demo(deployment: str, debug: bool = False):
     """Build the complete demo interface"""
     # Build UI
     _LOGGER.info("Building demo")
@@ -1374,7 +1374,9 @@ def build_demo(debug=False):
 
         # Bind event handlers that run on load
         _LOGGER.info("Binding onload event handlers")
-        bind_onload_events(demo=demo, ui=ui, state=state, debug=debug)
+        bind_onload_events(
+            deployment=deployment, demo=demo, ui=ui, state=state, debug=debug
+        )
 
         # Bind event handlers that run on UI events
         _LOGGER.info("Binding UI event handlers")
@@ -1387,6 +1389,12 @@ if __name__ == "__main__":
     parser = argparse.ArgumentParser()
     parser.add_argument("--host", type=str, default="0.0.0.0")
     parser.add_argument("--port", type=int, default=8080)
+    parser.add_argument(
+        "--deployment",
+        type=str,
+        default="dev",
+        choices=["dev", "huggingface.co", "music-arena.org"],
+    )
     parser.add_argument(
         "--share", action="store_true", help="Generate a public, shareable link"
     )
@@ -1414,7 +1422,7 @@ if __name__ == "__main__":
     args = parser.parse_args()
     _LOGGER.info(f"Starting with args: {args}")
 
-    demo = build_demo(debug=args.debug)
+    demo = build_demo(deployment=args.deployment, debug=args.debug)
     _LOGGER.info("Demo built")
 
     if args.queue:
