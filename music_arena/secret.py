@@ -34,6 +34,8 @@ def get_secret_json(tag: str) -> dict:
 def get_secret(tag: str, randomly_initialize: bool = False) -> str:
     tag_with_prefix = get_secret_var_name(tag)
     secrets_path = _SECRETS_DIR / f"{tag}.txt"
+    for k, v in os.environ.items():
+        print(k, v)
     if tag_with_prefix in os.environ:
         # Grab from environment override if defined
         secret = os.environ[tag_with_prefix]
