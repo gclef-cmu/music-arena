@@ -26,7 +26,6 @@ def get_secret_json(tag: str) -> dict:
             raise ValueError(f"JSON path for tag {tag} not found")
         secret = json.load(open(json_path))
     if not secrets_path.exists():
-        # secrets_path.parent.mkdir(parents=True, exist_ok=True)
         secrets_path.write_text(json.dumps(secret, indent=2))
     return secret
 
@@ -35,12 +34,6 @@ def get_secret_json(tag: str) -> dict:
 def get_secret(tag: str, randomly_initialize: bool = False) -> str:
     tag_with_prefix = get_secret_var_name(tag)
     secrets_path = _SECRETS_DIR / f"{tag}.txt"
-    import logging
-
-    logging.info(f"tag_with_prefix = {tag_with_prefix}")
-    logging.info(f"secrets_path = {secrets_path}")
-    for k, v in os.environ.items():
-        logging.info(f"{k} = {v}")
     if tag_with_prefix in os.environ:
         # Grab from environment override if defined
         secret = os.environ[tag_with_prefix]
@@ -59,6 +52,5 @@ def get_secret(tag: str, randomly_initialize: bool = False) -> str:
                 raise ValueError(f"Secret for tag {tag} not found")
     # Cache the secret
     if not secrets_path.exists():
-        # secrets_path.parent.mkdir(parents=True, exist_ok=True)
         secrets_path.write_text(secret)
     return secret
