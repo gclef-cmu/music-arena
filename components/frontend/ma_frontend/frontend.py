@@ -92,8 +92,8 @@ def set_visible(session, criteria, name, negate, num_elements):
 # Setup callbacks
 
 
-def onload_init_session():
-    session = Session()
+def onload_init_session(deployment: str):
+    session = Session(deployment=deployment)
     logger = get_battle_logger("onload_init_session", session=session)
     logger.info(f"Initialized session={session}")
     return session
