@@ -56,7 +56,10 @@ def _parse_musicarena_type(data: dict, key: str, type: type, required: list[str]
     except KeyError:
         raise HTTPException(status_code=400, detail=f"{key} is required")
     except TypeError:
-        raise HTTPException(status_code=400, detail=f"{key} data must be a dictionary")
+        raise HTTPException(
+            status_code=400,
+            detail=f"{key} type error, possibly due to version mismatch",
+        )
     except ValueError as e:
         raise HTTPException(status_code=400, detail=f"Invalid {key} data: {str(e)}")
     missing_fields = [attr for attr in required if getattr(result, attr) is None]
