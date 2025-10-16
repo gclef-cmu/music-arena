@@ -54,3 +54,8 @@ def check_gpu_memory_gb(device_id: int = 0) -> dict[str, float]:
     used, free, total = map(lambda x: round(int(x) / 1024, 2), output.split(", "))
 
     return {"used": used, "available": free, "total": total}
+
+
+# Set CONTAINER_HOST_GIT_HASH if not already set
+if EXECUTING_IN_CONTAINER and CONTAINER_HOST_GIT_HASH is None:
+    CONTAINER_HOST_GIT_HASH = get_git_summary()
