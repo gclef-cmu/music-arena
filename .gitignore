@@ -2,7 +2,7 @@
 .venv
 .vscode
 __pycache__
-music_arena.egg-info/
+*.egg-info/
 deploy/*.yaml
 *.sh
 old/
