@@ -174,7 +174,7 @@ ARENA_MD = """
 ARENA_ABOUT_MD = f"""
 **Music Arena** is a free platform for evaluating and comparing AI music generation models. Type a text prompt for any music you can imagine and press "{GENERATE_BUTTON_LABEL}"! Music Arena will even generate lyrics for you if your prompt implies that you want them.
 
-Music Arena is an _academic research project_ operated by the [Generative Creativity Lab (G-CLef)](https://chrisdonahue.com/#group) at Carnegie Mellon University. Our primary goals are to provide rigorous evaluation for music generation models, and to provide an open and renewable source of music generation preference data for the research community. See our [paper]({PAPER_URL}) for more details.
+Music Arena is an _academic research project_ operated by the [Generative Creativity Lab (G-CLef)](https://gclef-cmu.org) at Carnegie Mellon University. Our primary goals are to provide rigorous evaluation for music generation models, and to provide an open and renewable source of music generation preference data for the research community. See our [paper]({PAPER_URL}) for more details.
 
 **How to participate**:
 
@@ -319,7 +319,7 @@ ABOUT_MD = f"""
 
 Welcome to Music Arena! This platform ranks Text-to-Music AI models based on crowdsourced human preferences. Models are evaluated in head-to-head battles, and their Elo ratings are updated dynamically. Explore the top models, their performance metrics, and learn more about their capabilities.
 
-Music Arena is an _academic research project_ operated by the [Generative Creativity Lab (G-CLef)](https://chrisdonahue.com/#group) at Carnegie Mellon University. Our primary goals are to provide rigorous evaluation for music generation models, and to provide an open and renewable source of music generation preference data for the research community. See our [paper]({PAPER_URL}) for more details.
+Music Arena is an _academic research project_ operated by the [Generative Creativity Lab (G-CLef)](https://gclef-cmu.org) at Carnegie Mellon University. Our primary goals are to provide rigorous evaluation for music generation models, and to provide an open and renewable source of music generation preference data for the research community. See our [paper]({PAPER_URL}) for more details.
 
 Music Arena is approved by CMU's Institutional Review Board under Protocol `STUDY2024_00000489`.
 
