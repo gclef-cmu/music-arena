@@ -5,7 +5,12 @@ from dataclasses import dataclass, field
 from enum import Enum
 from typing import Any, Literal, Optional
 
-from ..env import CONTAINER_COMPONENT, CONTAINER_HOST_GIT_HASH, EXECUTING_IN_CONTAINER
+from ..env import (
+    CONTAINER_COMPONENT,
+    CONTAINER_HOST_GIT_HASH,
+    EXECUTING_IN_CONTAINER,
+    get_git_summary,
+)
 from ..helper import create_uuid, salted_checksum
 from ..secret import get_secret
 from .base import MusicArenaDataClass
@@ -45,9 +50,11 @@ class Session(MusicArenaDataClass):
             self.frontend_git_hash is None
             and EXECUTING_IN_CONTAINER
             and CONTAINER_COMPONENT == "frontend"
-            and CONTAINER_HOST_GIT_HASH is not None
         ):
-            self.frontend_git_hash = CONTAINER_HOST_GIT_HASH
+            if CONTAINER_HOST_GIT_HASH is None:
+                self.frontend_git_hash = get_git_summary()
+            else:
+                self.frontend_git_hash = CONTAINER_HOST_GIT_HASH
 
 
 @dataclass
