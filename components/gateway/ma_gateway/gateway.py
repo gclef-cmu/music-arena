@@ -42,6 +42,7 @@ _BATTLE_GENERATOR: Optional[BattleGenerator] = None
 _BUCKET_METADATA: Optional[BucketBase] = None
 _BUCKET_AUDIO: Optional[BucketBase] = None
 _FLAKINESS = 0.0
+_HEALTH_EXCLUDE_SYSTEMS = []
 
 
 def _maybe_raise_flaky_error(logger):
@@ -135,7 +136,10 @@ async def health_check():
     timings = []
     timings.append(("generate", time.time()))
     battle, a_audio_bytes, b_audio_bytes = await _BATTLE_GENERATOR.generate_battle(
-        prompt_detailed=prompt_detailed, prompt_prebaked=True, timings=timings
+        prompt_detailed=prompt_detailed,
+        prompt_prebaked=True,
+        timings=timings,
+        exclude=_HEALTH_EXCLUDE_SYSTEMS,
     )
 
     # Store audio
@@ -343,6 +347,7 @@ def main():
     parser.add_argument("--bucket_audio", type=str)
     parser.add_argument("--route_config", type=str, default="4o-v00")
     parser.add_argument("--flakiness", type=float, default=0.0)
+    parser.add_argument("--health_exclude_systems", type=str, default=None)
     args = parser.parse_args()
 
     logging.basicConfig(level=logging.INFO)
@@ -427,6 +432,21 @@ def main():
     # Set up flakiness
     global _FLAKINESS
     _FLAKINESS = args.flakiness
+
+    # Set up health exclude systems
+    global _HEALTH_EXCLUDE_SYSTEMS
+    if args.health_exclude_systems is None:
+        _HEALTH_EXCLUDE_SYSTEMS = []
+    else:
+        _HEALTH_EXCLUDE_SYSTEMS = [
+            SystemKey.from_string(s.strip())
+            for s in args.health_exclude_systems.strip().split(",")
+        ]
+    if any(s not in systems for s in _HEALTH_EXCLUDE_SYSTEMS):
+        raise ValueError(
+            f"Health exclude systems: {_HEALTH_EXCLUDE_SYSTEMS} not found in systems: {systems}"
+        )
+    _LOGGER.info(f"Health exclude systems: {_HEALTH_EXCLUDE_SYSTEMS}")
 
     logging.basicConfig(level=logging.INFO)
     uvicorn.run(_APP, host=args.host, port=args.port)
