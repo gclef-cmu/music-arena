@@ -64,25 +64,31 @@ class BattleGenerator:
         return f"{self.base_url}:{self.ports.get(system, system_port(system))}"
 
     def sample_pair(
-        self, prompt: DetailedTextToMusicPrompt
+        self, prompt: DetailedTextToMusicPrompt, exclude: list[SystemKey] = []
     ) -> tuple[SystemKey, SystemKey]:
         # TODO: This logic is only meant for our initial launch. Need to refine down the road.
+
+        # Ensure exclude list is a set for fast lookup
+        exclude_set = set(exclude)
+
         if prompt.instrumental:
             # Filter pairs to those where at most one system supports lyrics
-            qualifying_pairs = [pair for pair in self.weights.keys()]
-            qualifying_weights = [weight for weight in self.weights.values()]
+            qualifying_pairs = [
+                (a, b)
+                for a, b in self.weights.keys()
+                if a not in exclude_set and b not in exclude_set
+            ]
         else:
-            # Filter pairs to only those where both systems support lyrics
-            qualifying_pairs = []
-            qualifying_weights = []
-            for pair, weight in self.weights.items():
-                system_a, system_b = pair
-                if (
-                    self.systems[system_a].supports_lyrics
-                    and self.systems[system_b].supports_lyrics
-                ):
-                    qualifying_pairs.append(pair)
-                    qualifying_weights.append(weight)
+            # Filter pairs to only those where both systems support lyrics and not in exclude
+            qualifying_pairs = [
+                (a, b)
+                for a, b in self.weights.keys()
+                if a not in exclude_set
+                and b not in exclude_set
+                and self.systems[a].supports_lyrics
+                and self.systems[b].supports_lyrics
+            ]
+        qualifying_weights = [self.weights[pair] for pair in qualifying_pairs]
 
         if not qualifying_pairs:
             raise ValueError("No system pairs available")
@@ -202,6 +208,7 @@ class BattleGenerator:
         *,
         timings: Optional[list[tuple[str, float]]] = None,
         logger: Optional[logging.Logger] = None,
+        exclude: list[SystemKey] = [],
         **battle_kwargs,
     ) -> tuple[Battle, bytes, bytes]:
         if prompt_detailed is None and prompt is None:
@@ -221,7 +228,7 @@ class BattleGenerator:
 
         # Sample pair
         timings.append(("sample_pair", time.time()))
-        a_system, b_system = self.sample_pair(prompt_detailed)
+        a_system, b_system = self.sample_pair(prompt_detailed, exclude=exclude)
         logger.info(f"sampled_pair={a_system} vs {b_system}")
 
         # Generate audio for both systems in parallel
