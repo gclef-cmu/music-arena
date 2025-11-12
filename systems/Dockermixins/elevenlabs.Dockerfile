@@ -1,1 +1,1 @@
-RUN python -m pip install elevenlabs
+RUN python -m pip install elevenlabs==2.22.1

@@ -66,11 +66,11 @@ class ElevenLabsMusic(TextToMusicAPISystem):
         # Use compose_detailed to retrieve metadata and audio bytes
         try:
             # Ensure seed is within int32 range to avoid validation error
-            seed = seed % (2**31)
+            # seed = seed % (2**31)
             audio = self._client.music.compose(
                 model_id=self._model_id,
                 output_format=self._output_format,
-                seed=seed,
+                # seed=seed, # No longer supported in API
                 prompt=prompt.overall_prompt,
                 force_instrumental=prompt.instrumental,
                 music_length_ms=music_length_ms,
