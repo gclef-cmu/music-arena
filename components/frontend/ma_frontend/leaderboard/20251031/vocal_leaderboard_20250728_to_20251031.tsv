@@ -1,0 +1,8 @@
+Rank	Model	Arena Score	95% CI	# Votes	Generation Speed (RTF)	organization	training_data	supports_lyrics	access
+1	riffusion-fuzz-1-0	1174.1	+68.9 / -35.1	360	6.74	Producer.ai	Unspecified	True	Proprietary
+2	riffusion-fuzz-1-1	1131.7	+51.5 / -35.5	487	5.28	Producer.ai	Unspecified	True	Proprietary
+3	preview-jerboa	1073.3	+59.2 / -69.3	127	5.87	Hidden	Unspecified	True	Proprietary
+4	preview-ocelot	1071.0	+77.2 / -76.4	134	5.36	Hidden	Unspecified	True	Proprietary
+5	elevenlabs-music-v1	958.5	+94.8 / -146.6	42	1.81	ElevenLabs	Licensed	True	Proprietary
+6	sonauto-v2-2	942.7	+80.5 / -98.1	94	2.57	Sonauto	Unspecified	True	Proprietary
+7	acestep	648.7	+85.5 / -109.8	344	2.93	ACE Studio	Unspecified	True	Open weights
