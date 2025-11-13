@@ -211,6 +211,8 @@ LEADERBOARD_MD = """
 ## 📊 Model Leaderboard
 
 The leaderboard is generated periodically from user votes. The data shown here includes votes through {latest_date_str}.
+
+To ensure statistical reliability, only models with **30 or more votes** are included in the leaderboard. Models with fewer votes are excluded as their scores and confidence intervals are not yet stable.
 """.strip()
 
 TERMS_OF_SERVICE_MODAL_INSTRUCTIONS = f"""
