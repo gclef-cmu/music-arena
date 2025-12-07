@@ -1,9 +1,9 @@
 Rank	Model	Arena Score	95% CI	# Votes	Generation Speed (RTF)	organization	training_data	supports_lyrics	access
-1	sonauto-v2-2	1224.9	+202.7 / -572.3	63	2.77	Sonauto	Unspecified	True	Proprietary
-2	riffusion-fuzz-1-0	1140.7	+107.5 / -534.5	68	9.47	Producer.ai	Unspecified	True	Proprietary
-3	riffusion-fuzz-1-1	1120.4	+55.5 / -509.4	381	6.05	Producer.ai	Unspecified	True	Proprietary
-4	magenta-rt-large	1002.9	+46.4 / -504.1	406	1.01	Google DeepMind	Stock	False	Open weights
-5	musicgen-medium	888.1	+78.6 / -516.5	69	0.45	Meta	Stock	False	Open weights
-6	musicgen-small	831.9	+34.9 / -491.4	463	0.87	Meta	Stock	False	Open weights
-7	sao	828.1	+47.3 / -510.5	447	2.66	Stability AI	Open	False	Open weights
-8	sao-small	718.8	+47.8 / -507.2	460	13.36	Stability AI	Open	False	Open weights
+1	sonauto-v2-2	1199.6	+103.3 / -85.9	63	2.77	Sonauto	Unspecified	True	Proprietary
+2	riffusion-fuzz-1-0	1139.8	+101.7 / -71.3	68	9.47	Producer.ai	Unspecified	True	Proprietary
+3	riffusion-fuzz-1-1	1133.0	+50.2 / -55.8	381	6.05	Producer.ai	Unspecified	True	Proprietary
+4	magenta-rt-large	1016.3	+43.2 / -49.6	406	1.01	Google DeepMind	Stock	False	Open weights
+5	musicgen-medium	905.1	+97.1 / -102.4	69	0.45	Meta	Stock	False	Open weights
+6	musicgen-small	847.4	+42.2 / -48.6	463	0.87	Meta	Stock	False	Open weights
+7	sao	844.3	+46.0 / -39.3	447	2.66	Stability AI	Open	False	Open weights
+8	sao-small	737.9	+52.4 / -52.7	460	13.36	Stability AI	Open	False	Open weights
