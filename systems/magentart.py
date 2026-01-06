@@ -73,9 +73,7 @@ class MagentaRealTime(TextToMusicGPUSystem):
 
         # Concatenate chunks
         timings.append(("concatenate", time.time()))
-        generated = audio.concatenate(
-            chunks, crossfade_time=self._model.config.crossfade_length
-        )
+        generated = audio.concatenate(chunks)
         result = Audio(samples=generated.samples, sample_rate=generated.sample_rate)
 
         # Crop audio
