@@ -4,7 +4,7 @@ setup(
     name="music-arena-frontend",
     packages=["ma_frontend"],
     install_requires=[
-        "gradio",
+        "gradio==5.50.0",
         "requests",
         "pandas",
     ],
