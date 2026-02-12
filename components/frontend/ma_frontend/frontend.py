@@ -1393,7 +1393,7 @@ if __name__ == "__main__":
         "--deployment",
         type=str,
         default="dev",
-        choices=["dev", "huggingface.co", "music-arena.org"],
+        choices=["dev", "huggingface.co", "music-arena.org", "music-arena.org-new-a5000-machine"],
     )
     parser.add_argument(
         "--share", action="store_true", help="Generate a public, shareable link"
