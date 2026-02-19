@@ -402,7 +402,7 @@ sonauto-v2-2:
   links:
     home: "https://sonauto.ai"
   variants:
-    "initial":
+    "260219":
       module_name: "sonauto"
       class_name: "Sonauto"
       secrets:
@@ -420,7 +420,7 @@ sonauto-v3-preview:
   links:
     home: "https://sonauto.ai"
   variants:
-    "initial":
+    "260219":
       module_name: "sonauto"
       class_name: "Sonauto"
       secrets:
