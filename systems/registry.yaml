@@ -407,6 +407,26 @@ sonauto-v2-2:
       class_name: "Sonauto"
       secrets:
         - "SONAUTO_API_KEY"
+      init_kwargs:
+        model_version: "v2.2"
+
+sonauto-v3-preview:
+  display_name: "Sonauto v3 Preview"
+  description: "Sonauto v3 preview model with variable-length generations."
+  organization: "Sonauto"
+  access: "PROPRIETARY"
+  supports_lyrics: true
+  model_type: "Latent Diffusion"
+  links:
+    home: "https://sonauto.ai"
+  variants:
+    "initial":
+      module_name: "sonauto"
+      class_name: "Sonauto"
+      secrets:
+        - "SONAUTO_API_KEY"
+      init_kwargs:
+        model_version: "v3-preview"
 
 elevenlabs-music-v1:
   display_name: "ElevenLabs Music v1"
