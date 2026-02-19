@@ -231,6 +231,52 @@ acestep:
       init_kwargs:
         lyrics_config: "4o-v00"
 
+acestep-1.5-turbo-1.7b:
+  display_name: "ACE-Step 1.5 Turbo (1.7B)"
+  description: "Hybrid DiT + 5Hz LM (1.7B) for text-to-music and lyric generation."
+  organization: "ACE Studio / StepFun"
+  access: "OPEN"
+  supports_lyrics: true
+  model_type: "Latent Diffusion"
+  training_data:
+    type: "Unspecified"
+  citation: "Gong+ 26"
+  links:
+    code: "https://github.com/ace-step/ACE-Step-1.5"
+  variants:
+    "initial":
+      docker_base: "nvidia/cuda:13.1.1-cudnn-runtime-ubuntu24.04"
+      docker_build_args:
+        PEP_668_OVERRIDE: "1"
+      module_name: "acestep15"
+      class_name: "ACEStep15"
+      init_kwargs:
+        lm_model_path: "acestep-5Hz-lm-1.7B"
+        lm_backend: "pytorch"
+
+acestep-1.5-turbo-4b:
+  display_name: "ACE-Step 1.5 Turbo (4B)"
+  description: "Hybrid DiT + 5Hz LM (4B) for text-to-music and lyric generation."
+  organization: "ACE Studio / StepFun"
+  access: "OPEN"
+  supports_lyrics: true
+  model_type: "Latent Diffusion"
+  training_data:
+    type: "Unspecified"
+  citation: "Gong+ 26"
+  links:
+    code: "https://github.com/ace-step/ACE-Step-1.5"
+  variants:
+    "initial":
+      docker_base: "nvidia/cuda:13.1.1-cudnn-runtime-ubuntu24.04"
+      docker_build_args:
+        PEP_668_OVERRIDE: "1"
+      module_name: "acestep15"
+      class_name: "ACEStep15"
+      init_kwargs:
+        lm_model_path: "acestep-5Hz-lm-4B"
+        lm_backend: "pytorch"
+
 songgen:
   display_name: "SongGen"
   description: "Single-stage LM for song generation with lyrics conditioning."
