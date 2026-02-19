@@ -243,6 +243,7 @@ acestep-1.5-turbo-1.7b:
   citation: "Gong+ 26"
   links:
     code: "https://github.com/ace-step/ACE-Step-1.5"
+    paper: "https://www.arxiv.org/abs/2602.00744"
   variants:
     "initial":
       docker_base: "nvidia/cuda:13.1.1-cudnn-runtime-ubuntu24.04"
@@ -266,6 +267,7 @@ acestep-1.5-turbo-4b:
   citation: "Gong+ 26"
   links:
     code: "https://github.com/ace-step/ACE-Step-1.5"
+    paper: "https://www.arxiv.org/abs/2602.00744"
   variants:
     "initial":
       docker_base: "nvidia/cuda:13.1.1-cudnn-runtime-ubuntu24.04"
