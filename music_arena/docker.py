@@ -205,6 +205,8 @@ def system_build_command(
     build_args = {}
     for secret in metadata.secrets:
         build_args[get_secret_var_name(secret)] = get_secret(secret)
+    for k, v in metadata.docker_build_args.items():
+        build_args[k] = v
 
     # Build command
     return build_command(

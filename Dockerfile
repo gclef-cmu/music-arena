@@ -31,7 +31,7 @@ RUN apt-get update --fix-missing && apt-get install -y --no-install-recommends \
     && rm -rf /var/lib/apt/lists/*
 
 # Install Python 3 (in case BASE_CONTAINER does not have it)
-ENV LANG C.UTF-8
+ENV LANG=C.UTF-8
 RUN apt-get update --fix-missing && apt-get install -y --no-install-recommends \
     python3 \
     python3-dev \
@@ -39,6 +39,9 @@ RUN apt-get update --fix-missing && apt-get install -y --no-install-recommends \
     && rm -rf /var/lib/apt/lists/*
 RUN [ ! -f /usr/local/bin/python ] && ln -s $(which python3) /usr/local/bin/python || true
 ENV PIP_NO_CACHE_DIR=1
+ARG PEP_668_OVERRIDE=0
+ENV PIP_BREAK_SYSTEM_PACKAGES=${PEP_668_OVERRIDE}
+ENV PIP_IGNORE_INSTALLED=${PEP_668_OVERRIDE}
 RUN python -m pip install --upgrade pip
 #RUN python -c "import sys; assert sys.version_info.major == 3 and sys.version_info.minor == 10"
 
