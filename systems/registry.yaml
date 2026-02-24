@@ -459,7 +459,7 @@ lyria-3-30s:
   training_data:
     type: "Unspecified"
   links:
-    home: "https://ai.google.dev/gemini-api/docs/music-generation"
+    home: "https://deepmind.google/models/lyria"
   variants:
     "initial":
       module_name: "lyria3"
