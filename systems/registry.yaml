@@ -449,6 +449,27 @@ elevenlabs-music-v1:
       secrets:
         - "ELEVENLABS_API_KEY"
 
+lyria-3-30s:
+  display_name: "Lyria 3"
+  description: "Lyria 3 30-second music generation model."
+  organization: "Google DeepMind"
+  access: "PROPRIETARY"
+  supports_lyrics: true
+  model_type: "Unspecified"
+  training_data:
+    type: "Unspecified"
+  links:
+    home: "https://deepmind.google/models/lyria"
+  variants:
+    "initial":
+      module_name: "lyria3"
+      class_name: "Lyria3"
+      secrets:
+        - "GEMINI_API_KEY"
+        - "API_MODEL_ID"
+      init_kwargs:
+        fixed_duration: 30.0
+
 # =============================================================================
 # DSP systems for testing
 # =============================================================================
