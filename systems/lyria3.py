@@ -58,9 +58,12 @@ class Lyria3(TextToMusicAPISystem):
         _LOGGER.info("Calling Lyria 3 model='%s'", self._model_id)
         s = time.time()
         timings.append(("call", s))
+        text_prompt = prompt.overall_prompt
+        if prompt.instrumental and "instrumental" not in text_prompt.lower():
+            text_prompt = f"{text_prompt} (instrumental only)"
         response = self._client.models.generate_content(
             model=self._model_id,
-            contents=prompt.overall_prompt,
+            contents=text_prompt,
             config=types.GenerateContentConfig(
                 response_modalities=["Audio", "Text"],
             ),
