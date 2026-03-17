@@ -1252,6 +1252,9 @@ def build_ui_leaderboard(debug=False):
         C.LEADERBOARD_MD.format(latest_date_str=latest_date.strftime("%Y-%m-%d"))
     )
 
+    with gr.Accordion("How are scores calculated?", open=False):
+        gr.Markdown(C.SCORING_METHODOLOGY_MD)
+
     with gr.Tabs():
         with gr.TabItem("🎹 Instrumental"):
             instrumental_board = gr.DataFrame(
