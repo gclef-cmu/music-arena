@@ -316,7 +316,15 @@ ls results/plots/           # PNG scatter plots
 
 ### Monthly Data Pipeline (Maintainers)
 
-Each month, maintainers run the following steps to update the public dataset and leaderboard:
+The full pipeline can be run with a single command:
+
+```bash
+bash components/leaderboard/ma_leaderboard/monthly_update.sh
+```
+
+This will download new data, preprocess, push to HuggingFace, generate the leaderboard, and update the frontend. See [Monthly Update Script](#monthly-update-script) below for details.
+
+Alternatively, each step can be run individually:
 
 **Step 1: Download new battle data from GCP**
 
@@ -390,7 +398,7 @@ Compares local log count vs HuggingFace dataset count to verify the push was com
 **Step 4: Generate updated leaderboard**
 
 ```bash
-# Wait for HuggingFace to process the new data (~5 min), then:
+# After HuggingFace processes the new data:
 ma-leaderboard leaderboard
 ```
 
