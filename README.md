@@ -417,31 +417,12 @@ ma-leaderboard update-frontend
 # Commit and open a PR
 ```
 
-### Monthly Update Script
-
-The full pipeline (GCP download → preprocess → HF push → leaderboard → frontend update) can be run with a single command:
+Optionally, the monthly update script can be scheduled as a cron job (not enabled by default):
 
 ```bash
-bash components/leaderboard/ma_leaderboard/monthly_update.sh
-```
-
-Optionally, this can be scheduled as a cron job for full automation (not enabled by default):
-
-```bash
-# Optional: add to crontab for automatic monthly runs
 crontab -e
 0 0 1 * * /path/to/music-arena/components/leaderboard/ma_leaderboard/monthly_update.sh >> ~/monthly_update.log 2>&1
 ```
-
-The script will:
-1. Download new data from GCP (incremental, skips existing)
-2. Preprocess into HuggingFace format
-3. Push to HuggingFace dataset repo
-4. Sanity check (local vs HF count)
-5. Generate updated leaderboard (TSV + plots)
-6. Copy to frontend directory
-
-After the script runs, commit and push the frontend update to deploy.
 
 ## TODO
 
