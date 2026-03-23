@@ -38,9 +38,9 @@ HARDWARE_RTF_RATIOS = {
 # Model Metadata — loaded from systems/registry.yaml
 # =============================================================================
 
-# Models to exclude from leaderboard (test/utility/debug systems)
-# These are registered in registry.yaml but never ran in the arena,
-# or were only used briefly for debugging.
+# Models to exclude from leaderboard:
+# - test/utility systems that were never deployed
+# - older private testing models that should not be shown publicly
 _EXCLUDED_MODELS = {
     "noise",           # test system
     "audioldm2",       # registered but never deployed
@@ -49,6 +49,8 @@ _EXCLUDED_MODELS = {
     "songgen",         # registered but never deployed
     "musicgen-large",  # registered but never deployed
     "magenta-rt-base", # registered but never deployed
+    "preview-ocelot",  # private testing model
+    "preview-jerboa",  # private testing model
 }
 
 _ACCESS_MAP = {"OPEN": "Open weights", "PROPRIETARY": "Proprietary"}
@@ -56,7 +58,7 @@ _ACCESS_MAP = {"OPEN": "Open weights", "PROPRIETARY": "Proprietary"}
 _TRAINING_DATA_MAP = {
     "Stock": "Stock",
     "Creative Commons": "Open",
-    "Licensed Stock": "Licensed",
+    "Licensed": "Licensed",
     "Commercial": "Commercial",
 }
 
@@ -109,33 +111,4 @@ def _load_models_from_registry():
     return models
 
 
-# Models that exist in battle data but not in registry.yaml
-# (e.g., preview models, recently added models not yet in registry)
-_ADDITIONAL_MODELS = {
-    "preview-ocelot": {
-        "organization": "Hidden",
-        "training_data": "Unspecified",
-        "supports_lyrics": True,
-        "access": "Proprietary",
-    },
-    "preview-jerboa": {
-        "organization": "Hidden",
-        "training_data": "Unspecified",
-        "supports_lyrics": True,
-        "access": "Proprietary",
-    },
-    "lyria-3-30s": {
-        "organization": "Google DeepMind",
-        "training_data": "Unspecified",
-        "supports_lyrics": True,
-        "access": "Proprietary",
-    },
-    "sonauto-v3-preview": {
-        "organization": "Sonauto",
-        "training_data": "Unspecified",
-        "supports_lyrics": True,
-        "access": "Proprietary",
-    },
-}
-
-MODELS_METADATA = {**_load_models_from_registry(), **_ADDITIONAL_MODELS}
+MODELS_METADATA = _load_models_from_registry()
