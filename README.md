@@ -278,6 +278,17 @@ ma-chat lyrics --prompt_path io/example.json
 ma-chat lyrics --config 4o-v00 --prompt_path io/example.json
 ```
 
+## Leaderboard
+
+The leaderboard is computed transparently from the public [Music Arena Dataset](https://huggingface.co/datasets/music-arena/music-arena-dataset) on HuggingFace. Anyone can reproduce the results:
+
+```bash
+pip install -e components/leaderboard/
+ma-leaderboard leaderboard
+```
+
+See [`components/leaderboard/README.md`](components/leaderboard/README.md) for the full pipeline documentation (scoring methodology, data pipeline, monthly updates).
+
 ## TODO
 
 - Move `music_arena/cli/system-*.py` to `components` for consistency

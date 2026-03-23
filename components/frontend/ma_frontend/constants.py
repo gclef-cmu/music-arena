@@ -215,6 +215,16 @@ The leaderboard is generated periodically from user votes. The data shown here i
 To ensure statistical reliability, only models with **30 or more votes** are included in the leaderboard. Models with fewer votes are excluded as their scores and confidence intervals are not yet stable.
 """.strip()
 
+SCORING_METHODOLOGY_MD = f"""
+**Arena Score** is computed using the [Bradley-Terry model](https://en.wikipedia.org/wiki/Bradley%E2%80%93Terry_model) — a pairwise comparison model fitted via L2-regularized logistic regression. Ties count as half-win / half-loss. Votes marked as "Both Bad" are excluded. 95% confidence intervals are estimated via bootstrap resampling (1,000 iterations). Only models with 30+ votes are shown.
+
+**Generation Speed (RTF)** measures how fast a model generates music relative to real time. An RTF of 5x means the model produces 5 seconds of audio per 1 second of compute — higher is faster. Values are the median across all battles, measured by total gateway time (user-perceived speed).
+- **Open-weights models** (running on our GPUs): normalized to NVIDIA A6000.
+- **Proprietary models** (accessed via API): no normalization applied — RTF reflects actual end-to-end response time.
+
+[View the full scoring code on GitHub]({CODE_URL}/tree/main/components/leaderboard/ma_leaderboard/scoring.py)
+""".strip()
+
 TERMS_OF_SERVICE_MODAL_INSTRUCTIONS = f"""
 By clicking "{TOS_ACCEPT_BUTTON_LABEL}" below, you agree to the **terms of service** below.
 """.strip()

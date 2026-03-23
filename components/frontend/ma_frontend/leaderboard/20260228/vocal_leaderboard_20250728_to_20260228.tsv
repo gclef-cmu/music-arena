@@ -1,0 +1,7 @@
+Rank	Model	Arena Score	95% CI	# Votes	Generation Speed (RTF)	organization	training_data	supports_lyrics	access
+1	riffusion-fuzz-1-0	1158	±43	426	6.99	Producer.ai	Unspecified	True	Proprietary
+2	riffusion-fuzz-1-1	1129	±43	421	5.5	Producer.ai	Unspecified	True	Proprietary
+3	elevenlabs-music-v1	1021	±48	166	1.87	ElevenLabs	Licensed	True	Proprietary
+4	lyria-3-30s	1011	±83	36	2.9	Google DeepMind	Unspecified	True	Proprietary
+5	sonauto-v2-2	975	±46	208	2.51	Sonauto	Unspecified	True	Proprietary
+6	acestep	680	±67	312	2.9	ACE Studio	Unspecified	True	Open weights

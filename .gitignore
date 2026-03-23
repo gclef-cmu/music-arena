@@ -5,7 +5,14 @@ __pycache__
 *.egg-info/
 deploy/*.yaml
 *.sh
+!components/leaderboard/ma_leaderboard/monthly_update.sh
 old/
 io/
 systems_private/
 cache/
+.env
+.env.*
+*credentials*
+*service_account*
+results/
+components/leaderboard/data/
