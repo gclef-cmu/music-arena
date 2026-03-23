@@ -231,6 +231,54 @@ acestep:
       init_kwargs:
         lyrics_config: "4o-v00"
 
+acestep-1.5-turbo-1.7b:
+  display_name: "ACE-Step 1.5 Turbo (1.7B)"
+  description: "Hybrid DiT + 5Hz LM (1.7B) for text-to-music and lyric generation."
+  organization: "ACE Studio / StepFun"
+  access: "OPEN"
+  supports_lyrics: true
+  model_type: "Latent Diffusion"
+  training_data:
+    type: "Unspecified"
+  citation: "Gong+ 26"
+  links:
+    code: "https://github.com/ace-step/ACE-Step-1.5"
+    paper: "https://www.arxiv.org/abs/2602.00744"
+  variants:
+    "initial":
+      docker_base: "nvidia/cuda:13.1.1-cudnn-runtime-ubuntu24.04"
+      docker_build_args:
+        PEP_668_OVERRIDE: "1"
+      module_name: "acestep15"
+      class_name: "ACEStep15"
+      init_kwargs:
+        lm_model_path: "acestep-5Hz-lm-1.7B"
+        lm_backend: "pytorch"
+
+acestep-1.5-turbo-4b:
+  display_name: "ACE-Step 1.5 Turbo (4B)"
+  description: "Hybrid DiT + 5Hz LM (4B) for text-to-music and lyric generation."
+  organization: "ACE Studio / StepFun"
+  access: "OPEN"
+  supports_lyrics: true
+  model_type: "Latent Diffusion"
+  training_data:
+    type: "Unspecified"
+  citation: "Gong+ 26"
+  links:
+    code: "https://github.com/ace-step/ACE-Step-1.5"
+    paper: "https://www.arxiv.org/abs/2602.00744"
+  variants:
+    "initial":
+      docker_base: "nvidia/cuda:13.1.1-cudnn-runtime-ubuntu24.04"
+      docker_build_args:
+        PEP_668_OVERRIDE: "1"
+      module_name: "acestep15"
+      class_name: "ACEStep15"
+      init_kwargs:
+        lm_model_path: "acestep-5Hz-lm-4B"
+        lm_backend: "pytorch"
+
 songgen:
   display_name: "SongGen"
   description: "Single-stage LM for song generation with lyrics conditioning."
@@ -354,11 +402,31 @@ sonauto-v2-2:
   links:
     home: "https://sonauto.ai"
   variants:
-    "initial":
+    "260219":
       module_name: "sonauto"
       class_name: "Sonauto"
       secrets:
         - "SONAUTO_API_KEY"
+      init_kwargs:
+        model_version: "v2.2"
+
+sonauto-v3-preview:
+  display_name: "Sonauto v3 Preview"
+  description: "Sonauto v3 preview model with variable-length generations."
+  organization: "Sonauto"
+  access: "PROPRIETARY"
+  supports_lyrics: true
+  model_type: "Latent Diffusion"
+  links:
+    home: "https://sonauto.ai"
+  variants:
+    "260219":
+      module_name: "sonauto"
+      class_name: "Sonauto"
+      secrets:
+        - "SONAUTO_API_KEY"
+      init_kwargs:
+        model_version: "v3-preview"
 
 elevenlabs-music-v1:
   display_name: "ElevenLabs Music v1"
@@ -380,6 +448,27 @@ elevenlabs-music-v1:
         output_format: "pcm_44100"
       secrets:
         - "ELEVENLABS_API_KEY"
+
+lyria-3-30s:
+  display_name: "Lyria 3"
+  description: "Lyria 3 30-second music generation model."
+  organization: "Google DeepMind"
+  access: "PROPRIETARY"
+  supports_lyrics: true
+  model_type: "Unspecified"
+  training_data:
+    type: "Unspecified"
+  links:
+    home: "https://deepmind.google/models/lyria"
+  variants:
+    "initial":
+      module_name: "lyria3"
+      class_name: "Lyria3"
+      secrets:
+        - "GEMINI_API_KEY"
+        - "API_MODEL_ID"
+      init_kwargs:
+        fixed_duration: 30.0
 
 # =============================================================================
 # DSP systems for testing

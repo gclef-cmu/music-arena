@@ -1,0 +1,1 @@
+RUN python -c "from huggingface_hub import snapshot_download; snapshot_download(repo_id='ACE-Step/Ace-Step1.5', local_dir='/ace-step-1.5/checkpoints', local_dir_use_symlinks=False, allow_patterns=['acestep-5Hz-lm-1.7B/*'])"

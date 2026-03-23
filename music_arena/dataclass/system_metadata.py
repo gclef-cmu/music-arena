@@ -62,6 +62,7 @@ class TextToMusicSystemMetadata(MusicArenaDataClass):
     release_audio_publicly: bool = True
     # Optional variant fields
     docker_base: Optional[str] = None
+    docker_build_args: dict[str, str] = field(default_factory=dict)
     secrets: list[str] = field(default_factory=list)
     init_kwargs: dict[str, Any] = field(default_factory=dict)
 

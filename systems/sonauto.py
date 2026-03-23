@@ -22,6 +22,7 @@ class Sonauto(TextToMusicAPISystem):
     def __init__(
         self,
         *args,
+        model_version: str = "v2.2",
         prompt_strength: float = 2.3,
         balance_strength: float = 0.7,
         poll_interval: float = 1.0,
@@ -30,6 +31,7 @@ class Sonauto(TextToMusicAPISystem):
     ):
         super().__init__(*args, **kwargs)
         self._api_key = get_secret("SONAUTO_API_KEY").strip()
+        self._model_version = model_version
         self._prompt_strength = prompt_strength
         self._balance_strength = balance_strength
         self._poll_interval = poll_interval
@@ -42,33 +44,58 @@ class Sonauto(TextToMusicAPISystem):
             return PromptSupport.PARTIAL
         return PromptSupport.SUPPORTED
 
+    def _generation_endpoint_for_model_version(self) -> str:
+        normalized = self._model_version.lower()
+        if normalized in ("v2", "v2.2"):
+            return f"{_API_BASE_URL}/v1/generations/v2"
+        if normalized in ("v3", "v3-preview"):
+            return f"{_API_BASE_URL}/v1/generations/v3"
+        raise ValueError(
+            f"Unsupported Sonauto model_version='{self._model_version}'. "
+            "Expected one of: v2.2, v2, v3-preview, v3."
+        )
+
+    def _build_payload(
+        self, prompt: DetailedTextToMusicPrompt, seed: int
+    ) -> dict[str, str | int | float | bool]:
+        payload: dict[str, str | int | float | bool] = {
+            "prompt": prompt.overall_prompt or "",
+            "instrumental": bool(prompt.instrumental),
+            "prompt_strength": float(self._prompt_strength),
+            "output_format": "flac",
+        }
+
+        if not prompt.instrumental and prompt.lyrics is not None:
+            payload["lyrics"] = prompt.lyrics
+
+        endpoint = self._generation_endpoint_for_model_version()
+        if endpoint.endswith("/v2"):
+            payload["balance_strength"] = float(self._balance_strength)
+            payload["seed"] = int(seed)
+            payload["num_songs"] = 1
+            payload["bpm"] = "auto" if prompt.bpm is None else round(prompt.bpm)
+
+        return payload
+
     async def _generate_single(
         self, prompt: DetailedTextToMusicPrompt, seed: int
     ) -> TextToMusicResponse:
         timings: list[tuple[str, float]] = []
 
         # Build generation payload (see https://sonauto.ai/developers)
-        payload: dict = {
-            "prompt": prompt.overall_prompt or "",
-            "instrumental": bool(prompt.instrumental),
-            "prompt_strength": float(self._prompt_strength),
-            "balance_strength": float(self._balance_strength),
-            "seed": int(seed),
-            "num_songs": 1,
-            "output_format": "flac",
-            "bpm": "auto" if prompt.bpm is None else round(prompt.bpm),
-        }
-        if not prompt.instrumental and prompt.lyrics is not None:
-            payload["lyrics"] = prompt.lyrics
+        payload = self._build_payload(prompt=prompt, seed=seed)
 
-        url = f"{_API_BASE_URL}/v1/generations"
+        url = self._generation_endpoint_for_model_version()
         headers = {
             "Authorization": f"Bearer {self._api_key}",
             "Content-Type": "application/json",
         }
 
         _LOGGER.info(
-            f"Calling Sonauto API with prompt='{payload.get('prompt')}', instrumental={payload.get('instrumental')}"
+            "Calling Sonauto API model_version='%s' with prompt='%s', instrumental=%s",
+            self._model_version,
+            payload.get("prompt"),
+            payload.get("instrumental"),
         )
         s = time.time()
         timings.append(("call", s))
