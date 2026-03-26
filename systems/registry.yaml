@@ -450,7 +450,7 @@ elevenlabs-music-v1:
         - "ELEVENLABS_API_KEY"
 
 lyria-3-30s:
-  display_name: "Lyria 3"
+  display_name: "Lyria 3 Clip"
   description: "Lyria 3 30-second music generation model."
   organization: "Google DeepMind"
   access: "PROPRIETARY"
@@ -471,9 +471,9 @@ lyria-3-30s:
         model_id_secret_name: "LYRIA3_30S_API_MODEL_ID"
         fixed_duration: 30.0
 
-lyria-3-3m:
-  display_name: "Lyria 3 (Full)"
-  description: "Lyria 3 3-minute music generation model."
+lyria-3-pro-preview:
+  display_name: "Lyria 3 Pro"
+  description: "Lyria 3 Pro full song generation (up to 3-minutes)."
   organization: "Google DeepMind"
   access: "PROPRIETARY"
   supports_lyrics: true
@@ -481,7 +481,7 @@ lyria-3-3m:
   training_data:
     type: "Unspecified"
   links:
-    home: "https://deepmind.google/models/lyria"
+    home: "https://blog.google/innovation-and-ai/technology/developers-tools/lyria-3-developers/"
   variants:
     "initial":
       module_name: "lyria3"
