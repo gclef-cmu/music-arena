@@ -72,7 +72,7 @@ class Lyria3(TextToMusicAPISystem):
 
         audio_bytes = None
         text_parts: list[str] = []
-        for part in response.parts:
+        for part in (response.parts or []):
             if part.text:
                 text_parts.append(part.text)
             if part.inline_data and part.inline_data.data:
