@@ -175,6 +175,8 @@ magenta-rt-base:
   variants:
     "gpu-initial":
       docker_base: "us-docker.pkg.dev/brain-magenta/magenta-rt/magenta-rt:gpu"
+      docker_build_args:
+        PEP_668_OVERRIDE: "1"
       module_name: "magentart"
       class_name: "MagentaRealTime"
       init_kwargs:
@@ -196,6 +198,8 @@ magenta-rt-large:
   variants:
     "gpu-initial":
       docker_base: "us-docker.pkg.dev/brain-magenta/magenta-rt/magenta-rt:gpu"
+      docker_build_args:
+        PEP_668_OVERRIDE: "1"
       module_name: "magentart"
       class_name: "MagentaRealTime"
       init_kwargs:
