@@ -138,6 +138,54 @@ sao-small:
       secrets:
         - "HUGGINGFACE_READ_TOKEN"
 
+sa3-medium:
+  display_name: "Stable Audio 3 (Medium)"
+  description: "Latent diffusion model (1.4B)"
+  organization: "Stability AI"
+  access: "OPEN"
+  supports_lyrics: false
+  model_type: "Latent Diffusion"
+  training_data:
+    type: "Unspecified"
+  citation: "Evans+ 26"
+  links:
+    paper: "https://arxiv.org/abs/2605.17991"
+    code: "https://github.com/Stability-AI/stable-audio-3"
+    home: "https://huggingface.co/stabilityai/stable-audio-3-medium"
+  release_audio_publicly: false
+  variants:
+    "initial":
+      docker_build_args:
+        PEP_668_OVERRIDE: "1"
+      module_name: "sa3"
+      class_name: "StableAudio3Medium"
+      secrets:
+        - "HUGGINGFACE_READ_TOKEN"
+
+sa3-small-music:
+  display_name: "Stable Audio 3 (Small Music)"
+  description: "Speedy, small (433M) latent diffusion model"
+  organization: "Stability AI"
+  access: "OPEN"
+  supports_lyrics: false
+  model_type: "Latent Diffusion"
+  training_data:
+    type: "Unspecified"
+  citation: "Evans+ 26"
+  links:
+    paper: "https://arxiv.org/abs/2605.17991"
+    code: "https://github.com/Stability-AI/stable-audio-3"
+    home: "https://huggingface.co/stabilityai/stable-audio-3-small-music"
+  release_audio_publicly: false
+  variants:
+    "initial":
+      docker_build_args:
+        PEP_668_OVERRIDE: "1"
+      module_name: "sa3"
+      class_name: "StableAudio3SmallMusic"
+      secrets:
+        - "HUGGINGFACE_READ_TOKEN"
+
 audioldm2:
   display_name: "AudioLDM2"
   description: "Latent diffusion model for high-quality text-to-audio generation by University of Surrey, CVSSP"
