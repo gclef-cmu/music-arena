@@ -22,6 +22,7 @@ class StableAudio3(TextToMusicGPUSystem):
         model_name: str = "medium",
         max_duration: float = 120.0,
         default_duration: float = 120.0,
+        # Defaults match the stable-audio-3 CLI for post-trained models.
         generate_steps: int = 8,
         generate_cfg_scale: float = 1.0,
         model_half: bool = True,
@@ -105,6 +106,17 @@ class StableAudio3Medium(StableAudio3):
         super().__init__(
             *args,
             model_name="medium",
+            max_duration=120.0,
+            default_duration=120.0,
+            **kwargs,
+        )
+
+
+class StableAudio3SmallMusic(StableAudio3):
+    def __init__(self, *args, **kwargs):
+        super().__init__(
+            *args,
+            model_name="small-music",
             max_duration=120.0,
             default_duration=120.0,
             **kwargs,
