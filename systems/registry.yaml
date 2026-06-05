@@ -255,6 +255,56 @@ magenta-rt-large:
         device: "gpu"
         max_duration: 30.0
 
+magenta-rt-2-base:
+  display_name: "Magenta RealTime 2 (Base)"
+  description: "Streaming codec language model (2.4B)"
+  organization: "Google DeepMind"
+  access: "OPEN"
+  supports_lyrics: false
+  model_type: "Codec Language Model"
+  training_data:
+    type: "Stock"
+  citation: "Caillon+ 25"
+  links:
+    home: "https://magenta.withgoogle.com/mrt2"
+    code: "https://github.com/magenta/magenta-realtime"
+    paper: "https://arxiv.org/abs/2508.04651"
+  variants:
+    "initial":
+      docker_base: "nvidia/cuda:13.1.1-cudnn-runtime-ubuntu24.04"
+      docker_build_args:
+        PEP_668_OVERRIDE: "1"
+      module_name: "magentart2"
+      class_name: "MagentaRealTime2"
+      init_kwargs:
+        size: "mrt2_base"
+        max_duration: 30.0
+
+magenta-rt-2-small:
+  display_name: "Magenta RealTime 2 (Small)"
+  description: "Smaller streaming codec language model (230M)"
+  organization: "Google DeepMind"
+  access: "OPEN"
+  supports_lyrics: false
+  model_type: "Codec Language Model"
+  training_data:
+    type: "Stock"
+  citation: "Caillon+ 25"
+  links:
+    home: "https://magenta.withgoogle.com/mrt2"
+    code: "https://github.com/magenta/magenta-realtime"
+    paper: "https://arxiv.org/abs/2508.04651"
+  variants:
+    "initial":
+      docker_base: "nvidia/cuda:13.1.1-cudnn-runtime-ubuntu24.04"
+      docker_build_args:
+        PEP_668_OVERRIDE: "1"
+      module_name: "magentart2"
+      class_name: "MagentaRealTime2"
+      init_kwargs:
+        size: "mrt2_small"
+        max_duration: 30.0
+
 # =============================================================================
 # Open, supports lyrics conditioning
 # =============================================================================
