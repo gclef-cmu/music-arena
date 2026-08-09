@@ -24,16 +24,30 @@ class Lyria3(TextToMusicAPISystem):
         *args,
         model_id_secret_name: str = "API_MODEL_ID",
         fixed_duration: float = 30.0,
+        timeout: Optional[float] = None,
         **kwargs,
     ):
         super().__init__(*args, **kwargs)
         self._model_id_secret_name = model_id_secret_name
         self._fixed_duration = fixed_duration
+        self._timeout = timeout
         self._model_id: Optional[str] = None
         self._client: Optional[genai.Client] = None
 
     def _prepare(self):
-        self._client = genai.Client(api_key=get_secret("GEMINI_API_KEY"))
+        # Without an explicit timeout, the SDK passes timeout=None through to
+        # httpx, which disables request timeouts entirely and can hang the
+        # server forever on a stalled call (observed: an 11-day hang in
+        # production). `timeout` (seconds) is opt-in per variant.
+        http_options = (
+            types.HttpOptions(timeout=int(self._timeout * 1000))
+            if self._timeout is not None
+            else None
+        )
+        self._client = genai.Client(
+            api_key=get_secret("GEMINI_API_KEY"),
+            http_options=http_options,
+        )
         self._model_id = get_secret(self._model_id_secret_name).strip()
 
     def _release(self):

@@ -657,6 +657,16 @@ lyria-3-pro-preview:
       init_kwargs:
         model_id_secret_name: "LYRIA3_3M_API_MODEL_ID"
         fixed_duration: 180.0
+    "260809":
+      module_name: "lyria3"
+      class_name: "Lyria3"
+      secrets:
+        - "GEMINI_API_KEY"
+        - "LYRIA3_3M_API_MODEL_ID"
+      init_kwargs:
+        model_id_secret_name: "LYRIA3_3M_API_MODEL_ID"
+        fixed_duration: 180.0
+        timeout: 120.0
 
 minimax-music-3-0:
   display_name: "MiniMax Music 3.0"
