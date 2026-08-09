@@ -268,14 +268,15 @@ def generate_leaderboard(
         else:
             ci_str = "N/A"
 
+        model_meta = models_metadata.get(model, {})
         model_data = {
-            "Model": model,
+            "Model": model_meta.get("display_name", model),
             "Arena Score": main_score,
             "95% CI": ci_str,
             "# Votes": votes.get(model, 0),
             "Generation Speed (RTF)": rtfs.get(model),
         }
-        model_data.update(models_metadata.get(model, {}))
+        model_data.update(model_meta)
         data.append(model_data)
 
     df = (

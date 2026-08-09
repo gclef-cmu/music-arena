@@ -146,7 +146,11 @@ sa3-medium:
   supports_lyrics: false
   model_type: "Latent Diffusion"
   training_data:
-    type: "Unspecified"
+    type: "Licensed/Open"
+    sources:
+      - "AudioSparx"
+      - "Freesound"
+    num_tracks: 1278902
   citation: "Evans+ 26"
   links:
     paper: "https://arxiv.org/abs/2605.17991"
