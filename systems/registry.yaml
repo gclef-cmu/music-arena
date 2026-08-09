@@ -548,6 +548,25 @@ elevenlabs-music-v1:
       init_kwargs:
         model_id: "music_v1"
         output_format: "pcm_44100"
+        default_duration_ms: 20000
+      secrets:
+        - "ELEVENLABS_API_KEY"
+    "autoduration":
+      module_name: "elevenlabs"
+      class_name: "ElevenLabsMusic"
+      init_kwargs:
+        model_id: "music_v1"
+        output_format: "pcm_44100"
+        default_duration_ms: null
+      secrets:
+        - "ELEVENLABS_API_KEY"
+    "60s":
+      module_name: "elevenlabs"
+      class_name: "ElevenLabsMusic"
+      init_kwargs:
+        model_id: "music_v1"
+        output_format: "pcm_44100"
+        default_duration_ms: 60000
       secrets:
         - "ELEVENLABS_API_KEY"
 
@@ -569,6 +588,7 @@ elevenlabs-music-v2:
       init_kwargs:
         model_id: "music_v2"
         output_format: "pcm_44100"
+        default_duration_ms: 60000
       secrets:
         - "ELEVENLABS_API_KEY"
 
