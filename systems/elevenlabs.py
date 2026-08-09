@@ -22,14 +22,16 @@ class ElevenLabsMusic(TextToMusicAPISystem):
     def __init__(
         self,
         *args,
-        default_duration_ms: int = 20000,
+        default_duration_ms: int | None = 20000,
         model_id: str = "music_v1",
         output_format: str = "mp3_44100_128",
         **kwargs,
     ):
         super().__init__(*args, **kwargs)
         self._client = ElevenLabs(api_key=get_secret("ELEVENLABS_API_KEY").strip())
-        self._default_duration_ms = int(default_duration_ms)
+        self._default_duration_ms = (
+            None if default_duration_ms is None else int(default_duration_ms)
+        )
         self._model_id = model_id
         self._output_format = output_format
 
@@ -49,7 +51,8 @@ class ElevenLabsMusic(TextToMusicAPISystem):
     ) -> TextToMusicResponse:
         timings: list[tuple[str, float]] = []
 
-        # Determine duration in milliseconds
+        # Determine duration in milliseconds. If neither the prompt nor the
+        # system config specifies one, pass None so the API picks a length.
         if prompt.duration is not None:
             music_length_ms = int(round(prompt.duration * 1000.0))
             music_length_ms = max(music_length_ms, 3000)
@@ -58,7 +61,7 @@ class ElevenLabsMusic(TextToMusicAPISystem):
             music_length_ms = self._default_duration_ms
 
         _LOGGER.info(
-            f"Calling ElevenLabs Music compose_detailed with duration_ms={music_length_ms}"
+            f"Calling ElevenLabs Music compose_detailed with duration_ms={music_length_ms if music_length_ms is not None else 'auto'}"
         )
         s = time.time()
         timings.append(("call", s))
