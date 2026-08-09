@@ -1,5 +1,6 @@
 """Leaderboard visualization: Arena Score vs Generation Speed (RTF) plots."""
 
+import math
 import os
 
 import matplotlib.image as mpimg
@@ -80,11 +81,21 @@ def _plot_on_ax(
         "Licensed": "#984EA3",
         "Commercial": "#EE3377",
     }
+    # Categories with more than one training-data influence (e.g. Stable Audio
+    # 3's AudioSparx + Freesound mix) are rendered as split-color markers
+    # (left half / right half) instead of getting a single solid color.
+    bicolor_palette = {
+        "Licensed/Open": ("#984EA3", "#77AADD"),  # Licensed | Open
+    }
     markers = {"Open weights": "o", "Proprietary": "^"}
 
-    # Scatter plot
+    is_bicolor = leaderboard_df["training_data"].isin(bicolor_palette)
+    solid_df = leaderboard_df[~is_bicolor]
+    bicolor_df = leaderboard_df[is_bicolor]
+
+    # Scatter plot (solid-color categories)
     sns.scatterplot(
-        data=leaderboard_df,
+        data=solid_df,
         x="Generation Speed (RTF)",
         y="Arena Score",
         hue="training_data",
@@ -97,6 +108,24 @@ def _plot_on_ax(
         linewidth=1.2,
         legend=False,
     )
+
+    # Split-color categories: matplotlib's marker fillstyle natively supports
+    # a two-tone left/right fill via markerfacecolor / markerfacecoloralt.
+    bicolor_markersize = math.sqrt(STYLE["scatter_size"])
+    for _, row in bicolor_df.iterrows():
+        left_color, right_color = bicolor_palette[row["training_data"]]
+        ax.plot(
+            row["Generation Speed (RTF)"],
+            row["Arena Score"],
+            marker=markers.get(row["access"], "o"),
+            linestyle="none",
+            markersize=bicolor_markersize,
+            fillstyle="left",
+            markerfacecolor=left_color,
+            markerfacecoloralt=right_color,
+            markeredgecolor="black",
+            markeredgewidth=1.2,
+        )
 
     # X-axis: log scale with "Nx" format
     ax.set_xscale("log")
@@ -183,6 +212,9 @@ def _plot_on_ax(
         mpatches.Patch(color=color_palette[label], label=label)
         for label in present_training
     ]
+    # Split-color ("Licensed/Open") points intentionally get no separate
+    # legend entry — the two halves map directly onto the existing
+    # "Licensed" and "Open" swatches already in this legend.
 
     present_access = [
         a for a in markers.keys() if a in leaderboard_df["access"].unique()

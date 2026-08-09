@@ -62,6 +62,7 @@ _TRAINING_DATA_MAP = {
     "Creative Commons": "Open",
     "Licensed": "Licensed",
     "Commercial": "Commercial",
+    "Licensed/Open": "Licensed/Open",
 }
 
 
@@ -108,6 +109,7 @@ def _load_models_from_registry():
         td_type = td_raw.get("type", "Unspecified") if isinstance(td_raw, dict) else "Unspecified"
 
         models[name] = {
+            "display_name": info.get("display_name", name),
             "organization": info.get("organization", "Unknown"),
             "training_data": _TRAINING_DATA_MAP.get(td_type, "Unspecified"),
             "supports_lyrics": info.get("supports_lyrics", False),
