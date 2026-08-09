@@ -654,6 +654,44 @@ lyria-3-pro-preview:
         model_id_secret_name: "LYRIA3_3M_API_MODEL_ID"
         fixed_duration: 180.0
 
+minimax-music-3-0:
+  display_name: "MiniMax Music 3.0"
+  description: "MiniMax's Music 3.0 model. Generates full songs with vocals or instrumental from a text prompt."
+  organization: "MiniMax"
+  access: "PROPRIETARY"
+  supports_lyrics: true
+  training_data:
+    type: "Unspecified"
+  links:
+    home: "https://platform.minimax.io"
+  variants:
+    "free":
+      module_name: "minimax"
+      class_name: "MiniMaxMusic"
+      init_kwargs:
+        model: "music-3.0-free"
+      secrets:
+        - "MINIMAX_API_KEY"
+
+minimax-music-2-6:
+  display_name: "MiniMax Music 2.6"
+  description: "MiniMax's Music 2.6 model. Generates full songs with vocals or instrumental from a text prompt."
+  organization: "MiniMax"
+  access: "PROPRIETARY"
+  supports_lyrics: true
+  training_data:
+    type: "Unspecified"
+  links:
+    home: "https://platform.minimax.io"
+  variants:
+    "free":
+      module_name: "minimax"
+      class_name: "MiniMaxMusic"
+      init_kwargs:
+        model: "music-2.6-free"
+      secrets:
+        - "MINIMAX_API_KEY"
+
 
 # =============================================================================
 # DSP systems for testing
