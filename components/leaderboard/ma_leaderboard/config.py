@@ -65,12 +65,8 @@ _TRAINING_DATA_MAP = {
 }
 
 
-def _load_models_from_registry():
-    """Load model metadata from systems/registry.yaml (single source of truth).
-
-    Automatically picks up new models when they are added to the registry,
-    and excludes models that are removed.
-    """
+def _load_registry_yaml() -> dict:
+    """Load the raw systems/registry.yaml dict (single source of truth for models)."""
     import yaml
 
     registry_paths = [
@@ -89,7 +85,16 @@ def _load_models_from_registry():
         return {}
 
     with open(path) as f:
-        registry = yaml.safe_load(f)
+        return yaml.safe_load(f)
+
+
+def _load_models_from_registry():
+    """Load model metadata from systems/registry.yaml (single source of truth).
+
+    Automatically picks up new models when they are added to the registry,
+    and excludes models that are removed.
+    """
+    registry = _load_registry_yaml()
 
     models = {}
     for name, info in registry.items():
@@ -112,4 +117,19 @@ def _load_models_from_registry():
     return models
 
 
+def _load_non_public_models() -> set:
+    """Models whose audio must not be publicly released.
+
+    Read directly from registry.yaml's `release_audio_publicly: false` flag,
+    independent of _EXCLUDED_MODELS (which only affects leaderboard display).
+    """
+    registry = _load_registry_yaml()
+    return {
+        name
+        for name, info in registry.items()
+        if isinstance(info, dict) and info.get("release_audio_publicly", True) is False
+    }
+
+
 MODELS_METADATA = _load_models_from_registry()
+NON_PUBLIC_MODELS = _load_non_public_models()

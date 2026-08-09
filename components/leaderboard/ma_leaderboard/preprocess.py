@@ -15,12 +15,9 @@ from zoneinfo import ZoneInfo
 
 from tqdm import tqdm
 
-from .config import MODELS_METADATA
+from .config import MODELS_METADATA, NON_PUBLIC_MODELS
 
 EASTERN_TZ = ZoneInfo("America/New_York")
-
-# Models whose audio is not publicly released
-NON_PUBLIC_MODELS = {"sao", "sao-small"}
 
 
 def sum_listen_time(listen_data: list) -> float:
