@@ -551,6 +551,27 @@ elevenlabs-music-v1:
       secrets:
         - "ELEVENLABS_API_KEY"
 
+elevenlabs-music-v2:
+  display_name: "ElevenLabs Music v2"
+  description: "Generate studio-quality tracks instantly, any genre, any style, vocals or instrumental, in minutes using simple text prompts."
+  organization: "ElevenLabs"
+  access: "PROPRIETARY"
+  supports_lyrics: true
+  training_data:
+    type: "Licensed"
+  links:
+    home: "https://elevenlabs.io"
+  release_audio_publicly: false
+  variants:
+    "initial":
+      module_name: "elevenlabs"
+      class_name: "ElevenLabsMusic"
+      init_kwargs:
+        model_id: "music_v2"
+        output_format: "pcm_44100"
+      secrets:
+        - "ELEVENLABS_API_KEY"
+
 lyria-3-30s:
   display_name: "Lyria 3 Clip"
   description: "Lyria 3 30-second music generation model."
