@@ -818,66 +818,68 @@ def bind_onload_events(deployment: str, demo, state, ui, debug=False):
         }
 
     def _onack_subchain(event, tos_source):
-        # Chain breaks if TOS is not accepted
-        onfetch = (
-            event.success(
-                fn=lambda x, y: x.copy(ack_tos=y),
-                inputs=[s["session"], gr.State(C.TERMS_CHECKSUM)],
-                outputs=[s["session"]],
-            )
-            .success(
-                **set_ui_visible_kwargs(
-                    "tos",
-                    u["tos"]["rows"] + u["no_ack"]["rows"],
-                    gr.State(False),
-                ),
-            )
-            .success(
-                onack_init_user,
-                inputs=[s["session"]],
-                outputs=[s["user"]],
-            )
-            .success(
-                onack_fetch_from_gateway,
-                inputs=[s["session"]],
-                outputs=[s["systems"], s["prebaked"]],
-            )
-        )
+        # Run the whole post-TOS setup as one event (one round trip instead of ~8)
+        tos_rows = u["tos"]["rows"] + u["no_ack"]["rows"]
+        no_gateway_rows = u["no_gateway"]["rows"]
+        battle_rows = u["battle"]["rows"]
+        gateway_ui = [
+            u["battle"]["model_description_markdown"],
+            u["battle"]["prebake_btn"],
+            u["battle"]["prompt_textbox_col"],
+            u["battle"]["prebake_btn_col"],
+        ]
+        new_battle_outputs = [
+            s["battle"],
+            s["vote"],
+            s["frontend"]["voting_enabled"],
+            *u["new_battle"],
+        ]
 
-        # Displays error if gateway fails to load
-        gateway_success = gr.State(None)
-        onfetch.then(
-            fn=lambda s, p: s is not None and p is not None,
-            inputs=[s["systems"], s["prebaked"]],
-            outputs=[gateway_success],
-        ).then(
-            **set_ui_visible_kwargs(
-                "no_gateway", u["no_gateway"]["rows"], gateway_success, negate=True
-            ),
-        )
+        def onack(session, request: gr.Request):
+            session = session.copy(ack_tos=C.TERMS_CHECKSUM)
+            user = onack_init_user(session, request)
+            hide_tos = [gr.update(visible=False)] * len(tos_rows)
+            try:
+                systems, prebaked = onack_fetch_from_gateway(session)
+            except Exception as e:
+                _LOGGER.error(f"Gateway fetch failed: {e}")
+                rest = gateway_ui + new_battle_outputs + battle_rows
+                return [
+                    session,
+                    user,
+                    None,
+                    None,
+                    *hide_tos,
+                    *[gr.update(visible=True)] * len(no_gateway_rows),
+                    *[gr.update()] * len(rest),
+                ]
+            new_battle = handle_new_battle(session, user, debug=debug)
+            return [
+                new_battle[0],
+                user,
+                systems,
+                prebaked,
+                *hide_tos,
+                *[gr.update(visible=False)] * len(no_gateway_rows),
+                *ongateway_update_ui(session, systems, prebaked),
+                *new_battle[1:],
+                *[gr.update(visible=True)] * len(battle_rows),
+            ]
 
-        # Otherwise, update UI and start new battle
-        onfetch.success(
-            ongateway_update_ui,
-            inputs=[s["session"], s["systems"], s["prebaked"]],
-            outputs=[
-                u["battle"]["model_description_markdown"],
-                u["battle"]["prebake_btn"],
-                u["battle"]["prompt_textbox_col"],
-                u["battle"]["prebake_btn_col"],
-            ],
-        ).success(
-            functools.partial(handle_new_battle, debug=debug),
-            inputs=[s["session"], s["user"]],
+        event.success(
+            onack,
+            inputs=[s["session"]],
             outputs=[
                 s["session"],
-                s["battle"],
-                s["vote"],
-                s["frontend"]["voting_enabled"],
-                *u["new_battle"],
+                s["user"],
+                s["systems"],
+                s["prebaked"],
+                *tos_rows,
+                *no_gateway_rows,
+                *gateway_ui,
+                *new_battle_outputs,
+                *battle_rows,
             ],
-        ).success(
-            **set_ui_visible_kwargs("battle", u["battle"]["rows"], gr.State(True)),
         )
 
     # TOS handlers
